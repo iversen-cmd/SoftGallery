@@ -337,6 +337,83 @@ figcaption{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5;max
 .mt-l{margin-top:clamp(30px,4vw,52px)}
 [hidden]{display:none !important}
 
+/* ---------- proposition (workshop: the "so what?") ---------- */
+.prop{display:grid;gap:1px;background:var(--line);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+@media (min-width:820px){.prop{grid-template-columns:repeat(3,1fr)}}
+.prop__col{background:var(--paper);padding:30px 26px 34px;display:flex;flex-direction:column;gap:10px}
+.prop__col .step{font-family:var(--serif);font-variation-settings:'SOFT' 70;font-size:12px;letter-spacing:.2em;color:var(--accent)}
+.prop__col h4{font-family:var(--serif);font-variation-settings:'SOFT' 80;font-size:clamp(21px,2.4vw,26px);letter-spacing:-.01em}
+.prop__col p{font-size:14px;color:var(--ink-2);margin:0;line-height:1.6}
+.statement{font-family:var(--serif);font-variation-settings:'SOFT' 70;font-size:clamp(24px,3.6vw,42px);line-height:1.18;letter-spacing:-.02em;max-width:24ch}
+.statement em{font-style:italic;font-variation-settings:'SOFT' 90,'WONK' 1}
+
+/* ---------- quiz ---------- */
+.quiz{border:1px solid var(--ink);background:var(--paper)}
+.quiz__head{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.quiz__bar{height:2px;background:var(--line);width:130px;position:relative;flex:none}
+.quiz__bar i{position:absolute;left:0;top:0;bottom:0;background:var(--accent);transition:width .5s var(--ease)}
+.quiz__body{padding:clamp(24px,4vw,44px)}
+.quiz h3{font-family:var(--serif);font-variation-settings:'SOFT' 80;font-size:clamp(22px,3vw,32px);line-height:1.2;margin-bottom:22px;max-width:24ch}
+.opts{display:grid;gap:10px}
+@media (min-width:700px){.opts{grid-template-columns:1fr 1fr}}
+.opt{text-align:left;border:1px solid var(--line);background:none;padding:16px 18px;cursor:pointer;transition:.3s var(--ease);display:flex;flex-direction:column;gap:4px}
+.opt:hover{border-color:var(--ink);background:var(--shell)}
+.opt strong{font-weight:500;font-size:15px}
+.opt span{font-size:12.5px;color:var(--muted)}
+.quiz__foot{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 20px;border-top:1px solid var(--line);flex-wrap:wrap}
+
+/* ---------- works ---------- */
+.work .art{aspect-ratio:4/5;margin-bottom:12px}
+.work h4{font-family:var(--serif);font-variation-settings:'SOFT' 70;font-size:19px;line-height:1.2;margin-bottom:3px}
+.work .who{font-size:13px;color:var(--ink-2)}
+.work .spec{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5}
+.work .price{font-size:13.5px;margin-top:8px;display:flex;align-items:center;gap:8px}
+.tag{display:inline-block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;border:1px solid var(--line);padding:3px 8px;color:var(--muted);border-radius:999px}
+
+/* ---------- room / placement ---------- */
+.room{position:relative;width:100%;aspect-ratio:42/26;background:var(--wall,#F3F1EC);overflow:hidden;transition:background .5s var(--ease);border:1px solid var(--line)}
+.room__floor{position:absolute;left:0;right:0;bottom:0;height:7%;background:rgba(0,0,0,.10)}
+.room__skirt{position:absolute;left:0;right:0;bottom:7%;height:1.6%;background:rgba(0,0,0,.07)}
+.room__frame{position:absolute;left:50%;transform:translateX(-50%);box-shadow:0 10px 26px rgba(0,0,0,.16);background:#fff;padding:.6%;transition:width .35s var(--ease),height .35s var(--ease),bottom .35s var(--ease)}
+.room__frame svg{width:100%;height:100%;display:block}
+.room__sofa,.room__person{position:absolute;bottom:7%}
+.room__sofa{left:50%;transform:translateX(-50%);opacity:.5}
+.room__person{right:6%;opacity:.28}
+.room__tick{position:absolute;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(0,0,0,.42)}
+.room--dark .room__tick{color:rgba(255,255,255,.55)}
+.room--dark .room__floor{background:rgba(0,0,0,.25)}
+.swatches{display:flex;gap:8px;align-items:center}
+.sw{width:26px;height:26px;border-radius:50%;border:1px solid var(--line);cursor:pointer;padding:0}
+.sw[aria-pressed="true"]{outline:1px solid var(--ink);outline-offset:2px}
+.slider{-webkit-appearance:none;appearance:none;width:100%;height:1px;background:var(--line);outline:0;padding:0}
+.slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--ink);cursor:pointer}
+.slider::-moz-range-thumb{width:18px;height:18px;border:0;border-radius:50%;background:var(--ink);cursor:pointer}
+.ctrl-row{display:flex;flex-wrap:wrap;gap:18px 26px;align-items:center;justify-content:space-between;margin-top:16px}
+.thumbs{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+.thumbs::-webkit-scrollbar{display:none}
+.thumb{width:56px;height:70px;flex:none;border:1px solid var(--line);padding:0;background:none;cursor:pointer;overflow:hidden}
+.thumb svg{width:100%;height:100%}
+.thumb[aria-pressed="true"]{outline:1px solid var(--ink);outline-offset:2px}
+
+/* ---------- audiences / trust / roadmap ---------- */
+.aud{border-top:1px solid var(--ink);padding-top:22px}
+.aud h4{font-family:var(--serif);font-variation-settings:'SOFT' 80;font-size:22px;margin:10px 0 8px}
+.aud p{font-size:14px;color:var(--ink-2);margin:0 0 12px}
+.aud ul{margin:0;padding-left:18px;font-size:13.5px;color:var(--muted)}
+.aud li{margin-bottom:5px}
+.trust{display:grid;gap:1px;background:var(--line);border:1px solid var(--line)}
+@media (min-width:640px){.trust{grid-template-columns:repeat(2,1fr)}}
+@media (min-width:1000px){.trust{grid-template-columns:repeat(4,1fr)}}
+.trust > div{background:var(--paper);padding:22px 20px}
+.trust h5{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:0 0 10px}
+.trust p{font-size:14px;color:var(--ink);margin:0;line-height:1.5}
+.phase{display:grid;gap:16px 26px;padding:26px 0;border-bottom:1px solid var(--line);align-items:start}
+@media (min-width:800px){.phase{grid-template-columns:130px 1fr 1fr}}
+.phase h4{font-family:var(--serif);font-variation-settings:'SOFT' 80;font-size:23px;margin-bottom:8px}
+.phase p{font-size:14.5px;color:var(--ink-2);margin:0}
+.phase .when{font-family:var(--serif);font-size:13px;color:var(--accent);letter-spacing:.06em}
+.phase--now{background:linear-gradient(90deg,var(--accent-wash),transparent 60%)}
+
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;scroll-behavior:auto !important}
 }
@@ -351,6 +428,7 @@ figcaption{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5;max
     <a class="mark" href="#/" aria-label="Soft Gallery — home"><span class="mark__dot" aria-hidden="true"></span>Soft Gallery</a>
     <nav class="nav" id="nav" aria-label="Primary">
       <a href="#/journal" data-route="journal">Journal</a>
+      <a href="#/collect" data-route="collect">Collect</a>
       <a href="#/artists" data-route="artists">Artists</a>
       <a href="#/about" data-route="about">About</a>
     </nav>
@@ -379,6 +457,7 @@ figcaption{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5;max
   </div>
   <nav class="sheet__nav" aria-label="Mobile">
     <a href="#/journal">Journal<small>Writing on art</small></a>
+    <a href="#/collect">Collect<small>Find a work, with help</small></a>
     <a href="#/artists">Artists<small>Submit your work</small></a>
     <a href="#/about">About<small>Who we are</small></a>
   </nav>
@@ -415,6 +494,7 @@ figcaption{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5;max
         <h5>Explore</h5>
         <ul>
           <li><a href="#/journal">Journal</a></li>
+          <li><a href="#/collect">Collect</a></li>
           <li><a href="#/artists">Submit your work</a></li>
           <li><a href="#/about">About</a></li>
           <li><a href="https://instagram.com" target="_blank" rel="noopener">Instagram ↗</a></li>
@@ -738,6 +818,72 @@ const fmtDate=iso=>new Date(iso+"T12:00:00").toLocaleDateString("en-GB",{day:"nu
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
 /* ============================================================
+   2b. WORKS  (workshop: curated selection + concierge commerce)
+   A deliberately short list — the point of the model is that
+   somebody chose these and will put their name to the choice.
+   ============================================================ */
+const ARTWORKS=[
+ {id:"w1", title:"Salt Study VII", artist:"Inés Maroun", year:2026, medium:"Oil and cold wax on linen", w:90, h:110, price:2850, mood:"quiet", places:["living","bed"], slug:"ines-maroun-salt"},
+ {id:"w2", title:"Low Tide (Ochre)", artist:"Inés Maroun", year:2025, medium:"Oil on board", w:40, h:50, price:980, mood:"quiet", places:["bed","hall"], slug:"ines-maroun-salt"},
+ {id:"w3", title:"Eleven Passes", artist:"Tomás Beloff", year:2024, medium:"Oil on board", w:60, h:75, price:3400, mood:"material", places:["living","work"], slug:"tomas-beloff"},
+ {id:"w4", title:"Untitled (Winter Section)", artist:"Tomás Beloff", year:2026, medium:"Oil on canvas", w:35, h:45, price:1450, mood:"material", places:["hall","bed"], slug:"tomas-beloff"},
+ {id:"w5", title:"Signal", artist:"Adaeze Okonjo", year:2026, medium:"Acrylic and flashe on canvas", w:100, h:100, price:2200, mood:"bold", places:["living","work"]},
+ {id:"w6", title:"Fast Colour II", artist:"Adaeze Okonjo", year:2025, medium:"Screenprint, edition of 12", w:50, h:70, price:520, mood:"bold", places:["hall","work"]},
+ {id:"w7", title:"Two Sisters, Standing", artist:"Marek Hlavatý", year:2025, medium:"Oil on linen", w:70, h:90, price:3900, mood:"figure", places:["living"]},
+ {id:"w8", title:"Study for a Kitchen", artist:"Marek Hlavatý", year:2026, medium:"Charcoal on paper", w:30, h:40, price:680, mood:"figure", places:["hall","bed"]},
+ {id:"w9", title:"Weft (Green)", artist:"Runa Thorsdóttir", year:2026, medium:"Handwoven wool and linen", w:120, h:160, price:4600, mood:"material", places:["living","work"]},
+ {id:"w10", title:"Small Weft", artist:"Runa Thorsdóttir", year:2026, medium:"Handwoven wool", w:30, h:40, price:740, mood:"material", places:["bed","hall"]},
+ {id:"w11", title:"Glass Negative (Pier)", artist:"Yusuf Kaplan", year:2024, medium:"Photograph on salvaged glass, edition of 5", w:45, h:60, price:1250, mood:"quiet", places:["hall","work"]},
+ {id:"w12", title:"Night Garden", artist:"Priya Raman", year:2026, medium:"Oil and pigment on canvas", w:80, h:100, price:1900, mood:"bold", places:["living","bed"]}
+];
+const band=p=>p<=750?"a":p<=1500?"b":p<=3000?"c":"d";
+const money=n=>"£"+n.toLocaleString("en-GB");
+const byId=id=>ARTWORKS.find(w=>w.id===id);
+
+const QUIZ=[
+ {q:"What pulls you in first?", k:"mood", opts:[
+   {v:"quiet",   t:"Quiet and atmospheric",  d:"Work you notice slowly"},
+   {v:"bold",    t:"Bold and graphic",       d:"Colour that holds a room"},
+   {v:"figure",  t:"Figurative and human",   d:"People, bodies, faces"},
+   {v:"material",t:"Textural and material",  d:"Surface you want to touch"}]},
+ {q:"Where will it live?", k:"place", opts:[
+   {v:"living",t:"A living room",        d:"Seen from a sofa, every evening"},
+   {v:"bed",   t:"A bedroom",            d:"First and last thing you see"},
+   {v:"hall",  t:"A hallway or study",   d:"Close range, short viewing"},
+   {v:"work",  t:"A workplace or venue", d:"Seen by other people too"}]},
+ {q:"What feels comfortable to spend?", k:"budget", opts:[
+   {v:"a",t:"Up to £750",       d:"Works on paper, prints, small pieces"},
+   {v:"b",t:"£750 – £1,500",    d:"Small paintings and photography"},
+   {v:"c",t:"£1,500 – £3,000",  d:"Mid-size work by exhibiting artists"},
+   {v:"d",t:"£3,000 and above", d:"Larger or more established work"}]}
+];
+function recommend(ans){
+  const order={a:0,b:1,c:2,d:3};
+  return ARTWORKS.map(w=>{
+    let s=0;
+    if(w.mood===ans.mood) s+=3;
+    const gap=Math.abs(order[band(w.price)]-order[ans.budget]);
+    s+=gap===0?2:gap===1?1:0;
+    if(w.places.indexOf(ans.place)>-1) s+=1;
+    return {w:w,s:s};
+  }).sort((a,b)=>b.s-a.s||a.w.price-b.w.price).slice(0,3).map(x=>x.w);
+}
+function workCard(w,badge){
+  return `<div class="work rev">
+    ${art(w.id)}
+    ${badge?`<span class="tag" style="margin-bottom:8px">${badge}</span>`:""}
+    <h4>${w.title}<span style="color:var(--muted)"> — ${w.year}</span></h4>
+    <div class="who">${w.slug?`<a href="#/journal/${w.slug}" style="border-bottom:1px solid var(--line)">${w.artist}</a>`:w.artist}</div>
+    <div class="spec">${w.medium}<br>${w.h} × ${w.w} cm</div>
+    <div class="price"><strong style="font-weight:500">${money(w.price)}</strong><span class="dot"></span><span class="meta">Framing and delivery included</span></div>
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+      <button class="chip" data-place="${w.id}">See it on your wall</button>
+      <button class="chip" data-enq="${w.id}">Enquire</button>
+    </div>
+  </div>`;
+}
+
+/* ============================================================
    3. COMPONENTS
    ============================================================ */
 function cardHTML(a,mod){
@@ -817,8 +963,10 @@ function viewHome(){
   </div></section>
 
   <section class="section band"><div class="wrap">
-    <div class="sec-head" style="border-color:var(--ink)"><h2 class="d">What Soft Gallery is</h2><span class="label">Four things, done properly</span></div>
-    ${pillarsHTML()}
+    <span class="label">What Soft Gallery is</span>
+    <p class="statement rev" style="margin:16px 0 32px">We find artists worth your attention, explain why they matter, and <em>stay with you</em> until the work is on the wall.</p>
+    ${propositionHTML()}
+    <div style="margin-top:26px"><a class="link-u" href="#/collect">See how collecting works <svg class="arrow" viewBox="0 0 16 8" aria-hidden="true"><path d="M0 4h14M10.5 1L14 4l-3.5 3"/></svg></a></div>
   </div></section>
 
   <section class="section"><div class="wrap">
@@ -829,6 +977,21 @@ function viewHome(){
   <section class="section" style="padding-top:0"><div class="wrap">
     <div class="sec-head"><h2 class="d">Also worth your time</h2></div>
     <div class="grid grid--3">${more.map(a=>cardHTML(a,"card--tall")).join("")}</div>
+  </div></section>
+
+  <section class="section" style="padding-top:0"><div class="wrap">
+    <div class="grid grid--2" style="border-top:1px solid var(--ink);padding-top:34px;align-items:center">
+      <div class="rev">
+        <span class="label">For collectors</span>
+        <h2 class="d" style="font-size:clamp(26px,3.8vw,42px);margin:14px 0">Three questions, and we will show you three works.</h2>
+        <p style="color:var(--ink-2);font-size:15.5px;max-width:44ch">No account and no email address. Then see any of them on your wall at true scale, before you speak to a single person.</p>
+        <div style="margin-top:24px"><a class="btn btn--ghost" href="#/collect">Find your first piece <svg class="arrow" viewBox="0 0 16 8" aria-hidden="true"><path d="M0 4h14M10.5 1L14 4l-3.5 3"/></svg></a></div>
+      </div>
+      <div class="rev">
+        <div class="art" style="aspect-ratio:4/3">${artSVG("w1")}</div>
+        <span class="meta" style="display:block;margin-top:10px">Salt Study VII — Inés Maroun, 2026. Oil and cold wax on linen. ${money(2850)}.</span>
+      </div>
+    </div>
   </div></section>
 
   ${ctaArtistsHTML()}
@@ -1005,6 +1168,227 @@ function viewArtists(){
   ${newsletterHTML()}`;
 }
 
+
+/* ============================================================
+   4b. COLLECT — guided discovery, placement preview, concierge.
+   The workshop's three-layer model made operable: curate,
+   explain, guide. Phase 2 in the plan; prototyped here.
+   ============================================================ */
+const WALLS=[
+ {n:"Gallery white", c:"#F3F1EC", dark:false},
+ {n:"Warm grey",     c:"#D8D3CA", dark:false},
+ {n:"Deep green",    c:"#3A4A42", dark:true},
+ {n:"Ink",           c:"#262622", dark:true}
+];
+let roomWorkId="w1", roomWidth=90, roomWall=0, quizStep=0, quizAns={}, quizDone=false;
+
+function propositionHTML(){
+  return `<div class="prop rev">
+    <div class="prop__col"><span class="step">01 — Curate</span><h4>Somebody chose these.</h4><p>A short list of artists, selected by name and defensible in person. Not everything that is available — the part we would actually put on our own wall.</p></div>
+    <div class="prop__col"><span class="step">02 — Explain</span><h4>And can tell you why.</h4><p>Studio visits, interviews and plain-language writing, so you understand what you are looking at before anyone mentions money.</p></div>
+    <div class="prop__col"><span class="step">03 — Guide</span><h4>Then stays on the phone.</h4><p>Concierge help with selection, scale, framing, placement and delivery. A person, not a checkout, for as long as you want one.</p></div>
+  </div>`;
+}
+
+function roomHTML(){
+  const w=byId(roomWorkId), wall=WALLS[roomWall];
+  const TW=420, TH=280, FLOOR=20;
+  const ratio=w.h/w.w, hCm=roomWidth*ratio;
+  const fw=(roomWidth/TW*100).toFixed(2), fh=(hCm/TH*100).toFixed(2);
+  const fb=(((145-hCm/2)+FLOOR)/TH*100).toFixed(2);
+  return `<div class="room ${wall.dark?"room--dark":""}" id="room" style="--wall:${wall.c}">
+    <div class="room__floor"></div><div class="room__skirt"></div>
+    <div class="room__sofa" style="width:${(210/TW*100).toFixed(2)}%;height:${(78/TH*100).toFixed(2)}%">
+      <svg viewBox="0 0 210 78" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M2 78V36a12 12 0 0 1 12-12h182a12 12 0 0 1 12 12v42h-14V58H16v20z" fill="rgba(0,0,0,.34)"/></svg>
+    </div>
+    <div class="room__person" style="width:${(46/TW*100).toFixed(2)}%;height:${(170/TH*100).toFixed(2)}%">
+      <svg viewBox="0 0 46 170" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="23" cy="16" r="12" fill="rgba(0,0,0,.5)"/><path d="M23 30c-9 0-15 7-15 16v44h30V46c0-9-6-16-15-16z" fill="rgba(0,0,0,.5)"/><path d="M12 90h9l2 80h-8zM34 90h-9l-2 80h8z" fill="rgba(0,0,0,.5)"/></svg>
+    </div>
+    <div class="room__frame" style="width:${fw}%;height:${fh}%;bottom:${fb}%">${artSVG(w.id)}</div>
+    <span class="room__tick" style="left:14px;bottom:11%">Hung at 145 cm · wall shown 4.2 m wide · figure 1.7 m</span>
+  </div>`;
+}
+function paintRoom(){
+  const host=document.getElementById("roomHost"); if(!host) return;
+  host.innerHTML=roomHTML();
+  const w=byId(roomWorkId);
+  document.getElementById("roomLabel").innerHTML=
+    `<strong style="font-weight:500">${w.title}</strong> — ${w.artist} · ${money(w.price)}`;
+  document.getElementById("sizeVal").textContent=Math.round(roomWidth)+" × "+Math.round(roomWidth*(w.h/w.w))+" cm";
+  document.querySelectorAll(".thumb").forEach(b=>b.setAttribute("aria-pressed",b.dataset.w===roomWorkId));
+  document.querySelectorAll(".sw").forEach((b,i)=>b.setAttribute("aria-pressed",i===roomWall));
+}
+function setRoomWork(id){
+  roomWorkId=id; roomWidth=byId(id).w;
+  const sl=document.getElementById("sizeSlider"); if(sl) sl.value=roomWidth;
+  paintRoom();
+}
+
+function paintQuiz(){
+  const host=document.getElementById("quizHost"); if(!host) return;
+  if(quizDone){
+    const recs=recommend(quizAns);
+    host.innerHTML=`<div class="quiz">
+      <div class="quiz__head"><span class="label">Three works, chosen for you</span><button class="chip" id="quizReset">Start again</button></div>
+      <div class="quiz__body">
+        <div class="grid grid--3">${recs.map((w,i)=>workCard(w,i===0?"Closest match":null)).join("")}</div>
+        <p class="smallprint" style="margin-top:22px">Matched on medium, mood, room and budget. In the live platform this is where AI-assisted discovery sits — narrowing the shortlist, never making the choice. A curator confirms every recommendation before it is sent.</p>
+      </div>
+    </div>`;
+  } else {
+    const step=QUIZ[quizStep];
+    host.innerHTML=`<div class="quiz">
+      <div class="quiz__head">
+        <span class="label">Find your first piece — ${quizStep+1} of ${QUIZ.length}</span>
+        <span class="quiz__bar"><i style="width:${((quizStep)/QUIZ.length*100).toFixed(0)}%"></i></span>
+      </div>
+      <div class="quiz__body">
+        <h3 class="d">${step.q}</h3>
+        <div class="opts">${step.opts.map(o=>`<button class="opt" data-v="${o.v}"><strong>${o.t}</strong><span>${o.d}</span></button>`).join("")}</div>
+      </div>
+      ${quizStep>0?`<div class="quiz__foot"><button class="chip" id="quizBack">← Back</button><span class="meta">No account, no email required</span></div>`:""}
+    </div>`;
+  }
+  observeRevs();
+}
+
+function viewCollect(){
+  return `
+  <section class="wrap page-head">
+    <span class="eyebrow label label--ink">Collect</span>
+    <h1 class="d">Art you can live with, chosen with someone who knows the work.</h1>
+    <p class="sub">Buying contemporary art is rarely difficult because of access. It is difficult because nobody tells you whether the price is fair, whether the artist is serious, or whether it will work in your room. That is the part we do.</p>
+  </section>
+
+  <section class="section section--top" style="padding-top:0"><div class="wrap">${propositionHTML()}</div></section>
+
+  <section class="section" style="padding-top:clamp(30px,4vw,50px)"><div class="wrap">
+    <div class="sec-head"><h2 class="d">Find your first piece</h2><span class="label">Three questions · 30 seconds</span></div>
+    <div id="quizHost"></div>
+  </div></section>
+
+  <section class="section band"><div class="wrap">
+    <div class="sec-head"><h2 class="d">See it on your wall</h2><span class="label">Scale is the thing people get wrong</span></div>
+    <div class="grid grid--2" style="align-items:start">
+      <div class="rev">
+        <div id="roomHost"></div>
+        <div class="ctrl-row">
+          <div style="flex:1;min-width:210px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <span class="label">Size</span><span class="meta" id="sizeVal"></span>
+            </div>
+            <input type="range" class="slider" id="sizeSlider" min="30" max="150" step="1" value="${roomWidth}" aria-label="Artwork width in centimetres">
+          </div>
+          <div>
+            <span class="label" style="display:block;margin-bottom:8px">Wall</span>
+            <div class="swatches">${WALLS.map((w,i)=>`<button class="sw" data-wall="${i}" style="background:${w.c}" aria-label="${w.n}" aria-pressed="${i===roomWall}"></button>`).join("")}</div>
+          </div>
+        </div>
+      </div>
+      <div class="rev">
+        <p id="roomLabel" style="font-size:15px;margin-bottom:6px"></p>
+        <p style="font-size:14px;color:var(--ink-2)">Most work in most homes is hung too high and bought too small. Drag the slider against the 1.7 m figure before you commit — a 40 cm painting that looked generous in a studio disappears above a sofa.</p>
+        <span class="label" style="display:block;margin:18px 0 10px">Choose a work</span>
+        <div class="thumbs" role="group" aria-label="Choose a work to preview">
+          ${ARTWORKS.map(w=>`<button class="thumb" data-w="${w.id}" aria-pressed="${w.id===roomWorkId}" aria-label="${w.title} by ${w.artist}">${artSVG(w.id)}</button>`).join("")}
+        </div>
+        <p class="smallprint" style="margin-top:16px">A room preview, not a photograph of your room. In the live platform this becomes a photo upload with true-to-scale placement — and, later, AR on a phone.</p>
+      </div>
+    </div>
+  </div></section>
+
+  <section class="section"><div class="wrap">
+    <div class="sec-head"><h2 class="d">Who we do this for</h2></div>
+    <div class="grid grid--3">
+      <div class="aud rev"><span class="label">01</span><h4>New collectors</h4><p>People buying their first, second or third work, who would rather not admit that they find galleries intimidating.</p><ul><li>Budgets from £500</li><li>Plain-language guidance</li><li>No obligation to buy anything</li></ul></div>
+      <div class="aud rev"><span class="label">02</span><h4>Hospitality and workplace</h4><p>Hotels, restaurants, members' clubs and offices that need coherence across many rooms, on a schedule and a budget.</p><ul><li>Multi-work commissions and leasing</li><li>Installation and condition reporting</li><li>Artist credits and guest-facing stories</li></ul></div>
+      <div class="aud rev"><span class="label">03</span><h4>Designers and architects</h4><p>Sourcing to a scheme, to a deadline, with pricing and lead times you can put in front of a client without caveats.</p><ul><li>Shortlists against a brief</li><li>Trade terms and clear commission</li><li>Bespoke sizing where the artist allows</li></ul></div>
+    </div>
+  </div></section>
+
+  <section class="section" style="padding-top:0"><div class="wrap">
+    <div class="sec-head"><h2 class="d">How buying works</h2><span class="label">Trust, written down</span></div>
+    <div class="trust rev">
+      <div><h5>Prices</h5><p>Every work shows its price. Nothing is “on request”.</p></div>
+      <div><h5>Artist terms</h5><p>Artists keep 70% of the sale and are paid within 14 days.</p></div>
+      <div><h5>Provenance</h5><p>Invoice, certificate and artist details with every work.</p></div>
+      <div><h5>Living with it</h5><p>Fourteen days to return a work if it is wrong in the room.</p></div>
+    </div>
+    <p class="smallprint" style="margin-top:14px">Indicative terms for demonstration. Final commission split, returns policy and trade terms to be confirmed.</p>
+  </div></section>
+
+  <section class="section" style="padding-top:0"><div class="wrap wrap--tight" style="padding-left:0;padding-right:0">
+    <div class="sec-head"><h2 class="d">Talk to a curator</h2><span class="label">Reply within two working days</span></div>
+    <div id="enqWrap">
+      <form class="form" id="enqForm" novalidate>
+        <div class="frow frow--2">
+          <div class="field"><label for="eName">Name</label><input id="eName" required><span class="msg">Please add your name.</span></div>
+          <div class="field"><label for="eEmail">Email</label><input type="email" id="eEmail" required><span class="msg">Enter a valid email address.</span></div>
+        </div>
+        <div class="frow frow--3">
+          <div class="field"><label for="eFor">This is for</label><select id="eFor"><option>My home</option><option>A gift</option><option>A hotel, restaurant or club</option><option>A workplace</option><option>A client scheme</option></select></div>
+          <div class="field"><label for="eBudget">Budget</label><select id="eBudget"><option>Up to £750</option><option>£750 – £1,500</option><option>£1,500 – £3,000</option><option>£3,000 – £10,000</option><option>Above £10,000</option><option>Not sure yet</option></select></div>
+          <div class="field"><label for="eWhen">Timing</label><select id="eWhen"><option>No rush</option><option>Within a month</option><option>Within a week</option></select></div>
+        </div>
+        <div class="field"><label for="eNote">What are you looking for?</label><textarea id="eNote" placeholder="A wall, a room, a feeling, a work you have seen here — anything is a useful starting point."></textarea></div>
+        <div><button class="btn" type="submit" style="max-width:320px;width:100%">Send enquiry <svg class="arrow" viewBox="0 0 16 8" aria-hidden="true"><path d="M0 4h14M10.5 1L14 4l-3.5 3"/></svg></button>
+        <div class="demo-note" style="margin-top:20px"><strong>Demonstration build.</strong> Nothing is transmitted or stored. In production this creates a record in the collector CRM and alerts the curator on duty.</div></div>
+      </form>
+    </div>
+    <div id="enqDone" hidden><div class="confirm rev">
+      <span class="label">Enquiry received</span>
+      <h3 class="d" style="margin-top:16px">Thank you — a curator will be in touch within two working days.</h3>
+      <p style="max-width:44ch;margin:0 auto;color:var(--ink-2)">If it is urgent, call us on +44 20 7332 5640. No obligation, and no sales sequence: one person, one reply.</p>
+    </div></div>
+  </div></section>
+
+  <section class="section band" style="padding-top:clamp(30px,4vw,46px)"><div class="wrap">
+    <div class="demo-note" style="background:var(--paper)"><strong>Where this sits in the plan.</strong> Phase 1 — the journal and the artist database — is what launches. Guided discovery, placement preview and concierge advisory are Phase 2, prototyped here so the model can be seen rather than described.</div>
+  </div></section>
+  ${newsletterHTML()}`;
+}
+
+function bindCollect(){
+  paintQuiz(); paintRoom();
+  const host=document.getElementById("quizHost");
+  host.addEventListener("click",e=>{
+    const o=e.target.closest(".opt");
+    if(o){
+      quizAns[QUIZ[quizStep].k]=o.dataset.v;
+      if(quizStep<QUIZ.length-1){quizStep++} else {quizDone=true}
+      paintQuiz(); return;
+    }
+    if(e.target.id==="quizBack"){quizStep=Math.max(0,quizStep-1);paintQuiz();return}
+    if(e.target.id==="quizReset"){quizStep=0;quizAns={};quizDone=false;paintQuiz();return}
+    const place=e.target.closest("[data-place]");
+    if(place){setRoomWork(place.dataset.place);document.getElementById("roomHost").scrollIntoView({behavior:"smooth",block:"center"});return}
+    const enq=e.target.closest("[data-enq]");
+    if(enq){
+      const w=byId(enq.dataset.enq), note=document.getElementById("eNote");
+      note.value="I am interested in "+w.title+" by "+w.artist+" ("+money(w.price)+").";
+      document.getElementById("enqForm").scrollIntoView({behavior:"smooth",block:"center"});
+      setTimeout(()=>note.focus(),500);
+    }
+  });
+  document.getElementById("sizeSlider").addEventListener("input",e=>{roomWidth=+e.target.value;paintRoom()});
+  document.querySelectorAll(".sw").forEach(b=>b.addEventListener("click",()=>{roomWall=+b.dataset.wall;paintRoom()}));
+  document.querySelectorAll(".thumb").forEach(b=>b.addEventListener("click",()=>setRoomWork(b.dataset.w)));
+  const f=document.getElementById("enqForm");
+  f.addEventListener("submit",e=>{
+    e.preventDefault();
+    let ok=true,firstBad=null;
+    [["eName",v=>v.trim().length>0],["eEmail",v=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim())]].forEach(([id,test])=>{
+      const el=document.getElementById(id),good=test(el.value);
+      el.closest(".field").classList.toggle("err",!good);
+      if(!good){ok=false;firstBad=firstBad||el}
+    });
+    if(!ok){firstBad.focus();toast("A few fields still need attention");return}
+    document.getElementById("enqWrap").hidden=true;
+    const d=document.getElementById("enqDone");d.hidden=false;observeRevs();
+    d.scrollIntoView({behavior:"smooth",block:"center"});
+  });
+}
+
 function viewAbout(){
   const people=[
     {n:"Alexandra “Sasha” Ryabchik",r:"Co-Founder & Managing Director",b:["Sasha leads Soft Gallery’s curatorial, artist-facing and brand activity — artist representation, exhibition development, collector education and partnerships. She is an international contemporary abstract artist, with solo and group exhibitions in Paris, London, Tashkent, Novi Sad, Sofia and Almaty.","Before co-founding Soft Gallery she founded SHINE Jewellery, taking the brand from concept to market and working hands-on across brand identity, e-commerce, marketing, supplier management and customer relationships. She completed the Sotheby’s Institute of Art Business Programme, holds a BA (Hons) in Fashion Business & Communication from Istituto Marangoni London, and trained in luxury brand strategy through INSIDE LVMH."]},
@@ -1043,6 +1427,21 @@ function viewAbout(){
   </div></section>
 
   <section class="section" style="padding-top:0"><div class="wrap">
+    <div class="sec-head"><h2 class="d">How this gets built</h2><span class="label">Three phases</span></div>
+    <div class="rev">
+      <div class="phase phase--now"><div><span class="when">Now — early 2027</span><br><span class="label">Phase one</span></div>
+        <div><h4>Foundation</h4><p>Launch the platform, publish consistently, build the artist database and earn a first collector audience.</p></div>
+        <div><p style="color:var(--muted)">Journal, artist submissions, initial curation, brand and audience. Deliberately narrow: depth before width.</p></div></div>
+      <div class="phase"><div><span class="when">2027</span><br><span class="label">Phase two</span></div>
+        <div><h4>Collectors and advisory</h4><p>Turn attention into acquisition — concierge guidance, placement tools and the first partnerships.</p></div>
+        <div><p style="color:var(--muted)">Hospitality, workplace and design channels. Private views and curated drops. Everything on the Collect page sits here.</p></div></div>
+      <div class="phase"><div><span class="when">2028 onward</span><br><span class="label">Phase three</span></div>
+        <div><h4>Cultural ecosystem</h4><p>Membership, personalisation, community and international reach.</p></div>
+        <div><p style="color:var(--muted)">Patron circles, recommendation tools that learn, artist development and exhibitions beyond London.</p></div></div>
+    </div>
+  </div></section>
+
+  <section class="section" style="padding-top:0"><div class="wrap">
     <div class="sec-head"><h2 class="d">Founders</h2><span class="label">London</span></div>
     <div style="display:grid;gap:clamp(34px,5vw,60px)">
       ${people.map(p=>`<div class="person rev">
@@ -1058,6 +1457,7 @@ function viewAbout(){
     <div class="grid grid--3">
       <div class="rev"><span class="label">Legal</span><p style="margin-top:8px;font-size:14.5px;color:var(--ink-2)">Preiskel &amp; Co LLP — corporate, commercial and technology counsel.</p></div>
       <div class="rev"><span class="label">Finance</span><p style="margin-top:8px;font-size:14.5px;color:var(--ink-2)">Gravita — financial planning, reporting and tax.</p></div>
+      <div class="rev"><span class="label">Curator — open</span><p style="margin-top:8px;font-size:14.5px;color:var(--ink-2)">We are looking for a curator with selling as well as curating experience. If that is you, write to us.</p></div>
       <div class="rev"><span class="label">Contact</span><p style="margin-top:8px;font-size:14.5px;color:var(--ink-2)"><a href="mailto:hello@softgallery.com" style="border-bottom:1px solid var(--line)">hello@softgallery.com</a><br>4 King’s Bench Walk, Temple, London EC4Y 7DL</p></div>
     </div>
   </div></section>
@@ -1112,6 +1512,7 @@ function router(){
   else if(root==="journal"&&parts[1]){html=viewArticle(parts[1]);route="journal";
     const a=bySlug(parts[1]); if(a) setMeta(a.title+" — Soft Gallery",a.dek);}
   else if(root==="journal"){journalShown=6;html=viewJournal();setMeta("Journal — Soft Gallery","Interviews, studio visits, exhibition notes and practical guidance on collecting contemporary art.")}
+  else if(root==="collect"){html=viewCollect();setMeta("Collect — Soft Gallery","Guided discovery, true-scale placement preview and concierge advisory for contemporary art.")}
   else if(root==="artists"){html=viewArtists();setMeta("Submit your work — Soft Gallery","Soft Gallery welcomes submissions from emerging and established artists internationally.")}
   else if(root==="about"){html=viewAbout();setMeta("About — Soft Gallery","Soft Gallery combines editorial, discovery, community and curation.")}
   else {html=view404();route=""}
@@ -1154,6 +1555,7 @@ function bindPage(root,sub){
     document.querySelectorAll("[data-share]").forEach(b=>b.addEventListener("click",()=>share(b.dataset.share)));
   }
 
+  if(root==="collect") bindCollect();
   if(root==="artists") bindArtistForm();
 }
 
