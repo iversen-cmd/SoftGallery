@@ -2687,7 +2687,7 @@ function placeSculpture(work){
   frameMats();
   const px = work.plinth[0], pz = work.plinth[1];
   const plinth = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.94, 0.66),
-    new THREE.MeshStandardMaterial({ color:0xE9E5DD, roughness:0.62, metalness:0, envMapIntensity:0.5 }));
+    new THREE.MeshStandardMaterial({ color:0xF2EFE8, roughness:0.58, metalness:0, envMapIntensity:0.55 }));
   plinth.position.set(px, 0.47, pz);
   plinth.castShadow = true; plinth.receiveShadow = true;
   scene.add(plinth); CASTERS.push(plinth);
@@ -2705,15 +2705,19 @@ function placeSculpture(work){
     mat = new THREE.MeshStandardMaterial({ color:0xCFC6B6, roughness:0.72, metalness:0.02, envMapIntensity:0.9 });
   } else {
     geo = new THREE.TorusKnotGeometry(0.19, 0.058, 148, 24, 2, 3);
-    mat = new THREE.MeshStandardMaterial({ color:0x6E6152, roughness:0.28, metalness:0.95, envMapIntensity:1.6 });
+    mat = new THREE.MeshStandardMaterial({ color:0x8A7A62, roughness:0.34, metalness:0.78, envMapIntensity:1.5 });
   }
   const obj = new THREE.Mesh(geo, mat);
   obj.position.set(px, work.sculpt === "lathe" ? 0.94 : 1.20, pz);
   obj.castShadow = true;
   scene.add(obj); CASTERS.push(obj);
 
+  const lamp = new THREE.PointLight(0xFFEFD6, 0.55, 5.2, 1.8);
+  lamp.position.set(px, ROOM[work.room].h - 0.55, pz);
+  scene.add(lamp);
+
   const pool = new THREE.Mesh(new THREE.CircleGeometry(1.05, 30),
-    new THREE.MeshBasicMaterial({ color:0xFFEFD6, transparent:true, opacity:0,
+    new THREE.MeshBasicMaterial({ color:0xFFEFD6, transparent:true, opacity:0.10,
       blending:THREE.AdditiveBlending, depthWrite:false }));
   pool.rotation.x = -Math.PI / 2;
   pool.position.set(px, 0.014, pz);
@@ -2725,7 +2729,7 @@ function placeSculpture(work){
   addLabel(work, lg, 0, 0, 0.42);
 
   PIECES.push({
-    work, room:ROOM.south, faceMat:null, glow:null, pool, light:null,
+    work, room:ROOM[work.room], faceMat:null, glow:null, pool, light:lamp, poolBase:0.10,
     normal:new THREE.Vector3(0, 0, -1),
     centre:  new THREE.Vector3(px, 1.25, pz),
     viewPos: new THREE.Vector3(px, EYE, pz - 1.8),
@@ -3248,8 +3252,8 @@ function frame(){
     p.lit += (target - p.lit) * (1 - Math.exp(-5.5 * dt));
     if (p.faceMat) p.faceMat.color.setScalar(0.44 + 0.56 * p.lit);
     if (p.glow)  p.glow.material.opacity = 0.26 * p.lit;
-    if (p.pool)  p.pool.material.opacity = 0.24 * p.lit;
-    if (p.light) p.light.intensity = 0.12 + 1.35 * p.lit;
+    if (p.pool)  p.pool.material.opacity = (p.poolBase || 0) + 0.24 * p.lit;
+    if (p.light) p.light.intensity = 0.55 + 1.30 * p.lit;
   }
 
   stepDust(dt, t);
