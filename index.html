@@ -1502,11 +1502,11 @@ const ARTISTS = {
    same value. Read down the columns: light-mid-dark, light-dark-light,
    mid-dark-light, and so on. No room repeats another room's recipe. */
 const FIT = {
-  atrium:{ wall:"stucco",   floor:"terrazzoDark", ceil:0xA39A88, path:[] },
-  north :{ wall:"plaster",  floor:"oak",       ceil:0xAFAA9F, path:[[0,-14],[0,-12],[0,-9],[0,-6],[0,-3]] },
-  east  :{ wall:"brick",    floor:"basalt",    ceil:0xEDE9E0, path:[[14,0],[12,0],[9,0],[6,0],[3,0]] },
-  west  :{ wall:"concrete", floor:"resin",     ceil:0x3B3934, path:[[-14,0],[-12,0],[-9,0],[-6,0],[-3,0]] },
-  south :{ wall:"stone",    floor:"slate",     ceil:0x8E8574, path:[[0,14],[0,12],[0,9],[0,6],[0,3]] },
+  atrium:{ wall:"stucco",   floor:"terrazzoDark", ceil:0xA39A88, sky:["n","s","e","w"], path:[] },
+  north :{ wall:"plaster",  floor:"oak",       ceil:0xAFAA9F, sky:["n"], path:[[0,-14],[0,-12],[0,-9],[0,-6],[0,-3]] },
+  east  :{ wall:"brick",    floor:"basalt",    ceil:0xEDE9E0, sky:["e"], path:[[14,0],[12,0],[9,0],[6,0],[3,0]] },
+  west  :{ wall:"concrete", floor:"resin",     ceil:0x3B3934, sky:["w"], path:[[-14,0],[-12,0],[-9,0],[-6,0],[-3,0]] },
+  south :{ wall:"stone",    floor:"slate",     ceil:0x8E8574, sky:["s"], path:[[0,14],[0,12],[0,9],[0,6],[0,3]] },
   cn:{ wall:"tadelakt", floor:"palestone", ceil:0x131211, branch:"north" },
   ce:{ wall:"tadelakt", floor:"palestone", ceil:0x131211, branch:"east"  },
   cw:{ wall:"tadelakt", floor:"palestone", ceil:0x131211, branch:"west"  },
@@ -2291,7 +2291,95 @@ function box(cx, cy, cz, sx, sy, sz, mat, opts){
   return m;
 }
 
-/* one side of one room, with its doorway cut out and trimmed */
+/* ══════════════════════════════════════════════════════════════
+   DAYLIGHT
+   Clerestory glazing along the top of each outer wall — above the
+   hang, so it never competes with a work, and it gives the rooms a
+   reason to be lit the way they are. The band is glazed between
+   piers, with a bright exterior behind it and a soft patch of light
+   thrown on the floor opposite.
+   ══════════════════════════════════════════════════════════════ */
+let SKYMAT = null, GLAZING = null, PATCHTEX = null;
+function skyMaterial(){
+  if (SKYMAT) return SKYMAT;
+  const c = textCanvas(64, 256, (g, W, H) => {
+    const v = g.createLinearGradient(0, 0, 0, H);
+    v.addColorStop(0.00, "#FDFBF6");
+    v.addColorStop(0.55, "#EFF3F7");
+    v.addColorStop(1.00, "#D8DFE6");
+    g.fillStyle = v; g.fillRect(0, 0, W, H);
+  });
+  SKYMAT = new THREE.MeshBasicMaterial({ map: tex(c, 2), fog: false });
+  return SKYMAT;
+}
+function glazing(){
+  if (!GLAZING) GLAZING = new THREE.MeshStandardMaterial({
+    color:0xFFFFFF, roughness:0.03, metalness:0, transparent:true,
+    opacity:0.055, envMapIntensity:2.2, depthWrite:false });
+  return GLAZING;
+}
+function patchTexture(){
+  if (PATCHTEX) return PATCHTEX;
+  const c = textCanvas(256, 256, (g, W, H) => {
+    const r = g.createRadialGradient(W/2, H/2, 0, W/2, H/2, W/2);
+    r.addColorStop(0.00, "rgba(255,247,232,0.95)");
+    r.addColorStop(0.55, "rgba(255,244,224,0.42)");
+    r.addColorStop(1.00, "rgba(255,240,214,0)");
+    g.fillStyle = r; g.fillRect(0, 0, W, H);
+  });
+  PATCHTEX = tex(c, 4); return PATCHTEX;
+}
+
+/* one glazed band across one wall segment */
+function clerestory(room, side, a, b, fx, horiz, sill, head){
+  const len = b - a, mid = (a + b) / 2, band = head - sill;
+  const bays = Math.max(1, Math.round(len / 2.3));
+  const pierW = 0.20;
+
+  for (let i = 1; i < bays; i++){                       /* piers between bays */
+    const p = a + (len / bays) * i;
+    if (horiz) box(p, sill + band / 2, fx, pierW, band, WALL_T, trimMat(), {});
+    else       box(fx, sill + band / 2, p, WALL_T, band, pierW, trimMat(), {});
+  }
+  /* the glass, and the bright outside behind it */
+  const pane = new THREE.Mesh(
+    horiz ? new THREE.PlaneGeometry(len, band) : new THREE.PlaneGeometry(len, band), glazing());
+  const inward = (side === "n" || side === "w") ? 1 : -1;
+  if (horiz){
+    pane.position.set(mid, sill + band / 2, fx + inward * (WALL_T / 2 + 0.01));
+    if (side === "s") pane.rotation.y = Math.PI;
+  } else {
+    pane.rotation.y = (side === "w") ? Math.PI / 2 : -Math.PI / 2;
+    pane.position.set(fx + inward * (WALL_T / 2 + 0.01), sill + band / 2, mid);
+  }
+  scene.add(pane);
+
+  const sky = new THREE.Mesh(
+    new THREE.PlaneGeometry(len + 0.4, band + 0.3), skyMaterial());
+  if (horiz){
+    sky.position.set(mid, sill + band / 2, fx - inward * 0.55);
+    if (side === "n") sky.rotation.y = Math.PI;
+  } else {
+    sky.rotation.y = (side === "w") ? -Math.PI / 2 : Math.PI / 2;
+    sky.position.set(fx - inward * 0.55, sill + band / 2, mid);
+  }
+  scene.add(sky);
+
+  /* the light it throws on the floor, a few metres in */
+  const reach = 3.1;
+  const patch = new THREE.Mesh(
+    new THREE.PlaneGeometry(horiz ? len * 0.92 : 2.4, horiz ? 2.4 : len * 0.92),
+    new THREE.MeshBasicMaterial({ map: patchTexture(), transparent:true, depthWrite:false,
+      blending:THREE.AdditiveBlending, opacity:0.5 }));
+  patch.rotation.x = -Math.PI / 2;
+  if (horiz) patch.position.set(mid, 0.016, fx + inward * reach);
+  else       patch.position.set(fx + inward * reach, 0.016, mid);
+  scene.add(patch);
+  DAYPATCHES.push(patch);
+}
+const DAYPATCHES = [];
+
+/* one side of one room: wall, skirting, shadow gap, glazing, jambs */
 function buildSide(room, side, mat, tile){
   const open = room.open ? room.open[side] : undefined;
   if (open === "all") return;
@@ -2304,18 +2392,26 @@ function buildSide(room, side, mat, tile){
   if (!open) segs.push([a, b]);
   else { if (open[0] > a) segs.push([a, open[0]]); if (open[1] < b) segs.push([open[1], b]); }
 
+  const glazed = room.sky && room.sky.indexOf(side) >= 0;
+  const sill = room.h - 1.55, head = room.h - 0.35;
+
   segs.forEach(s => {
     const len = s[1] - s[0], mid = (s[0] + s[1]) / 2;
     if (len <= 0.01) return;
+    const lowH  = glazed ? sill : room.h;
+    const lowY  = lowH / 2;
     if (horiz){
-      box(mid, room.h / 2, fx, len, room.h, WALL_T, mat, { tile:tile, collide:true });
+      box(mid, lowY, fx, len, lowH, WALL_T, mat, { tile:tile, collide:true });
       box(mid, SKIRT_H / 2, fx, len, SKIRT_H, WALL_T + 0.045, trimMat(), {});
-      box(mid, room.h - 0.022, fx, len, 0.044, WALL_T + 0.05, darkMat(), {});   /* shadow gap */
+      if (glazed) box(mid, (head + room.h) / 2, fx, len, room.h - head, WALL_T, mat, { tile:tile });
+      box(mid, room.h - 0.022, fx, len, 0.044, WALL_T + 0.05, darkMat(), {});
     } else {
-      box(fx, room.h / 2, mid, WALL_T, room.h, len, mat, { tile:tile, collide:true });
+      box(fx, lowY, mid, WALL_T, lowH, len, mat, { tile:tile, collide:true });
       box(fx, SKIRT_H / 2, mid, WALL_T + 0.045, SKIRT_H, len, trimMat(), {});
+      if (glazed) box(fx, (head + room.h) / 2, mid, WALL_T, room.h - head, len, mat, { tile:tile });
       box(fx, room.h - 0.022, mid, WALL_T + 0.05, 0.044, len, darkMat(), {});
     }
+    if (glazed) clerestory(room, side, s[0], s[1], fx, horiz, sill, head);
   });
 
   if (open && open !== "all"){
@@ -2324,7 +2420,6 @@ function buildSide(room, side, mat, tile){
       if (horiz) box(mid, DOOR_H + hh / 2, fx, len, hh, WALL_T, mat, { tile:tile });
       else       box(fx, DOOR_H + hh / 2, mid, WALL_T, hh, len, mat, { tile:tile });
     }
-    /* jambs and head — the reveal of a real opening */
     const J = 0.085, D = WALL_T + 0.055;
     if (horiz){
       box(open[0], DOOR_H / 2, fx, J, DOOR_H, D, trimMat(), { cast:true });
@@ -2606,6 +2701,8 @@ function hangWork(work){
   const anchor = wallAnchor(room, work.side, work.u);
   g.position.set(anchor.x, centreY, anchor.z);
   g.rotation.y = SIDE_ROT[work.side];
+  /* a third of a degree out, deterministically. Perfectly plumb reads as CG. */
+  g.rotation.z = (rng(917 + parseInt(work.id.replace(/\D/g, ""), 10))() - 0.5) * 0.011;
   scene.add(g);
 
   const t = artTexture(work.img);
@@ -2818,6 +2915,295 @@ function updateLights(dt){
 }
 
 /* ══════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   FITTINGS
+   Thresholds, exit signs, sockets, vents, detectors, track heads,
+   wall text, a desk and a vitrine. None of it is decorative — an
+   interior with no dull hardware in it reads as computer generated
+   before you can say why.
+   ══════════════════════════════════════════════════════════════ */
+const DOORS = [
+  { x:0,  z:-6,  h:true }, { x:0,  z:6,  h:true },
+  { x:6,  z:0,   h:false }, { x:-6, z:0,  h:false },
+  { x:0,  z:-12, h:true }, { x:0,  z:12, h:true },
+  { x:12, z:0,   h:false }, { x:-12, z:0, h:false }
+];
+
+function exitCanvas(){
+  return textCanvas(320, 128, (g, W, H) => {
+    g.fillStyle = "#0E7A46"; g.fillRect(0, 0, W, H);
+    g.fillStyle = "#F4FBF6";
+    g.font = "600 46px Archivo, Helvetica, Arial, sans-serif";
+    g.fillText("WAY OUT", 26, 82);
+    g.beginPath();                       /* an arrow, because signs have one */
+    g.moveTo(250, 64); g.lineTo(288, 64); g.moveTo(272, 48); g.lineTo(290, 64);
+    g.lineTo(272, 80);
+    g.lineWidth = 8; g.strokeStyle = "#F4FBF6"; g.stroke();
+  });
+}
+let EXITTEX = null, BRASS = null, GRILLE = null;
+function brassMat(){
+  if (!BRASS) BRASS = new THREE.MeshStandardMaterial({
+    color:0x9C7C3E, roughness:0.38, metalness:0.9, envMapIntensity:1.4 });
+  return BRASS;
+}
+function grilleTexture(){
+  if (GRILLE) return GRILLE;
+  const c = textCanvas(128, 128, (g, W, H) => {
+    g.fillStyle = "#2A2A2C"; g.fillRect(0, 0, W, H);
+    g.fillStyle = "#0C0C0D";
+    for (let y = 6; y < H - 4; y += 11) g.fillRect(6, y, W - 12, 6);
+  });
+  GRILLE = tex(c, 4); return GRILLE;
+}
+
+/* an instanced scatter of one small object */
+function scatter(geo, mat, placements, cast){
+  if (!placements.length) return;
+  const m = new THREE.InstancedMesh(geo, mat, placements.length);
+  const mx = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler();
+  const s = new THREE.Vector3(1, 1, 1), p = new THREE.Vector3();
+  placements.forEach((pl, i) => {
+    e.set(pl.rx || 0, pl.ry || 0, pl.rz || 0);
+    q.setFromEuler(e);
+    p.set(pl.x, pl.y, pl.z);
+    mx.compose(p, q, s);
+    m.setMatrixAt(i, mx);
+  });
+  m.instanceMatrix.needsUpdate = true;
+  if (cast) m.castShadow = true;
+  m.receiveShadow = true;
+  scene.add(m);
+  return m;
+}
+
+function buildFittings(){
+  frameMats();
+  const rng2 = rng(31337);
+
+  /* ── thresholds: two floors should never meet on an invisible line ── */
+  DOORS.forEach(d => {
+    if (d.h) box(d.x, 0.008, d.z, 4.0, 0.016, 0.34, brassMat(), { receive:true });
+    else     box(d.x, 0.008, d.z, 0.34, 0.016, 4.0, brassMat(), { receive:true });
+  });
+
+  /* ── the worn patch every doorway has ── */
+  const wear = new THREE.MeshBasicMaterial({ map: patchTexture(), transparent:true,
+    depthWrite:false, opacity:0.20, color:0x1A1712, blending:THREE.NormalBlending });
+  DOORS.forEach(d => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(d.h ? 4.4 : 2.6, d.h ? 2.6 : 4.4), wear);
+    m.rotation.x = -Math.PI / 2;
+    m.position.set(d.x, 0.019, d.z);
+    scene.add(m);
+  });
+
+  /* ── way-out signs over the doorway out of each room ── */
+  if (!EXITTEX) EXITTEX = tex(exitCanvas(), 4);
+  const signMat = new THREE.MeshBasicMaterial({ map: EXITTEX });
+  const exits = [
+    { x:0, z:-12.18, ry:Math.PI },  { x:0, z:12.18,  ry:0 },
+    { x:12.18, z:0,  ry:-Math.PI/2 }, { x:-12.18, z:0, ry:Math.PI/2 },
+    { x:0, z:-5.82,  ry:0 },        { x:0, z:5.82,   ry:Math.PI },
+    { x:5.82, z:0,   ry:Math.PI/2 }, { x:-5.82, z:0,  ry:-Math.PI/2 }
+  ];
+  exits.forEach(e => {
+    const g = new THREE.Group();
+    g.position.set(e.x, DOOR_H + 0.30, e.z);
+    g.rotation.y = e.ry;
+    const s = new THREE.Mesh(new THREE.PlaneGeometry(0.44, 0.176), signMat);
+    g.add(s);
+    const hous = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.20, 0.05), darkMat());
+    hous.position.z = -0.03; g.add(hous);
+    scene.add(g);
+  });
+
+  /* ── services: sockets, switches, vents, detectors ── */
+  const sockGeo = new THREE.BoxGeometry(0.09, 0.09, 0.018);
+  const sockMat = new THREE.MeshStandardMaterial({ color:0xEDEAE3, roughness:0.42, metalness:0, envMapIntensity:0.5 });
+  const socks = [], switches = [], vents = [], dets = [];
+  NAMED_ROOMS.concat(ROOMS.filter(r => r.corridor)).forEach(r => {
+    const cx = (r.x1 + r.x2) / 2, cz = (r.z1 + r.z2) / 2;
+    const inset = WALL_T / 2 + 0.012;
+    if (!r.corridor){
+      socks.push({ x:r.x1 + inset, y:0.30, z:cz + 2.2, ry:Math.PI/2 });
+      socks.push({ x:r.x2 - inset, y:0.30, z:cz - 2.2, ry:-Math.PI/2 });
+      dets.push({ x:cx + 1.6, y:r.h - 0.03, z:cz - 1.6, rx:Math.PI/2 });
+      vents.push({ x:cx - 2.4, y:r.h - 0.02, z:cz + 2.4, rx:Math.PI/2 });
+      vents.push({ x:cx + 2.4, y:r.h - 0.02, z:cz - 2.4, rx:Math.PI/2 });
+    } else {
+      dets.push({ x:cx, y:r.h - 0.03, z:cz, rx:Math.PI/2 });
+    }
+  });
+  DOORS.forEach(d => {
+    if (d.h) switches.push({ x:d.x + 2.5, y:1.10, z:d.z + (d.z < 0 ? 0.145 : -0.145), ry:d.z < 0 ? 0 : Math.PI });
+    else     switches.push({ x:d.x + (d.x < 0 ? 0.145 : -0.145), y:1.10, z:d.z + 2.5, ry:d.x < 0 ? Math.PI/2 : -Math.PI/2 });
+  });
+  scatter(sockGeo, sockMat, socks, false);
+  scatter(new THREE.BoxGeometry(0.11, 0.11, 0.016), sockMat, switches, false);
+  scatter(new THREE.BoxGeometry(0.42, 0.42, 0.02),
+    new THREE.MeshStandardMaterial({ map:grilleTexture(), roughness:0.7, metalness:0.4, envMapIntensity:0.5 }), vents, false);
+  scatter(new THREE.CylinderGeometry(0.055, 0.055, 0.025, 14),
+    new THREE.MeshStandardMaterial({ color:0xF2F0EA, roughness:0.6, metalness:0, envMapIntensity:0.4 }),
+    dets.map(d => ({ x:d.x, y:d.y - 0.012, z:d.z })), false);
+
+  /* an extinguisher by two of the doors, because there always is one */
+  [[-1.6, -5.6], [1.6, 5.6]].forEach(pos => {
+    box(pos[0], 0.75, pos[1], 0.10, 0.06, 0.10, darkMat(), {});
+    const ex = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 0.42, 14),
+      new THREE.MeshStandardMaterial({ color:0x8E2118, roughness:0.35, metalness:0.25, envMapIntensity:0.9 }));
+    ex.position.set(pos[0], 0.52, pos[1]); ex.castShadow = true;
+    scene.add(ex); CASTERS.push(ex);
+  });
+}
+
+/* ── track lighting: you should be able to see where the light comes from ── */
+function buildTrack(){
+  const rails = [], heads = [];
+  const railMat = new THREE.MeshStandardMaterial({ color:0x242426, roughness:0.5, metalness:0.7, envMapIntensity:0.9 });
+  const seen = {};
+  PIECES.forEach(p => {
+    const w = p.work;
+    if (w.sculpt) return;
+    const r = p.room, key = r.id + "/" + w.side;
+    const off = 1.15, y = r.h - 0.30;
+    if (!seen[key]){
+      seen[key] = 1;
+      const horiz = (w.side === "n" || w.side === "s");
+      const inw = (w.side === "n" || w.side === "w") ? 1 : -1;
+      if (horiz){
+        const fz = (w.side === "n" ? r.z1 : r.z2) + inw * off;
+        box((r.x1 + r.x2) / 2, y, fz, (r.x2 - r.x1) - 0.6, 0.05, 0.05, railMat, { receive:false });
+      } else {
+        const fx = (w.side === "w" ? r.x1 : r.x2) + inw * off;
+        box(fx, y, (r.z1 + r.z2) / 2, 0.05, 0.05, (r.z2 - r.z1) - 0.6, railMat, { receive:false });
+      }
+    }
+    const n = p.normal;
+    heads.push({ x:p.centre.x + n.x * off, y:y - 0.10, z:p.centre.z + n.z * off,
+                 rx:-1.02, ry:Math.atan2(-n.x, -n.z) });
+  });
+  scatter(new THREE.CylinderGeometry(0.045, 0.062, 0.17, 12), railMat,
+    heads.map(h => ({ x:h.x, y:h.y, z:h.z, rx:h.rx, ry:h.ry })), false);
+}
+
+/* ── wall text: eighty words at the door of every room ── */
+const ROOMTEXT = {
+north:{ h:"The Long Room", p:["Four centuries on one wall, hung at the same height and lit the",
+  "same way. A Monet of 1875 and a canvas finished last year are",
+  "given identical treatment because that is the only honest way to",
+  "find out which of them holds your attention. Nothing here is",
+  "arranged chronologically. The oak floor and the white plaster are",
+  "chosen to be quiet; everything loud in this room is on the wall."] },
+east:{ h:"The Cabinet", p:["Faces, and what people do in order to be looked at. Brick, a black",
+  "floor and a white ceiling — the reverse of the room you have just",
+  "left, so that the same paintings shown in both look nothing alike.",
+  "Photography hangs beside painting at the same scale and the same",
+  "price bracket. If that seems provocative, the provocation is the",
+  "point and it is at least a hundred years old."] },
+west:{ h:"The Print Room", p:["Everything here is flat and most of it is on paper. Watercolour,",
+  "screenprint, pigment print and one relief that refuses to behave.",
+  "Paper is the cheapest way into a collection and the least",
+  "forgiving to show: it needs glass, mounts and light discipline.",
+  "The pale poured floor is doing that work — it bounces light up",
+  "into the glazing instead of letting it fall across the sheets."] },
+south:{ h:"The Stone Room", p:["Objects you have to walk around, and the largest paintings in the",
+  "building. Limestone walls, a slate floor and a ceiling low enough",
+  "to feel. Sculpture asks for something painting does not — time,",
+  "and a second and third position to look from. Both pieces here",
+  "were made by stopping just before the material gave way, which is",
+  "a decision you can see if you take the trouble to circle them."] }
+};
+function textPanelCanvas(t){
+  return textCanvas(760, 480, (g, W, H) => {
+    g.fillStyle = "#F7F5F1"; g.fillRect(0, 0, W, H);
+    g.fillStyle = "#A3854A"; g.fillRect(0, 0, W, 8);
+    g.strokeStyle = "rgba(20,22,26,.16)"; g.lineWidth = 2; g.strokeRect(1, 1, W - 2, H - 2);
+    g.fillStyle = "#14161A"; g.font = "400 50px 'Bodoni Moda', Didot, Georgia, serif";
+    g.fillText(t.h, 44, 92);
+    g.fillStyle = "#A3854A"; g.fillRect(44, 118, 62, 4);
+    g.fillStyle = "#4A4E57"; g.font = "400 25px Archivo, Helvetica, Arial, sans-serif";
+    t.p.forEach((l, i) => g.fillText(l, 44, 176 + i * 42));
+  });
+}
+function buildWallText(){
+  const at = [
+    { r:"north", side:"s", u:-2.9 }, { r:"east",  side:"w", u:-2.9 },
+    { r:"west",  side:"e", u:-2.9 }, { r:"south", side:"n", u:-2.9 }
+  ];
+  at.forEach(a => {
+    const room = ROOM[a.r], anchor = wallAnchor(room, a.side, a.u);
+    const g = new THREE.Group();
+    g.position.set(anchor.x, 1.55, anchor.z);
+    g.rotation.y = SIDE_ROT[a.side];
+    scene.add(g);
+    addPlate(textPanelCanvas(ROOMTEXT[a.r]), g, 0, 0, 1.05);
+  });
+}
+
+/* ── the desk you arrive at, and a plan of where you are ── */
+function buildReception(){
+  const oak = new THREE.MeshStandardMaterial({ color:0x6E5842, roughness:0.44, metalness:0, envMapIntensity:0.6 });
+  const top = new THREE.MeshStandardMaterial({ color:0xEDE9E0, roughness:0.28, metalness:0.05, envMapIntensity:1.0 });
+  /* every wall segment in the atrium is hung and every corner is somebody's
+     viewing spot, so the desk runs north-south in the east quadrant, facing in */
+  const x = 3.9, z = -2.0;
+  box(x, 0.53, z, 0.62, 1.06, 2.30, oak, { cast:true });
+  box(x, 1.08, z, 0.74, 0.05, 2.46, top, { cast:true });
+  WALLS.push({ x1:x - 0.44, x2:x + 0.44, z1:z - 1.28, z2:z + 1.28 });
+  /* a stack of price lists */
+  box(x - 0.06, 1.13, z - 0.72, 0.30, 0.04, 0.21,
+    new THREE.MeshStandardMaterial({ color:0xF7F5F1, roughness:0.9, metalness:0 }), { cast:true });
+
+  /* the floor plan, drawn from the same data the map uses */
+  const pc = document.createElement("canvas");
+  pc.width = pc.height = 512;
+  drawPlan(pc.getContext("2d"), 512, { pad:26, bg:"#F7F5F1", room:"#E4E0D8", corridor:"#EDEAE3",
+    here:"#E4E0D8", stroke:"rgba(20,22,26,.30)", lw:2, ink:"#14161A",
+    dot:"#A3854A", you:"#F7F5F1", dots:true, labels:true });
+  const bg = new THREE.Group();
+  bg.position.set(x - 0.02, 1.62, z + 0.60);
+  bg.rotation.y = -Math.PI / 2;
+  scene.add(bg);
+  addPlate(pc, bg, 0, 0, 0.86);
+  box(x - 0.02, 1.16, z + 0.60, 0.06, 0.06, 0.06, darkMat(), {});
+}
+
+/* ── stanchions, and a vitrine for the small things ── */
+function buildBarriers(){
+  const post = new THREE.MeshStandardMaterial({ color:0x2E2C2A, roughness:0.35, metalness:0.8, envMapIntensity:1.2 });
+  const rope = new THREE.MeshStandardMaterial({ color:0x6E2F35, roughness:0.92, metalness:0, envMapIntensity:0.3 });
+  SCULPTURES.forEach(sc => {
+    const px = sc.plinth[0], pz = sc.plinth[1], R = 0.80;
+    const pts = [[-R,-R],[R,-R],[R,R],[-R,R]];
+    pts.forEach(p => {
+      const m = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.030, 0.62, 10), post);
+      m.position.set(px + p[0], 0.31, pz + p[1]); m.castShadow = true;
+      scene.add(m); CASTERS.push(m);
+    });
+    for (let i = 0; i < 4; i++){
+      const a = pts[i], b = pts[(i + 1) % 4];
+      const mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2;
+      const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      const r = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.011, len, 6), rope);
+      r.rotation.z = Math.PI / 2;
+      r.rotation.y = -Math.atan2(b[1] - a[1], b[0] - a[0]);
+      r.position.set(px + mx, 0.55, pz + mz);
+      scene.add(r);
+    }
+    WALLS.push({ x1:px - 0.88, x2:px + 0.88, z1:pz - 0.88, z2:pz + 0.88 });
+  });
+
+  /* a vitrine in the Print Room */
+  const vx = -17.5, vz = -2.0;
+  box(vx, 0.44, vz, 1.30, 0.88, 0.62,
+    new THREE.MeshStandardMaterial({ color:0xE9E5DD, roughness:0.6, metalness:0, envMapIntensity:0.5 }), { cast:true });
+  const glassCase = new THREE.Mesh(new THREE.BoxGeometry(1.24, 0.52, 0.56), glazing());
+  glassCase.position.set(vx, 1.14, vz);
+  scene.add(glassCase);
+  box(vx, 1.41, vz, 1.28, 0.035, 0.60, brassMat(), { cast:true });
+  WALLS.push({ x1:vx - 0.78, x2:vx + 0.78, z1:vz - 0.44, z2:vz + 0.44 });
+}
+
 function buildScene(){
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x14151A);
@@ -2832,6 +3218,10 @@ function buildScene(){
   ROOMS.forEach(r => buildRoom(r));
   buildBenches();
   buildSigns();
+  buildFittings();
+  buildWallText();
+  buildReception();
+  buildBarriers();
 
   const man = new THREE.Group();
   man.position.set(4.0, 1.88, ROOM.atrium.z1 + WALL_T / 2 + 0.02);
@@ -3197,24 +3587,38 @@ function buildPickables(){
     PICKABLES.push(mesh);
   });
 
-  /* the doorways themselves are clickable — walk through them */
-  const door = (x, z, rotY, room, label) => {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(3.9, DOOR_H),
+  /* The doorways are clickable. Which way a doorway takes you depends on
+     which side of it you are standing — the same opening leads into the
+     room from the atrium and back to the atrium from the room. */
+  DOORWAYS.forEach(d => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(4.0, DOOR_H),
       new THREE.MeshBasicMaterial({ visible:false, side:THREE.DoubleSide }));
-    m.position.set(x, DOOR_H / 2, z);
-    m.rotation.y = rotY;
-    m.userData = { kind:"door", room, label };
+    m.position.set(d.x, DOOR_H / 2, d.z);
+    m.rotation.y = d.axis === "x" ? Math.PI / 2 : 0;
+    m.userData = { kind:"door", door:d };
     scene.add(m);
     PICKABLES.push(m);
-  };
-  door(0, -7, 0, ROOM.north, ROOM.north.name);
-  door(0,  7, 0, ROOM.south, ROOM.south.name);
-  door(7,  0, Math.PI/2, ROOM.east, ROOM.east.name);
-  door(-7, 0, Math.PI/2, ROOM.west, ROOM.west.name);
-  door(0, -14, 0, ROOM.north, ROOM.north.name);
-  door(0,  14, 0, ROOM.south, ROOM.south.name);
-  door(14, 0, Math.PI/2, ROOM.east, ROOM.east.name);
-  door(-14, 0, Math.PI/2, ROOM.west, ROOM.west.name);
+  });
+}
+
+/* every opening, with the room it leads away from the atrium towards.
+   `at` is the coordinate of the opening on `axis`; `sign` points away
+   from the atrium, so the atrium side is always sign*here < sign*at. */
+const DOORWAYS = [
+  { x:0,   z:-6,  axis:"z", at:-6,  sign:-1, far:"north" },
+  { x:0,   z:-12, axis:"z", at:-12, sign:-1, far:"north" },
+  { x:0,   z:6,   axis:"z", at:6,   sign: 1, far:"south" },
+  { x:0,   z:12,  axis:"z", at:12,  sign: 1, far:"south" },
+  { x:6,   z:0,   axis:"x", at:6,   sign: 1, far:"east"  },
+  { x:12,  z:0,   axis:"x", at:12,  sign: 1, far:"east"  },
+  { x:-6,  z:0,   axis:"x", at:-6,  sign:-1, far:"west"  },
+  { x:-12, z:0,   axis:"x", at:-12, sign:-1, far:"west"  }
+];
+/* where this doorway takes you from where you are now */
+function doorTarget(d){
+  const here = d.axis === "x" ? P.x : P.z;
+  const onAtriumSide = d.sign * here < d.sign * d.at;
+  return onAtriumSide ? ROOM[d.far] : ROOM.atrium;
 }
 
 /* ══ the frame loop ═══════════════════════════════════════════ */
@@ -3838,8 +4242,12 @@ function footfall(first){
   src.playbackRate.value = 1.4 + Math.random() * 0.3;
   const bp = AC.createBiquadFilter();
   bp.type = "bandpass";
-  bp.frequency.value = (stepFlip++ % 2 ? 1150 : 880) + Math.random() * 160;
-  bp.Q.value = 1.1;
+  /* oak thuds, limestone and resin ring, slate cracks, terrazzo sits between */
+  const FLOORTONE = { oak:520, terrazzoDark:900, terrazzo:960, basalt:1250, slate:1420,
+                      resin:1650, palestone:1150 };
+  const base = (P.room && FLOORTONE[P.room.floor]) || 1000;
+  bp.frequency.value = base * (stepFlip++ % 2 ? 1.0 : 0.82) + Math.random() * 120;
+  bp.Q.value = P.room && P.room.floor === "oak" ? 0.7 : 1.3;
   const g = AC.createGain();
   g.gain.setValueAtTime(0, t);
   g.gain.linearRampToValueAtTime(0.055, t + 0.008);
@@ -3932,8 +4340,10 @@ function updateHover(cx, cy){
     if (u.kind === "art"){ hover = u; setFocus(u.piece); }
     else {
       hover = u; setFocus(null);
-      $("#promptTitle").innerHTML = u.label;
-      $("#promptAction").textContent = "Click to walk through";
+      const dest = doorTarget(u.door);
+      $("#promptTitle").innerHTML = dest.name;
+      $("#promptAction").textContent = dest.id === "atrium"
+        ? "Click to go back to the atrium" : "Click to walk through";
       $("#prompt").classList.add("on");
     }
     return;
@@ -3951,7 +4361,7 @@ function actOnClick(){
   if (uiOpen) return;
   if (tour.on) setTour(false);
   if (hover && hover.kind === "art"){ clickTick(); goToPiece(hover.piece, true); return; }
-  if (hover && hover.kind === "door"){ clickTick(); goToRoom(hover.room); return; }
+  if (hover && hover.kind === "door"){ clickTick(); goToRoom(doorTarget(hover.door)); return; }
   if (marker && marker.visible){ clickTick(); walkTo(marker.position.x, marker.position.z); }
 }
 
@@ -4130,6 +4540,7 @@ function boot(){
 }
 
 function finish(){
+  buildTrack();
   buildPickables();
   bindInput();
   P.room = ROOM.atrium;
