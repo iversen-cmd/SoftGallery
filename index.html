@@ -16,8 +16,8 @@
 <link rel="canonical" href="https://softgallery.art/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,600&family=Archivo:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%23F7F5F1'/%3E%3Cg style='mix-blend-mode:multiply'%3E%3Ccircle cx='24' cy='15.5' r='12.4' fill='%234B3F72'/%3E%3Ccircle cx='16.6' cy='28.2' r='12.4' fill='%23D2913A'/%3E%3Ccircle cx='31.4' cy='28.2' r='12.4' fill='%232E6E6B'/%3E%3C/g%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,600&family=Archivo:wght@400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230D131D'/%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%2317D3DD'/%3E%3Cstop offset='1' stop-color='%235F81F8'/%3E%3C/linearGradient%3E%3Cpath d='M18 54 L18 18 L82 18 L82 82 L54 82' fill='none' stroke='url(%23g)' stroke-width='5'/%3E%3C/svg%3E">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"ArtGallery","name":"Soft Gallery","url":"https://softgallery.art/","description":"A taste-led contemporary art platform. Curated artists, editorial context and concierge guidance.","address":{"@type":"PostalAddress","streetAddress":"4 King's Bench Walk, Temple","addressLocality":"London","postalCode":"EC4Y 7DL","addressCountry":"GB"}}
 </script>
@@ -39,14 +39,22 @@
   --ink:#14161A;
   --slate:#4A4E57;
   --pumice:#8C887F;
-  --iris:#4B3F72;
-  --iris-lift:#6A5C97;
+  /* from the identity: a vertical teal-to-blue gradient on navy */
+  --brand-teal:#17D3DD;
+  --brand-mid:#39ADE8;
+  --brand-blue:#5F81F8;
+  --brand-word:#3DB6DE;
+  --brand-dim:#4499CC;
+  --brand-navy:#0D131D;
+  --iris:#3A55C8;            /* the brand blue, taken darker so it reads on paper */
+  --iris-lift:#5F81F8;
   --brass:#A3854A;
   --hair:rgba(20,22,26,.15);
   --hair-2:rgba(20,22,26,.08);
 
   --display:"Bodoni Moda","Didot","Bodoni MT",Georgia,"Times New Roman",serif;
   --label:"Archivo","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --brandface:"Jost","Futura","Century Gothic",Avenir,sans-serif;
 
   --pad:clamp(18px,3.4vw,40px);
   --panel-w:min(430px,92vw);
@@ -58,7 +66,7 @@
 *,*::before,*::after{box-sizing:border-box}
 html,body{margin:0;padding:0;height:100%;overflow:hidden}
 body{
-  background:#0B0C0E;
+  background:var(--brand-navy);
   color:var(--ink);
   font-family:var(--label);
   font-size:15px;
@@ -106,7 +114,7 @@ a{color:inherit}
 
 /* fade-to-black used for teleports and the arrival sequence */
 #veil{
-  position:fixed;inset:0;background:#0B0C0E;
+  position:fixed;inset:0;background:var(--brand-navy);
   pointer-events:none;opacity:0;z-index:60;
   transition:opacity .5s var(--ease);
 }
@@ -115,7 +123,7 @@ a{color:inherit}
 /* ══ arrival ═══════════════════════════════════════════════════ */
 #arrival{
   position:fixed;inset:0;z-index:80;
-  background:radial-gradient(120% 90% at 50% 40%,#1A1C21 0%,#0B0C0E 68%);
+  background:radial-gradient(122% 92% at 50% 38%,#16202C 0%,var(--brand-navy) 62%,#080D14 100%);
   color:var(--paper);
   display:flex;flex-direction:column;
   align-items:center;justify-content:center;
@@ -135,7 +143,7 @@ a{color:inherit}
   line-height:1.0;letter-spacing:-.022em;
   margin:0;font-weight:400;
 }
-.arr-line em{font-style:italic;color:#C9BFE2}
+.arr-line em{font-style:italic;color:#6FD3E4}
 .arr-sub{
   max-width:38ch;margin:clamp(22px,3.6vh,34px) auto 0;
   font-size:14px;line-height:1.7;color:rgba(247,245,241,.58);
@@ -170,7 +178,8 @@ kbd{
   position:absolute;left:50%;bottom:clamp(28px,6vh,60px);transform:translateX(-50%);
   width:min(260px,60vw);height:1px;background:rgba(247,245,241,.14)
 }
-#loadbar i{display:block;height:100%;width:0%;background:var(--brass);transition:width .4s var(--ease)}
+#loadbar i{display:block;height:100%;width:0%;transition:width .4s var(--ease);
+  background:linear-gradient(90deg,var(--brand-teal),var(--brand-blue))}
 #loadtxt{
   position:absolute;left:50%;bottom:clamp(40px,8vh,80px);transform:translateX(-50%);
   font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:rgba(247,245,241,.36);
@@ -628,24 +637,26 @@ kbd{
    Reads as an aperture (looking), a bloom (life) and a frame
    (gallery). Rotational, so it works at any size and in one
    colour. Swap the SVG in brandMark() when the real mark lands. */
-.mark{display:block;flex:0 0 auto}
-.mark .blade{transform-origin:50% 50%}
-@keyframes bloom{
-  from{transform:rotate(-42deg) scale(.62);opacity:0}
-  to{transform:rotate(0deg) scale(1);opacity:1}
+.mark{display:block;flex:0 0 auto;overflow:visible}
+.mark .stroke{fill:none;stroke-linecap:square;stroke-linejoin:miter}
+.mark.animate .stroke{
+  stroke-dasharray:240;stroke-dashoffset:240;
+  animation:drawmark 1.9s var(--ease-out) .15s forwards;
 }
-.mark.animate .blade{animation:bloom 1.1s var(--ease-out) both}
-.mark.animate .blade:nth-child(2){animation-delay:.10s}
-.mark.animate .blade:nth-child(3){animation-delay:.20s}
+@keyframes drawmark{ to{stroke-dashoffset:0} }
+@media (prefers-reduced-motion:reduce){
+  .mark.animate .stroke{animation:none;stroke-dashoffset:0}
+}
 
 .lockup{display:flex;align-items:center;gap:12px;text-align:left}
 .lockup .lk-name{
-  font-family:var(--display);font-size:15px;letter-spacing:.2em;
-  text-transform:uppercase;line-height:1;padding-left:.2em;
+  font-family:var(--brandface);font-weight:300;font-size:15px;letter-spacing:.24em;
+  text-transform:uppercase;line-height:1;padding-left:.24em;color:var(--brand-word);
 }
 .lockup .lk-tag{
-  display:block;font-family:var(--label);font-size:8.5px;font-weight:600;
-  letter-spacing:.3em;text-transform:uppercase;opacity:.6;margin-top:6px;padding-left:.2em;
+  display:block;font-family:var(--brandface);font-weight:300;font-size:8.5px;
+  letter-spacing:.42em;text-transform:uppercase;color:var(--brand-dim);
+  margin-top:6px;padding-left:.42em;
 }
 
 /* ══ pointer states ════════════════════════════════════════════ */
@@ -671,12 +682,14 @@ kbd{
 .enter-btn.primary:hover{background:#C9BFE2;border-color:#C9BFE2;color:var(--ink)}
 .arr-mark{display:flex;flex-direction:column;align-items:center;gap:16px;letter-spacing:0}
 .arr-mark .nm{
-  font-family:var(--display);font-size:clamp(12px,1.5vw,15px);
-  letter-spacing:.4em;text-transform:uppercase;padding-left:.4em;
+  font-family:var(--brandface);font-weight:300;
+  font-size:clamp(15px,2.4vw,26px);
+  letter-spacing:.30em;text-transform:uppercase;padding-left:.30em;
+  color:var(--brand-word);
 }
 .arr-mark .tg{
-  font-family:var(--label);font-size:9px;font-weight:600;
-  letter-spacing:.42em;text-transform:uppercase;opacity:.5;padding-left:.42em;
+  font-family:var(--brandface);font-weight:300;font-size:clamp(8px,1vw,10px);
+  letter-spacing:.55em;text-transform:uppercase;color:var(--brand-dim);padding-left:.55em;
 }
 
 /* ══ panel: the fuller catalogue entry ════════════════════════ */
@@ -831,7 +844,7 @@ kbd{
     <span><kbd>Click art</kbd> step up to it</span>
     <span><kbd>Esc</kbd> step back</span>
   </div>
-  <div id="loadtxt">Hanging the work</div>
+  <div id="loadtxt">Opening the gallery</div>
   <div id="loadbar"><i></i></div>
 </section>
 
@@ -2583,9 +2596,10 @@ function labelCanvas(work){
     g.fillText(work.w + " × " + work.h + " cm", 34, 196);
     g.strokeStyle = "rgba(20,22,26,.10)"; g.lineWidth = 2;
     g.beginPath(); g.moveTo(34, 224); g.lineTo(W - 34, 224); g.stroke();
+    drawMark(g, W - 78, 240, 44, false);
     if (work.pd){
       g.fillStyle = "#8C887F"; g.font = "600 17px Archivo, Helvetica, Arial, sans-serif";
-      g.fillText(fitText(g, work.pd.toUpperCase(), W - 68), 34, 262);
+      g.fillText(fitText(g, work.pd.toUpperCase(), W - 160), 34, 262);
     } else {
       g.fillStyle = "#4B3F72"; g.font = "600 19px Archivo, Helvetica, Arial, sans-serif";
       g.fillText(work.price === null ? "NOT FOR SALE" : "£" + work.price.toLocaleString("en-GB"), 34, 262);
@@ -2602,6 +2616,7 @@ function signCanvas(title, sub, numeral){
     g.fillText(title, 44, 140);
     g.fillStyle = "#8C887F"; g.font = "400 22px Archivo, Helvetica, Arial, sans-serif";
     g.fillText(sub.toUpperCase(), 44, 190);
+    drawMark(g, W - 96, 78, 62, false);
   });
 }
 function manifestoCanvas(){
@@ -2614,11 +2629,10 @@ function manifestoCanvas(){
     g.fillText("comes to life", 70, 358);
     g.fillStyle = "#4A4E57"; g.font = "400 29px Archivo, Helvetica, Arial, sans-serif";
     ["Sixteen works, hung fifty-nine times, and two sculptures.",
-     "Every price shown, every provenance written by the person",
-     "who made it. Walk up to anything and it will tell you more."]
-      .forEach((l, i) => g.fillText(l, 70, 466 + i * 46));
-    g.fillStyle = "#8C887F"; g.font = "600 21px Archivo, Helvetica, Arial, sans-serif";
-    g.fillText("SOFTGALLERY.ART · FOR LIFE", 70, 636);
+     "Every price shown, every provenance written by the",
+     "person who made it."]
+      .forEach((l, i) => g.fillText(l, 70, 440 + i * 46));
+    drawLockup(g, 70, 556, 200, false);
   });
 }
 
@@ -3114,15 +3128,18 @@ south:{ h:"The Stone Room", p:["Objects you have to walk around, and the largest
   "a decision you can see if you take the trouble to circle them."] }
 };
 function textPanelCanvas(t){
-  return textCanvas(760, 480, (g, W, H) => {
+  /* sized so the longest line clears the mark with room to spare; every line
+     is fitted as well, so no future edit can run off the end of the panel */
+  return textCanvas(960, 580, (g, W, H) => {
     g.fillStyle = "#F7F5F1"; g.fillRect(0, 0, W, H);
     g.fillStyle = "#A3854A"; g.fillRect(0, 0, W, 8);
     g.strokeStyle = "rgba(20,22,26,.16)"; g.lineWidth = 2; g.strokeRect(1, 1, W - 2, H - 2);
-    g.fillStyle = "#14161A"; g.font = "400 50px 'Bodoni Moda', Didot, Georgia, serif";
-    g.fillText(t.h, 44, 92);
-    g.fillStyle = "#A3854A"; g.fillRect(44, 118, 62, 4);
-    g.fillStyle = "#4A4E57"; g.font = "400 25px Archivo, Helvetica, Arial, sans-serif";
-    t.p.forEach((l, i) => g.fillText(l, 44, 176 + i * 42));
+    g.fillStyle = "#14161A"; g.font = "400 52px 'Bodoni Moda', Didot, Georgia, serif";
+    g.fillText(t.h, 46, 98);
+    g.fillStyle = "#A3854A"; g.fillRect(46, 126, 64, 4);
+    drawMark(g, W - 108, 44, 58, false);
+    g.fillStyle = "#4A4E57"; g.font = "400 26px Archivo, Helvetica, Arial, sans-serif";
+    t.p.forEach((l, i) => g.fillText(fitText(g, l, W - 92), 46, 192 + i * 44));
   });
 }
 function buildWallText(){
@@ -3136,7 +3153,7 @@ function buildWallText(){
     g.position.set(anchor.x, 1.55, anchor.z);
     g.rotation.y = SIDE_ROT[a.side];
     scene.add(g);
-    addPlate(textPanelCanvas(ROOMTEXT[a.r]), g, 0, 0, 1.05);
+    addPlate(textPanelCanvas(ROOMTEXT[a.r]), g, 0, 0, 1.18);
   });
 }
 
@@ -3157,9 +3174,16 @@ function buildReception(){
   /* the floor plan, drawn from the same data the map uses */
   const pc = document.createElement("canvas");
   pc.width = pc.height = 512;
-  drawPlan(pc.getContext("2d"), 512, { pad:26, bg:"#F7F5F1", room:"#E4E0D8", corridor:"#EDEAE3",
+  drawPlan(pc.getContext("2d"), 512, { pad:34, bg:"#F7F5F1", room:"#E4E0D8", corridor:"#EDEAE3",
     here:"#E4E0D8", stroke:"rgba(20,22,26,.30)", lw:2, ink:"#14161A",
     dot:"#A3854A", you:"#F7F5F1", dots:true, labels:true });
+  const pg = pc.getContext("2d");
+  pg.fillStyle = "#F7F5F1"; pg.fillRect(0, 0, 512, 58);
+  drawMark(pg, 20, 8, 42, false);
+  pg.fillStyle = "#1F6E92";
+  pg.font = "300 21px Jost, Futura, 'Century Gothic', Avenir, sans-serif";
+  spaced(pg, "SOFTGALLERY.ART", 300, 36, 5);
+
   const bg = new THREE.Group();
   bg.position.set(x - 0.02, 1.62, z + 0.60);
   bg.rotation.y = -Math.PI / 2;
@@ -4158,24 +4182,86 @@ function replaceForm(form, title, body){
 }
 
 /* ══════════════════════════════════════════════════════════════
-   THE MARK
-   Placeholder identity for SoftGallery.art / For Life. Three
-   overlapping discs — artist, work, collector — meeting at a
-   centre that is darker than any of them on its own. It is an
-   aperture, a bloom and a Venn of the three parties at once,
-   it survives at 16px, and it works in a single colour.
-   Replace the paths here when the designed mark arrives.
+   THE MARK — SoftGallery.art / For Life
+   The supplied identity, rebuilt as vector so it stays crisp at any
+   size and can be drawn into the room textures as well as the page.
+   Geometry, stroke weight and gradient are measured from the
+   artwork; the light variant darkens the two upper stops so it
+   stays legible printed on paper.
    ══════════════════════════════════════════════════════════════ */
+/* The mark is one continuous stroke: up the left side to the corner,
+   across the top, down the right, and half way back along the bottom.
+   The lower-left corner is left open — a frame that does not close.
+   Geometry and gradient are taken from the supplied artwork. */
+const MARK_PATH = "M10 50 L10 10 L90 10 L90 90 L50 90";
+const MARK_LEN  = 240;                       /* 40 + 80 + 80 + 40 */
+const MARK_STOPS_DARK  = ["#17D3DD", "#39ADE8", "#5F81F8"];
+const MARK_STOPS_LIGHT = ["#0FA6B4", "#2C7FBE", "#3A55C8"];  /* legible on paper */
+let markId = 0;
+
 function brandMark(px, onDark, animate){
-  const c = onDark ? ["#7C6DAD","#E8B25C","#4CA39D"] : ["#4B3F72","#D2913A","#2E6E6B"];
-  const blend = onDark ? "screen" : "multiply";
-  const pts = [[24,15.5],[16.6,28.2],[31.4,28.2]];
-  const blades = pts.map((p, i) =>
-    '<circle class="blade" cx="' + p[0] + '" cy="' + p[1] + '" r="12.4" fill="' + c[i] +
-    '" style="mix-blend-mode:' + blend + '"/>').join("");
+  const c = onDark ? MARK_STOPS_DARK : MARK_STOPS_LIGHT;
+  const id = "sgm" + (++markId);
   return '<svg class="mark' + (animate ? " animate" : "") + '" width="' + px + '" height="' + px +
-         '" viewBox="0 0 48 48" role="img" aria-label="SoftGallery.art">' +
-         '<g>' + blades + '</g></svg>';
+    '" viewBox="-4 -4 108 108" role="img" aria-label="SoftGallery.art">' +
+    '<defs><linearGradient id="' + id + '" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="' + c[0] + '"/>' +
+      '<stop offset="0.5" stop-color="' + c[1] + '"/>' +
+      '<stop offset="1" stop-color="' + c[2] + '"/>' +
+    '</linearGradient></defs>' +
+    '<path class="stroke" d="' + MARK_PATH + '" stroke="url(#' + id + ')" stroke-width="5.2"/>' +
+    '</svg>';
+}
+
+/* the same mark drawn into a canvas, for the textures in the rooms */
+function drawMark(g, x, y, size, onDark){
+  const c = onDark ? MARK_STOPS_DARK : MARK_STOPS_LIGHT;
+  const k = size / 100, P = (v) => v * k;
+  const grd = g.createLinearGradient(x, y + P(10), x, y + P(90));
+  grd.addColorStop(0, c[0]); grd.addColorStop(0.5, c[1]); grd.addColorStop(1, c[2]);
+  g.save();
+  g.strokeStyle = grd;
+  g.lineWidth = P(5.2);
+  g.lineCap = "square"; g.lineJoin = "miter";
+  g.beginPath();
+  g.moveTo(x + P(10), y + P(50));
+  g.lineTo(x + P(10), y + P(10));
+  g.lineTo(x + P(90), y + P(10));
+  g.lineTo(x + P(90), y + P(90));
+  g.lineTo(x + P(50), y + P(90));
+  g.stroke();
+  g.restore();
+}
+
+/* the full lockup — mark, wordmark, tagline — for signage and vinyl */
+function drawLockup(g, x, y, w, onDark){
+  const m = w * 0.30;
+  drawMark(g, x + (w - m) / 2, y, m, onDark);
+  const word = onDark ? "#3DB6DE" : "#1F6E92";
+  const dim  = onDark ? "#4499CC" : "#4A7E9B";
+  const fs = w * 0.108, ts = w * 0.042;
+  g.save();
+  g.textAlign = "center";
+  g.fillStyle = word;
+  g.font = "300 " + fs.toFixed(1) + "px Jost, Futura, 'Century Gothic', Avenir, sans-serif";
+  spaced(g, "SOFTGALLERY.ART", x + w / 2, y + m + fs * 1.30, fs * 0.26);
+  g.fillStyle = dim;
+  g.font = "300 " + ts.toFixed(1) + "px Jost, Futura, 'Century Gothic', Avenir, sans-serif";
+  spaced(g, "FOR LIFE", x + w / 2, y + m + fs * 1.30 + ts * 2.5, ts * 0.5);
+  g.restore();
+}
+/* canvas has no letter-spacing, so lay the characters out by hand */
+function spaced(g, text, cx, y, track){
+  const chars = text.split("");
+  let total = 0;
+  chars.forEach(ch => { total += g.measureText(ch).width + track; });
+  total -= track;
+  let x = cx - total / 2;
+  const align = g.textAlign;
+  g.textAlign = "left";
+  chars.forEach(ch => { g.fillText(ch, x, y); x += g.measureText(ch).width + track; });
+  g.textAlign = align;
+  return total;
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -4532,6 +4618,7 @@ function boot(){
 
   progress(6, "Unpacking the work");
   /* fonts first — the wall labels are drawn into textures */
+  /* Bodoni, Archivo and Jost all get drawn into textures, so wait for all of them */
   const fonts = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
   fonts.catch(() => {}).then(() => new Promise(res => {
     loadImages(res, f => progress(6 + Math.round(18 * f), "Unpacking the work"));
@@ -4582,8 +4669,8 @@ $("#readBtn").addEventListener("click", () => {
 });
 
 /* the mark, on the door and in the corner */
-$("#arrMark").innerHTML = brandMark(52, true, !REDUCED);
-$("#hudMark").innerHTML = brandMark(30, true, false);
+$("#arrMark").innerHTML = brandMark(96, true, !REDUCED);
+$("#hudMark").innerHTML = brandMark(34, true, false);
 
 $("#enterBtn").disabled = true;
 $("#enterQuiet").disabled = true;
