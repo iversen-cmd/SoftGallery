@@ -3362,6 +3362,7 @@ function walkTo(x, z, opts){
   glide.on = true; glide.path = p; glide.i = 0; glide.t = 0; glide.step = 0;
   glide.look = opts.look || null;
   glide.yaw = (opts.yaw === undefined ? null : opts.yaw);
+  glide.travelYaw = null;
   glide.onArrive = opts.onArrive || null;
   glide.total = pathLength(P.x, P.z, p);
   footfall(true);
@@ -3396,6 +3397,7 @@ function stepGlide(dt){
   /* look where you are going, unless you were sent to look at something */
   const last = glide.i === glide.path.length - 1;
   let wantYaw = Math.atan2(-dx, -dz);
+  glide.travelYaw = wantYaw;                 /* where the walking is pointing */
   if (last && glide.look){
     const lx = glide.look.x - P.x, lz = glide.look.z - P.z;
     const near = Math.min(1, Math.max(0, (2.6 - d) / 2.0));
@@ -3410,6 +3412,12 @@ function stepGlide(dt){
 function arrive(){
   glide.on = false; P.bob = 0;
   if (glide.yaw !== null && glide.yaw !== undefined) P.yaw = glide.yaw;
+  else if (glide.travelYaw !== null && !glide.look){
+    /* settle the last few degrees of the turn, but never spin the camera:
+       on a short walk the head has not finished turning and a snap would jar */
+    const d = ((glide.travelYaw - P.yaw + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+    if (Math.abs(d) < 0.35) P.yaw = glide.travelYaw;
+  }
   const cb = glide.onArrive; glide.onArrive = null;
   if (cb) cb();
 }
@@ -3485,7 +3493,11 @@ function goToPiece(p, andOpen){
     onArrive: () => { if (andOpen) openPanel(p.work); }
   });
 }
-function goToRoom(room){ walkTo(room.entry.x, room.entry.z, { yaw: room.entry.yaw }); }
+/* No fixed bearing on arrival. Every room's entry yaw happens to match the
+   direction you approach from, so snapping to it was invisible — except in
+   the atrium, which you can enter from four directions and which would spin
+   you round to face the Long Room every time. Walking decides where you look. */
+function goToRoom(room){ walkTo(room.entry.x, room.entry.z); }
 /* cut (used from the index, the plan and my gallery) */
 function jumpToPiece(p, andOpen){
   fadeTo(() => {
