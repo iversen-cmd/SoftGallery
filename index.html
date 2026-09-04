@@ -16,8 +16,8 @@
 <link rel="canonical" href="https://softgallery.art/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,600&family=Archivo:wght@400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230D131D'/%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%2317D3DD'/%3E%3Cstop offset='1' stop-color='%235F81F8'/%3E%3C/linearGradient%3E%3Cpath d='M18 54 L18 18 L82 18 L82 82 L54 82' fill='none' stroke='url(%23g)' stroke-width='5'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,600&family=Archivo:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230C131D'/%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%2317EAD9'/%3E%3Cstop offset='1' stop-color='%236078EA'/%3E%3C/linearGradient%3E%3Cpolygon points='100,100 50,100 50,97.56 97.56,97.56 97.56,2.44 2.44,2.44 2.44,50 0,50 0,0 100,0' fill='url(%23g)'/%3E%3C/svg%3E">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"ArtGallery","name":"Soft Gallery","url":"https://softgallery.art/","description":"A taste-led contemporary art platform. Curated artists, editorial context and concierge guidance.","address":{"@type":"PostalAddress","streetAddress":"4 King's Bench Walk, Temple","addressLocality":"London","postalCode":"EC4Y 7DL","addressCountry":"GB"}}
 </script>
@@ -40,21 +40,19 @@
   --slate:#4A4E57;
   --pumice:#8C887F;
   /* from the identity: a vertical teal-to-blue gradient on navy */
-  --brand-teal:#17D3DD;
-  --brand-mid:#39ADE8;
-  --brand-blue:#5F81F8;
-  --brand-word:#3DB6DE;
-  --brand-dim:#4499CC;
-  --brand-navy:#0D131D;
+  --brand-teal:#17EAD9;
+  --brand-blue:#6078EA;
+  --brand-word:#31C0DF;
+  --brand-dim:#3FABE2;
+  --brand-navy:#0C131D;
   --iris:#3A55C8;            /* the brand blue, taken darker so it reads on paper */
-  --iris-lift:#5F81F8;
+  --iris-lift:#6078EA;   /* the gradient's blue end, used for hovers */
   --brass:#A3854A;
   --hair:rgba(20,22,26,.15);
   --hair-2:rgba(20,22,26,.08);
 
   --display:"Bodoni Moda","Didot","Bodoni MT",Georgia,"Times New Roman",serif;
   --label:"Archivo","Helvetica Neue",Helvetica,Arial,sans-serif;
-  --brandface:"Jost","Futura","Century Gothic",Avenir,sans-serif;
 
   --pad:clamp(18px,3.4vw,40px);
   --panel-w:min(430px,92vw);
@@ -640,24 +638,19 @@ kbd{
 .mark{display:block;flex:0 0 auto;overflow:visible}
 .mark .stroke{fill:none;stroke-linecap:square;stroke-linejoin:miter}
 .mark.animate .stroke{
-  stroke-dasharray:240;stroke-dashoffset:240;
-  animation:drawmark 1.9s var(--ease-out) .15s forwards;
+  stroke-dasharray:292.68;stroke-dashoffset:292.68;
+  animation:drawmark 2.1s var(--ease-out) .2s forwards;
 }
+.mark.animate .lk-word{opacity:0;animation:wordin .9s var(--ease) 1.5s forwards}
+@keyframes wordin{ from{opacity:0} to{opacity:1} }
 @keyframes drawmark{ to{stroke-dashoffset:0} }
 @media (prefers-reduced-motion:reduce){
   .mark.animate .stroke{animation:none;stroke-dashoffset:0}
+  .mark.animate .lk-word{animation:none;opacity:1}
 }
 
 .lockup{display:flex;align-items:center;gap:12px;text-align:left}
-.lockup .lk-name{
-  font-family:var(--brandface);font-weight:300;font-size:15px;letter-spacing:.24em;
-  text-transform:uppercase;line-height:1;padding-left:.24em;color:var(--brand-word);
-}
-.lockup .lk-tag{
-  display:block;font-family:var(--brandface);font-weight:300;font-size:8.5px;
-  letter-spacing:.42em;text-transform:uppercase;color:var(--brand-dim);
-  margin-top:6px;padding-left:.42em;
-}
+.wordmark svg{display:block}
 
 /* ══ pointer states ════════════════════════════════════════════ */
 #stage{cursor:grab}
@@ -680,17 +673,7 @@ kbd{
 .enter-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
 .enter-btn.primary{background:var(--paper);color:var(--ink);border-color:var(--paper)}
 .enter-btn.primary:hover{background:#C9BFE2;border-color:#C9BFE2;color:var(--ink)}
-.arr-mark{display:flex;flex-direction:column;align-items:center;gap:16px;letter-spacing:0}
-.arr-mark .nm{
-  font-family:var(--brandface);font-weight:300;
-  font-size:clamp(15px,2.4vw,26px);
-  letter-spacing:.30em;text-transform:uppercase;padding-left:.30em;
-  color:var(--brand-word);
-}
-.arr-mark .tg{
-  font-family:var(--brandface);font-weight:300;font-size:clamp(8px,1vw,10px);
-  letter-spacing:.55em;text-transform:uppercase;color:var(--brand-dim);padding-left:.55em;
-}
+.arr-mark{display:flex;justify-content:center;letter-spacing:0}
 
 /* ══ panel: the fuller catalogue entry ════════════════════════ */
 .pv-tabs{
@@ -824,11 +807,7 @@ kbd{
 
 <!-- ═══ arrival ═══════════════════════════════════════════════ -->
 <section id="arrival">
-  <div class="arr-mark">
-    <span id="arrMark"></span>
-    <span class="nm">SoftGallery<span style="opacity:.55">.art</span></span>
-    <span class="tg">For Life</span>
-  </div>
+  <div class="arr-mark"><span id="arrMark"></span></div>
   <h1 class="arr-line">Where art<br><em>comes to life</em></h1>
   <p class="arr-sub">Five rooms, sixteen works, sixty-one pieces on show, and every wall a different surface. Click anywhere on the floor to walk there. Click a painting to stand in front of it.</p>
   <div class="arr-actions">
@@ -851,12 +830,8 @@ kbd{
 <!-- ═══ head-up display ═══════════════════════════════════════ -->
 <div id="hud">
   <div class="hud-top">
-    <button class="wordmark lockup" id="homeBtn" title="Return to the atrium">
+    <button class="wordmark" id="homeBtn" title="Return to the atrium" aria-label="SoftGallery.art — return to the atrium">
       <span id="hudMark"></span>
-      <span>
-        <span class="lk-name">SoftGallery<span style="opacity:.55">.art</span></span>
-        <span class="lk-tag">For Life</span>
-      </span>
     </button>
     <nav class="hud-nav" aria-label="Gallery">
       <button class="hud-btn" id="navIndex">Index</button>
@@ -3180,9 +3155,7 @@ function buildReception(){
   const pg = pc.getContext("2d");
   pg.fillStyle = "#F7F5F1"; pg.fillRect(0, 0, 512, 58);
   drawMark(pg, 20, 8, 42, false);
-  pg.fillStyle = "#1F6E92";
-  pg.font = "300 21px Jost, Futura, 'Century Gothic', Avenir, sans-serif";
-  spaced(pg, "SOFTGALLERY.ART", 300, 36, 5);
+  drawWordmark(pg, 82, 38, 18, false);
 
   const bg = new THREE.Group();
   bg.position.set(x - 0.02, 1.62, z + 0.60);
@@ -4183,85 +4156,159 @@ function replaceForm(form, title, body){
 
 /* ══════════════════════════════════════════════════════════════
    THE MARK — SoftGallery.art / For Life
-   The supplied identity, rebuilt as vector so it stays crisp at any
-   size and can be drawn into the room textures as well as the page.
-   Geometry, stroke weight and gradient are measured from the
-   artwork; the light variant darkens the two upper stops so it
-   stays legible printed on paper.
+   Rebuilt from the master vector (Print.svg), not from a screenshot.
+   The frame is a filled polygon whose bar is 2.44% of its width, and
+   the wordmark and tagline are the real Kara BC letterforms as
+   outlines — so no webfont is needed and the type is exact.
+   Colours are taken from the artwork itself; see the note in the
+   About panel about where the spec sheet disagrees with it.
    ══════════════════════════════════════════════════════════════ */
-/* The mark is one continuous stroke: up the left side to the corner,
-   across the top, down the right, and half way back along the bottom.
-   The lower-left corner is left open — a frame that does not close.
-   Geometry and gradient are taken from the supplied artwork. */
-const MARK_PATH = "M10 50 L10 10 L90 10 L90 90 L50 90";
-const MARK_LEN  = 240;                       /* 40 + 80 + 80 + 40 */
-const MARK_STOPS_DARK  = ["#17D3DD", "#39ADE8", "#5F81F8"];
-const MARK_STOPS_LIGHT = ["#0FA6B4", "#2C7FBE", "#3A55C8"];  /* legible on paper */
-let markId = 0;
 
+/* the frame, normalised into a 0..100 box */
+const MARK_POLY = "100,100 50,100 50,97.56 97.56,97.56 97.56,2.44 2.44,2.44 2.44,50 0,50 0,0 100,0";
+/* its centreline, for the draw-on */
+const MARK_LINE = "M1.22 50 L1.22 1.22 L98.78 1.22 L98.78 98.78 L50 98.78";
+const MARK_LINE_LEN = 292.68;
+
+const BRAND = {
+  teal:"#17EAD9", blue:"#6078EA",        /* the gradient, top to bottom */
+  word:"#31C0DF", tag:"#3FABE2",         /* as filled in the master file */
+  navy:"#0C131D",
+  tealDark:"#0FA79A", blueDark:"#3F52C4" /* legible where the ground is paper */
+};
+
+/* lockup geometry, in the master's own units */
+const LOCK = { w:1021.05, h:534.77,
+  mark:{ x:496.47, y:156.20, s:1.562035 },
+  word:{ x:-7.22, y:454.73, s:1.921154 },
+  tag: { x:330.06, y:534.33, s:1.921154 } };
+
+const WORD_D = "M 11.75 0.47 C 16.17 0.47 19.74 -0.75 19.74 -7.05 L 19.74 -7.99 C 19.74 -15.56 7.05 -20.4 7.05 -24.91 C 7.05 -29.19 8.88 -30.08 11.75 -30.08 C 14.62 -30.08 16.45 -29.19 16.45 -24.91 L 16.45 -23.03 L 19.74 -23.03 L 19.74 -25.85 C 19.74 -32.15 16.21 -33.37 11.75 -33.37 C 7.33 -33.37 3.76 -32.15 3.76 -25.85 L 3.76 -24.91 C 3.76 -18.14 16.45 -13.3 16.45 -7.99 C 16.45 -3.71 14.62 -2.82 11.75 -2.82 C 8.88 -2.82 7.05 -3.71 7.05 -7.99 L 7.05 -10.43 L 3.76 -10.43 L 3.76 -7.05 C 3.76 -0.85 7.29 0.47 11.75 0.47 Z M 43.85 -25.85 L 43.85 -7.05 C 43.85 -0.75 47.42 0.47 51.84 0.47 C 56.31 0.47 59.83 -0.85 59.83 -7.05 L 59.83 -25.85 C 59.83 -32.15 56.31 -33.37 51.84 -33.37 C 47.42 -33.37 43.85 -32.15 43.85 -25.85 Z M 47.14 -7.99 L 47.14 -24.91 C 47.14 -29.19 48.97 -30.08 51.84 -30.08 C 54.71 -30.08 56.54 -29.19 56.54 -24.91 L 56.54 -7.99 C 56.54 -3.71 54.71 -2.82 51.84 -2.82 C 48.97 -2.82 47.14 -3.71 47.14 -7.99 Z M 84.88 -32.9 L 84.88 0 L 88.17 0 L 88.17 -15.04 L 96.16 -15.04 L 96.16 -17.86 L 88.17 -17.86 L 88.17 -30.08 L 98.51 -30.08 L 98.51 -32.9 Z M 133.67 -32.9 L 118.16 -32.9 L 118.16 -30.08 L 124.27 -30.08 L 124.27 0 L 127.56 0 L 127.56 -30.08 L 133.67 -30.08 Z M 171.41 -16.45 L 162.95 -16.45 L 162.95 -13.63 L 168.12 -13.63 L 168.12 -7.99 C 168.12 -3.71 166.29 -2.82 163.42 -2.82 C 160.55 -2.82 158.72 -3.71 158.72 -7.99 L 158.72 -24.91 C 158.72 -29.19 160.55 -30.08 163.42 -30.08 C 166.29 -30.08 168.12 -29.19 168.12 -24.91 L 168.12 -20.21 L 171.41 -20.21 L 171.41 -25.85 C 171.41 -32.15 167.88 -33.37 163.42 -33.37 C 159 -33.37 155.43 -32.15 155.43 -25.85 L 155.43 -7.05 C 155.43 -0.75 159 0.47 163.42 0.47 C 164.88 0.47 167.18 -0.14 168.45 -2.73 L 169.53 0 L 171.41 0 Z M 193.64 0 L 196.93 0 L 198.81 -8.93 L 207.22 -8.93 L 209.1 0 L 212.39 0 L 205.48 -32.9 L 200.55 -32.9 Z M 199.42 -11.75 L 203.04 -29 L 206.66 -11.75 Z M 235.33 -32.9 L 235.33 0 L 247.08 0 L 247.08 -2.82 L 238.62 -2.82 L 238.62 -32.9 Z M 269.07 -32.9 L 269.07 0 L 280.82 0 L 280.82 -2.82 L 272.36 -2.82 L 272.36 -32.9 Z M 302.82 -32.9 L 302.82 0 L 316.92 0 L 316.92 -2.82 L 306.11 -2.82 L 306.11 -15.04 L 314.1 -15.04 L 314.1 -17.86 L 306.11 -17.86 L 306.11 -30.08 L 316.45 -30.08 L 316.45 -32.9 Z M 340.33 0 L 343.62 0 L 343.62 -12.22 L 346.91 -12.22 L 352.78 0 L 356.31 0 L 350.29 -12.6 C 353.06 -13.3 354.9 -15.23 354.9 -19.74 L 354.9 -25.38 C 354.9 -31.68 351.37 -32.9 346.91 -32.9 L 340.33 -32.9 Z M 343.62 -15.04 L 343.62 -30.08 L 346.91 -30.08 C 349.77 -30.08 351.61 -29.19 351.61 -24.91 L 351.61 -20.21 C 351.61 -15.93 349.77 -15.04 346.91 -15.04 Z M 383.43 -12.69 L 383.43 0 L 386.72 0 L 386.72 -12.69 L 394.42 -32.9 L 391.13 -32.9 L 385.07 -17.01 L 379.01 -32.9 L 375.72 -32.9 Z M 415.95 -4.7 L 415.95 0 L 420.18 0 L 420.18 -4.7 Z M 442.41 0 L 445.7 0 L 447.58 -8.93 L 455.99 -8.93 L 457.87 0 L 461.16 0 L 454.25 -32.9 L 449.32 -32.9 Z M 448.19 -11.75 L 451.81 -29 L 455.43 -11.75 Z M 484.1 0 L 487.39 0 L 487.39 -12.22 L 490.68 -12.22 L 496.55 0 L 500.08 0 L 494.06 -12.6 C 496.84 -13.3 498.67 -15.23 498.67 -19.74 L 498.67 -25.38 C 498.67 -31.68 495.14 -32.9 490.68 -32.9 L 484.1 -32.9 Z M 487.39 -15.04 L 487.39 -30.08 L 490.68 -30.08 C 493.55 -30.08 495.38 -29.19 495.38 -24.91 L 495.38 -20.21 C 495.38 -15.93 493.55 -15.04 490.68 -15.04 Z M 535.24 -32.9 L 519.73 -32.9 L 519.73 -30.08 L 525.84 -30.08 L 525.84 0 L 529.13 0 L 529.13 -30.08 L 535.24 -30.08 Z";
+const TAG_D  = "M 2.3 -16.1 L 2.3 0 L 3.91 0 L 3.91 -7.36 L 7.82 -7.36 L 7.82 -8.74 L 3.91 -8.74 L 3.91 -14.72 L 8.97 -14.72 L 8.97 -16.1 Z M 25.35 -12.65 L 25.35 -3.45 C 25.35 -0.37 27.09 0.23 29.26 0.23 C 31.44 0.23 33.17 -0.41 33.17 -3.45 L 33.17 -12.65 C 33.17 -15.73 31.44 -16.33 29.26 -16.33 C 27.09 -16.33 25.35 -15.73 25.35 -12.65 Z M 26.96 -3.91 L 26.96 -12.19 C 26.96 -14.28 27.85 -14.72 29.26 -14.72 C 30.66 -14.72 31.56 -14.28 31.56 -12.19 L 31.56 -3.91 C 31.56 -1.82 30.66 -1.38 29.26 -1.38 C 27.85 -1.38 26.96 -1.82 26.96 -3.91 Z M 50.92 0 L 52.53 0 L 52.53 -5.98 L 54.14 -5.98 L 57.02 0 L 58.74 0 L 55.8 -6.16 C 57.15 -6.51 58.05 -7.45 58.05 -9.66 L 58.05 -12.42 C 58.05 -15.5 56.33 -16.1 54.14 -16.1 L 50.92 -16.1 Z M 52.53 -7.36 L 52.53 -14.72 L 54.14 -14.72 C 55.54 -14.72 56.44 -14.28 56.44 -12.19 L 56.44 -9.89 C 56.44 -7.8 55.54 -7.36 54.14 -7.36 Z M 93.56 -16.1 L 93.56 0 L 99.31 0 L 99.31 -1.38 L 95.17 -1.38 L 95.17 -16.1 Z M 118.57 -16.1 L 114.89 -16.1 L 114.89 -14.72 L 115.92 -14.72 L 115.92 -1.38 L 114.89 -1.38 L 114.89 0 L 118.57 0 L 118.57 -1.38 L 117.53 -1.38 L 117.53 -14.72 L 118.57 -14.72 Z M 135.98 -16.1 L 135.98 0 L 137.59 0 L 137.59 -7.36 L 141.5 -7.36 L 141.5 -8.74 L 137.59 -8.74 L 137.59 -14.72 L 142.65 -14.72 L 142.65 -16.1 Z M 159.37 -16.1 L 159.37 0 L 166.27 0 L 166.27 -1.38 L 160.98 -1.38 L 160.98 -7.36 L 164.89 -7.36 L 164.89 -8.74 L 160.98 -8.74 L 160.98 -14.72 L 166.04 -14.72 L 166.04 -16.1 Z";
+
+let markId = 0;
+function gradStops(onDark){
+  return onDark ? [BRAND.teal, BRAND.blue] : [BRAND.tealDark, BRAND.blueDark];
+}
+
+/* the frame alone */
 function brandMark(px, onDark, animate){
-  const c = onDark ? MARK_STOPS_DARK : MARK_STOPS_LIGHT;
-  const id = "sgm" + (++markId);
+  const c = gradStops(onDark), n = ++markId;
   return '<svg class="mark' + (animate ? " animate" : "") + '" width="' + px + '" height="' + px +
-    '" viewBox="-4 -4 108 108" role="img" aria-label="SoftGallery.art">' +
-    '<defs><linearGradient id="' + id + '" x1="0" y1="0" x2="0" y2="1">' +
-      '<stop offset="0" stop-color="' + c[0] + '"/>' +
-      '<stop offset="0.5" stop-color="' + c[1] + '"/>' +
-      '<stop offset="1" stop-color="' + c[2] + '"/>' +
-    '</linearGradient></defs>' +
-    '<path class="stroke" d="' + MARK_PATH + '" stroke="url(#' + id + ')" stroke-width="5.2"/>' +
+    '" viewBox="0 0 100 100" role="img" aria-label="SoftGallery.art">' + markDefs(n, c, 0, 100) +
+    markBody(n, animate) + '</svg>';
+}
+function markDefs(n, c, y0, y1){
+  return '<defs><linearGradient id="mg' + n + '" gradientUnits="userSpaceOnUse" x1="0" y1="' + y0 +
+    '" x2="0" y2="' + y1 + '">' +
+    '<stop offset="0" stop-color="' + c[0] + '"/><stop offset="1" stop-color="' + c[1] + '"/>' +
+    '</linearGradient><clipPath id="mc' + n + '"><polygon points="' + MARK_POLY + '"/></clipPath></defs>';
+}
+/* drawn by revealing a thick centreline clipped to the frame, so the
+   hairline appears to be drawn rather than fading in */
+function markBody(n, animate){
+  if (!animate) return '<polygon points="' + MARK_POLY + '" fill="url(#mg' + n + ')"/>';
+  return '<g clip-path="url(#mc' + n + ')">' +
+    '<path class="stroke" d="' + MARK_LINE + '" fill="none" stroke="url(#mg' + n + ')" ' +
+    'stroke-width="6" stroke-linecap="butt"/></g>';
+}
+
+/* the master lockup: frame over wordmark over tagline */
+function brandLockup(px, onDark, animate){
+  const c = gradStops(onDark), n = ++markId;
+  const L = LOCK, h = px * L.h / L.w;
+  /* MARK_POLY is normalised to a 0..100 box; the master's scale was written
+     for its original -100..100 range, so it needs doubling here */
+  const ms = L.mark.s * 2;
+  return '<svg class="mark' + (animate ? " animate" : "") + '" width="' + px + '" height="' + h.toFixed(1) +
+    '" viewBox="0 0 ' + L.w + ' ' + L.h + '" role="img" aria-label="SoftGallery.art — For Life">' +
+    '<defs><linearGradient id="mg' + n + '" gradientUnits="userSpaceOnUse" x1="0" y1="' +
+      (L.mark.y - 100 * L.mark.s).toFixed(1) + '" x2="0" y2="' + (L.mark.y + 100 * L.mark.s).toFixed(1) + '">' +
+      '<stop offset="0" stop-color="' + c[0] + '"/><stop offset="1" stop-color="' + c[1] + '"/>' +
+    '</linearGradient><clipPath id="mc' + n + '">' +
+      '<polygon points="' + MARK_POLY + '" transform="translate(' + L.mark.x + ',' + L.mark.y +
+      ') scale(' + ms + ') translate(-50,-50)"/></clipPath></defs>' +
+    (animate
+      ? '<g clip-path="url(#mc' + n + ')"><g transform="translate(' + L.mark.x + ',' + L.mark.y +
+        ') scale(' + ms + ')"><path class="stroke" d="' + MARK_LINE +
+        '" transform="translate(-50,-50)" fill="none" stroke="url(#mg' + n +
+        ')" stroke-width="6" stroke-linecap="butt"/></g></g>'
+      : '<g transform="translate(' + L.mark.x + ',' + L.mark.y + ') scale(' + ms + ')">' +
+        '<polygon points="' + MARK_POLY + '" transform="translate(-50,-50)" fill="url(#mg' + n + ')"/></g>') +
+    '<g class="lk-word" transform="translate(' + L.word.x + ',' + L.word.y + ') scale(' + L.word.s + ')">' +
+      '<path d="' + WORD_D + '" fill="' + (onDark ? BRAND.word : "#1C6E8C") + '"/></g>' +
+    '<g class="lk-word" transform="translate(' + L.tag.x + ',' + L.tag.y + ') scale(' + L.tag.s + ')">' +
+      '<path d="' + TAG_D + '" fill="' + (onDark ? BRAND.tag : "#3A6E8E") + '"/></g>' +
     '</svg>';
 }
 
-/* the same mark drawn into a canvas, for the textures in the rooms */
-function drawMark(g, x, y, size, onDark){
-  const c = onDark ? MARK_STOPS_DARK : MARK_STOPS_LIGHT;
-  const k = size / 100, P = (v) => v * k;
-  const grd = g.createLinearGradient(x, y + P(10), x, y + P(90));
-  grd.addColorStop(0, c[0]); grd.addColorStop(0.5, c[1]); grd.addColorStop(1, c[2]);
-  g.save();
-  g.strokeStyle = grd;
-  g.lineWidth = P(5.2);
-  g.lineCap = "square"; g.lineJoin = "miter";
-  g.beginPath();
-  g.moveTo(x + P(10), y + P(50));
-  g.lineTo(x + P(10), y + P(10));
-  g.lineTo(x + P(90), y + P(10));
-  g.lineTo(x + P(90), y + P(90));
-  g.lineTo(x + P(50), y + P(90));
-  g.stroke();
-  g.restore();
+/* a horizontal secondary lockup, for the corner of the screen */
+function brandLockupH(px, onDark){
+  const c = gradStops(onDark), n = ++markId, L = LOCK;
+  const m = 100, gap = 46;                       /* frame drawn in a 0..100 box */
+  const ws = 68 / 65.05, ts = 30 / 31.8;         /* wordmark and tagline to suit */
+  const wW = 1021.1 / L.word.s * ws, tW = 315.0 / L.tag.s * ts;
+  const totalW = m + gap + Math.max(wW, tW);
+  const h = px * 118 / totalW;
+  return '<svg width="' + (px) + '" height="' + (px * 118 / totalW).toFixed(1) +
+    '" viewBox="0 0 ' + totalW.toFixed(1) + ' 118" role="img" aria-label="SoftGallery.art — For Life">' +
+    markDefs(n, c, 9, 109) +
+    '<g transform="translate(0,9)"><polygon points="' + MARK_POLY + '" fill="url(#mg' + n + ')"/></g>' +
+    '<g transform="translate(' + (m + gap) + ',62) scale(' + ws.toFixed(4) + ')">' +
+      '<path d="' + WORD_D + '" fill="' + (onDark ? BRAND.word : "#1C6E8C") + '"/></g>' +
+    '<g transform="translate(' + (m + gap) + ',104) scale(' + ts.toFixed(4) + ')">' +
+      '<path d="' + TAG_D + '" fill="' + (onDark ? BRAND.tag : "#3A6E8E") + '"/></g>' +
+    '</svg>';
 }
 
-/* the full lockup — mark, wordmark, tagline — for signage and vinyl */
-function drawLockup(g, x, y, w, onDark){
-  const m = w * 0.30;
-  drawMark(g, x + (w - m) / 2, y, m, onDark);
-  const word = onDark ? "#3DB6DE" : "#1F6E92";
-  const dim  = onDark ? "#4499CC" : "#4A7E9B";
-  const fs = w * 0.108, ts = w * 0.042;
-  g.save();
-  g.textAlign = "center";
-  g.fillStyle = word;
-  g.font = "300 " + fs.toFixed(1) + "px Jost, Futura, 'Century Gothic', Avenir, sans-serif";
-  spaced(g, "SOFTGALLERY.ART", x + w / 2, y + m + fs * 1.30, fs * 0.26);
-  g.fillStyle = dim;
-  g.font = "300 " + ts.toFixed(1) + "px Jost, Futura, 'Century Gothic', Avenir, sans-serif";
-  spaced(g, "FOR LIFE", x + w / 2, y + m + fs * 1.30 + ts * 2.5, ts * 0.5);
-  g.restore();
+/* ─── the same assets, drawn into the canvases used in the rooms ─── */
+let P2D_OK = null, WORD_P = null, TAG_P = null;
+function pathsReady(){
+  if (P2D_OK !== null) return P2D_OK;
+  try { WORD_P = new Path2D(WORD_D); TAG_P = new Path2D(TAG_D); P2D_OK = true; }
+  catch(e){ P2D_OK = false; }                    /* very old browser: mark only */
+  return P2D_OK;
 }
-/* canvas has no letter-spacing, so lay the characters out by hand */
-function spaced(g, text, cx, y, track){
-  const chars = text.split("");
-  let total = 0;
-  chars.forEach(ch => { total += g.measureText(ch).width + track; });
-  total -= track;
-  let x = cx - total / 2;
-  const align = g.textAlign;
-  g.textAlign = "left";
-  chars.forEach(ch => { g.fillText(ch, x, y); x += g.measureText(ch).width + track; });
-  g.textAlign = align;
-  return total;
+function drawMark(g, x, y, size, onDark){
+  const c = gradStops(onDark), k = size / 100;
+  const grd = g.createLinearGradient(x, y, x, y + size);
+  grd.addColorStop(0, c[0]); grd.addColorStop(1, c[1]);
+  g.save(); g.translate(x, y); g.scale(k, k);
+  g.beginPath();
+  MARK_POLY.split(" ").forEach((p, i) => {
+    const q = p.split(",");
+    i ? g.lineTo(+q[0], +q[1]) : g.moveTo(+q[0], +q[1]);
+  });
+  g.closePath();
+  g.restore();
+  g.fillStyle = grd; g.fill();
+}
+/* the full lockup at a given width, returns the height it used */
+function drawLockup(g, x, y, w, onDark){
+  const L = LOCK, k = w / L.w;
+  drawMark(g, x + (L.mark.x - 100 * L.mark.s) * k, y + (L.mark.y - 100 * L.mark.s) * k,
+           200 * L.mark.s * k, onDark);
+  if (pathsReady()){
+    g.save();
+    g.translate(x + L.word.x * k, y + L.word.y * k); g.scale(L.word.s * k, L.word.s * k);
+    g.fillStyle = onDark ? BRAND.word : "#1C6E8C"; g.fill(WORD_P);
+    g.restore();
+    g.save();
+    g.translate(x + L.tag.x * k, y + L.tag.y * k); g.scale(L.tag.s * k, L.tag.s * k);
+    g.fillStyle = onDark ? BRAND.tag : "#3A6E8E"; g.fill(TAG_P);
+    g.restore();
+  }
+  return L.h * k;
+}
+/* just the wordmark, at a given cap height */
+function drawWordmark(g, x, y, cap, onDark){
+  if (!pathsReady()) return 0;
+  const k = cap / 65.05;
+  g.save();
+  g.translate(x, y); g.scale(k, k);
+  g.fillStyle = onDark ? BRAND.word : "#1C6E8C"; g.fill(WORD_P);
+  g.restore();
+  return 1021.1 / LOCK.word.s * k;
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -4618,7 +4665,7 @@ function boot(){
 
   progress(6, "Unpacking the work");
   /* fonts first — the wall labels are drawn into textures */
-  /* Bodoni, Archivo and Jost all get drawn into textures, so wait for all of them */
+  /* Bodoni and Archivo get drawn into textures; the wordmark is outlines, so it needs no font */
   const fonts = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
   fonts.catch(() => {}).then(() => new Promise(res => {
     loadImages(res, f => progress(6 + Math.round(18 * f), "Unpacking the work"));
@@ -4669,8 +4716,8 @@ $("#readBtn").addEventListener("click", () => {
 });
 
 /* the mark, on the door and in the corner */
-$("#arrMark").innerHTML = brandMark(96, true, !REDUCED);
-$("#hudMark").innerHTML = brandMark(34, true, false);
+$("#arrMark").innerHTML = brandLockup(Math.min(330, innerWidth * 0.66), true, !REDUCED);
+$("#hudMark").innerHTML = brandLockupH(168, true);
 
 $("#enterBtn").disabled = true;
 $("#enterQuiet").disabled = true;
