@@ -584,6 +584,26 @@ kbd{
 .done .didone{font-size:26px;font-style:italic;margin:0 0 10px}
 .done p{font-size:13.5px;color:var(--slate);margin:0;line-height:1.7}
 
+/* two fields on one line where they belong together */
+.two{display:grid;gap:16px;grid-template-columns:1fr 1fr}
+@media (max-width:520px){ .two{grid-template-columns:1fr} }
+
+.filebtn{
+  display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+  padding:13px 14px;border:1px dashed var(--hair);border-radius:2px;
+  background:var(--paper);font-size:14.5px;color:var(--slate);
+  transition:border-color .2s,color .2s,background .2s;
+}
+.filebtn:hover{border-color:var(--iris);color:var(--ink)}
+.filebtn svg{width:17px;height:17px;flex:0 0 auto;color:var(--pumice)}
+.filebtn.has{border-style:solid;border-color:var(--iris);color:var(--ink)}
+.filebtn.has svg{color:var(--iris)}
+.field.err .filebtn{border-color:#9B3B2E}
+.formnote{
+  font-size:11px;letter-spacing:.02em;color:var(--pumice);
+  margin:2px 0 0;text-align:center;
+}
+
 /* ── about / editorial columns ──────────────────────────────── */
 .prose{max-width:70ch}
 .prose h3{font-family:var(--display);font-size:clamp(21px,3vw,27px);margin:38px 0 12px;letter-spacing:-.012em}
@@ -865,6 +885,7 @@ kbd{
       <button class="hud-btn" id="navIndex">Index</button>
       <button class="hud-btn" id="navPlan">Plan</button>
       <button class="hud-btn" id="navMine">My gallery<span class="dot" id="mineDot" hidden></span></button>
+      <button class="hud-btn" id="navJoin">Join Soft Gallery</button>
       <button class="hud-btn" id="navTour" aria-pressed="false">Guided tour</button>
       <button class="hud-btn" id="navSound" aria-pressed="false">Sound off</button>
       <button class="hud-btn" id="navQuality">Quality: high</button>
@@ -1013,6 +1034,49 @@ kbd{
       </div>
       <div class="field"><label for="eNote">Message</label><textarea id="eNote"></textarea></div>
       <button class="btn wide" type="submit">Send enquiry</button>
+    </form>
+  </div>
+</section>
+
+<!-- ═══ join ══════════════════════════════════════════════════ -->
+<section class="sheet" id="sheetJoin" role="dialog" aria-modal="true" aria-labelledby="joH" aria-hidden="true">
+  <div class="sheet-head">
+    <div>
+      <p class="eyebrow">Artist submissions</p>
+      <h2 id="joH">Join Soft Gallery</h2>
+      <p class="lede">Soft Gallery is always looking for distinctive artistic voices. Submit your work to be considered for representation and future Soft Gallery projects.</p>
+    </div>
+    <button class="x-btn" data-close="sheetJoin" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="sheet-body">
+    <form class="form" id="joinForm" novalidate>
+      <div class="two">
+        <div class="field"><label for="jFirst">First name</label><input id="jFirst" type="text" autocomplete="given-name"></div>
+        <div class="field"><label for="jLast">Last name</label><input id="jLast" type="text" autocomplete="family-name"></div>
+      </div>
+      <div class="field"><label for="jEmail">Email</label><input id="jEmail" type="email" autocomplete="email"></div>
+      <div class="field">
+        <label for="jBio">Short artist bio</label>
+        <textarea id="jBio" maxlength="700" placeholder="Where you work, what you make, and what you are working on now."></textarea>
+        <div class="hint"><span id="jCount">0</span> / 700 characters</div>
+      </div>
+      <div class="two">
+        <div class="field"><label for="jSocial">Instagram or social media</label><input id="jSocial" type="text" inputmode="url" placeholder="@yourname"></div>
+        <div class="field"><label for="jSite">Portfolio website</label><input id="jSite" type="text" inputmode="url" placeholder="yoursite.com"></div>
+      </div>
+      <div class="field" id="jFileField">
+        <label for="jFileBtn">Portfolio</label>
+        <input id="jFile" type="file" accept="application/pdf,.pdf" class="sr" tabindex="-1" aria-hidden="true">
+        <button type="button" class="filebtn" id="jFileBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0L7 9m5-5l5 5M4 18v1a2 2 0 002 2h12a2 2 0 002-2v-1"/></svg>
+          <span id="jFileName">Choose a PDF</span>
+        </button>
+        <div class="hint" id="jFileHint">PDF, up to 25 MB. A website or social link on its own is fine too.</div>
+      </div>
+      <button class="btn wide" type="submit">Submit</button>
+      <p class="formnote">This demonstration does not yet transmit submissions.</p>
     </form>
   </div>
 </section>
@@ -4781,6 +4845,7 @@ function bindInput(){
   $("#navPlan").addEventListener("click",  () => openSheet("sheetPlan"));
   $("#navMine").addEventListener("click",  () => openSheet("sheetMine"));
   $("#navAbout").addEventListener("click", () => openSheet("sheetAbout"));
+  $("#navJoin").addEventListener("click",  () => openSheet("sheetJoin"));
   $("#navTour").addEventListener("click",  () => setTour(!tour.on));
   $("#navSound").addEventListener("click", () => setSound(!soundOn));
   $("#navQuality").addEventListener("click", () => setQuality(QUALITY === "high" ? "low" : "high"));
@@ -4816,6 +4881,60 @@ function bindInput(){
     replaceForm($("#viewForm"), "Your list is with us",
       "We will come back with availability, framing and what else these artists have.");
   });
+  /* ─── artist submissions ───────────────────────────────────── */
+  let joinFile = null;
+  $("#jBio").addEventListener("input", e => { $("#jCount").textContent = e.target.value.length; });
+  $("#jFileBtn").addEventListener("click", () => $("#jFile").click());
+  $("#jFile").addEventListener("change", e => {
+    const f = e.target.files && e.target.files[0];
+    const btn = $("#jFileBtn"), hint = $("#jFileHint"), field = $("#jFileField");
+    field.classList.remove("err");
+    if (!f){ joinFile = null; btn.classList.remove("has"); $("#jFileName").textContent = "Choose a PDF"; return; }
+    const isPdf = f.type === "application/pdf" || /\.pdf$/i.test(f.name);
+    if (!isPdf){
+      joinFile = null; e.target.value = "";
+      btn.classList.remove("has"); $("#jFileName").textContent = "Choose a PDF";
+      field.classList.add("err"); hint.textContent = "That is not a PDF. Please export your portfolio as one.";
+      return;
+    }
+    if (f.size > 25 * 1024 * 1024){
+      joinFile = null; e.target.value = "";
+      btn.classList.remove("has"); $("#jFileName").textContent = "Choose a PDF";
+      field.classList.add("err");
+      hint.textContent = "That file is " + (f.size / 1048576).toFixed(0) + " MB. The limit is 25 MB.";
+      return;
+    }
+    joinFile = f;
+    btn.classList.add("has");
+    $("#jFileName").textContent = f.name;
+    hint.textContent = (f.size / 1048576).toFixed(1) + " MB · ready";
+  });
+
+  $("#joinForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const ok = validate([
+      { sel:"#jFirst", test:v => v.length > 1, bad:"We need a first name." },
+      { sel:"#jLast",  test:v => v.length > 1, bad:"We need a last name." },
+      { sel:"#jEmail", test:v => EMAIL.test(v), bad:"That email address will not reach you." },
+      { sel:"#jBio",   test:v => v.length > 29,
+        bad:"A few sentences, please — thirty characters at minimum.",
+        hint:$("#jBio").value.length + " / 700 characters" }
+    ]);
+    /* something to actually look at: a file, a site, or a social handle */
+    const hasWork = !!joinFile || $("#jSite").value.trim().length > 3 || $("#jSocial").value.trim().length > 2;
+    const ff = $("#jFileField");
+    ff.classList.toggle("err", !hasWork);
+    if (!hasWork){
+      $("#jFileHint").textContent = "Please attach a PDF or give us a website or social link.";
+      if (ok) $("#jFileBtn").focus();
+    } else if (!joinFile){
+      $("#jFileHint").textContent = "PDF, up to 25 MB. A website or social link on its own is fine too.";
+    }
+    if (!ok || !hasWork) return;
+    replaceForm($("#joinForm"), "Thank you",
+      "Your submission is with us. We read every one, and a curator will reply whether or not it is a fit — usually within three weeks.");
+  });
+
   $("#fallbackBtn").addEventListener("click", () => {
     $("#nowebgl").classList.remove("on");
     $("#arrival").classList.add("gone");
