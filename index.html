@@ -1216,7 +1216,8 @@ kbd{
       <div class="cols">
         <div class="col-card"><div class="rule-brass"></div><h4>Curate</h4><p>A small number of artists, chosen for the work rather than for their following. Every piece is selected by a person who has to defend the choice.</p></div>
         <div class="col-card"><div class="rule-brass"></div><h4>Explain</h4><p>Provenance in the artist's own voice. How it was made, what it is about, what was going on at the time. Written and filmed in the studio.</p></div>
-        <div class="col-card"><div class="rule-brass"></div><h4>Guide</h4><p>A curator on the other end, for the first purchase or the fiftieth. Scale, framing, placement, and an honest answer when a work is wrong for you.</p></div>
+        <div class="col-card"><div class="rule-brass"></div><h4>Frame</h4><p>Every work here hangs in the same frame, and it is our mark: a continuous bar with the lower-left corner left open. It carries the same teal-to-blue gradient as the mark, top to foot. Bar weight is what separates a historic work from a contemporary one.</p></div>
+      <div class="col-card"><div class="rule-brass"></div><h4>Guide</h4><p>A curator on the other end, for the first purchase or the fiftieth. Scale, framing, placement, and an honest answer when a work is wrong for you.</p></div>
       </div>
 
       <h3>What we commit to</h3>
@@ -2943,11 +2944,45 @@ function contactMaterial(){
   return CONTACT;
 }
 
-let GILT = null, DARKFRAME = null, MOUNT = null, GLASS = null, STRETCH = null;
+let SGGRAD = null, MOUNT = null, GLASS = null, STRETCH = null;
+
+/* One shared material for every frame. The gradient is not a texture — it is
+   written into the vertex colours from each vertex's height, which is exact on
+   the front face, the bevel and the returns alike, needs no UV mapping, and
+   costs one material for the whole building.
+
+   Vertex colours are consumed as linear, so the brand hexes are converted
+   rather than fed in raw — otherwise they render dark and oversaturated. */
+function frameMaterial(){
+  if (!SGGRAD) SGGRAD = new THREE.MeshStandardMaterial({
+    color: 0xFFFFFF, vertexColors: true,
+    roughness: 0.28, metalness: 0.60, envMapIntensity: 1.35
+  });
+  return SGGRAD;
+}
+let _cTop = null, _cBot = null;
+function paintFrameGradient(geo){
+  if (!_cTop){
+    _cTop = new THREE.Color(BRAND.teal).convertSRGBToLinear();
+    _cBot = new THREE.Color(BRAND.blue).convertSRGBToLinear();
+  }
+  geo.computeBoundingBox();
+  const y0 = geo.boundingBox.min.y, y1 = geo.boundingBox.max.y;
+  const span = (y1 - y0) || 1;
+  const pos = geo.attributes.position;
+  const col = new Float32Array(pos.count * 3);
+  const c = new THREE.Color();
+  for (let i = 0; i < pos.count; i++){
+    /* teal at the top, blue at the foot, exactly as the mark runs */
+    const t = Math.min(1, Math.max(0, (y1 - pos.getY(i)) / span));
+    c.copy(_cTop).lerp(_cBot, t);
+    col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
+  }
+  geo.setAttribute("color", new THREE.BufferAttribute(col, 3));
+}
 function frameMats(){
-  if (GILT) return;
-  GILT = new THREE.MeshStandardMaterial({ color:0xB08D4F, roughness:0.34, metalness:0.92, envMapIntensity:1.5 });
-  DARKFRAME = new THREE.MeshStandardMaterial({ color:0x23221F, roughness:0.44, metalness:0.25, envMapIntensity:0.8 });
+  if (MOUNT) return;            /* called once per work; build these once */
+  frameMaterial();
   MOUNT = new THREE.MeshStandardMaterial({ color:0xF2EFE7, roughness:0.92, metalness:0, envMapIntensity:0.4 });
   STRETCH = new THREE.MeshStandardMaterial({ color:0xCFC8BC, roughness:0.78, metalness:0, envMapIntensity:0.4 });
   /* not real glass — a faint reflective skin, which is what you
@@ -2959,24 +2994,44 @@ function frameMats(){
 /* One bevelled moulding rather than four flat bars. A real gilt frame has a
    profile, and the chamfer is what catches a raking spotlight along its
    length. It is also one mesh instead of four. */
-function buildFrame(g, W, H, fw, depth, mat, z){
-  const ow = W / 2 + fw, oh = H / 2 + fw;
-  const shape = new THREE.Shape();
-  shape.moveTo(-ow, -oh); shape.lineTo(ow, -oh); shape.lineTo(ow, oh);
-  shape.lineTo(-ow, oh); shape.closePath();
-  const hole = new THREE.Path();
-  hole.moveTo(-W / 2, -H / 2); hole.lineTo(-W / 2, H / 2);
-  hole.lineTo(W / 2, H / 2); hole.lineTo(W / 2, -H / 2); hole.closePath();
-  shape.holes.push(hole);
-  const bev = Math.min(fw * 0.34, depth * 0.30);
-  const geo = new THREE.ExtrudeGeometry(shape, {
-    depth: Math.max(0.008, depth - bev * 2), bevelEnabled: true,
+/* ─── the house frame ─────────────────────────────────────────
+   The mark is a picture frame, so the picture frames are the mark:
+   a continuous bar with the lower-left corner left open, carrying the
+   same teal-to-blue gradient. Same proportion as the logo, extruded at
+   the size of the work, with a chamfer so a raking spotlight runs
+   along it.
+
+   W and H here are the OPENING, not the outer size. The bar sits
+   outside that. Walk the polygon anticlockwise from the bottom-right
+   and it traces the mark exactly: outer bottom to the midpoint, step
+   in, inner bottom, inner right, inner top, inner left down to the
+   midpoint, step out, outer left, outer top, close. */
+function sgFrame(g, W, H, fw, depth, mat, z){
+  const ow = W / 2 + fw, oh = H / 2 + fw, iw = W / 2, ih = H / 2;
+  const sh = new THREE.Shape();
+  sh.moveTo( ow, -oh);        /* bottom-right, outer            */
+  sh.lineTo(  0, -oh);        /* outer bottom, stopping half way */
+  sh.lineTo(  0, -ih);        /* the bar's thickness             */
+  sh.lineTo( iw, -ih);        /* inner bottom, back to the right */
+  sh.lineTo( iw,  ih);        /* inner right, up                 */
+  sh.lineTo(-iw,  ih);        /* inner top, across               */
+  sh.lineTo(-iw,   0);        /* inner left, down half way       */
+  sh.lineTo(-ow,   0);        /* the bar's thickness             */
+  sh.lineTo(-ow,  oh);        /* outer left, up                  */
+  sh.lineTo( ow,  oh);        /* outer top, across               */
+  sh.closePath();             /* outer right, down               */
+
+  const bev = Math.min(fw * 0.30, depth * 0.26);
+  const geo = new THREE.ExtrudeGeometry(sh, {
+    depth: Math.max(0.006, depth - bev * 2), bevelEnabled: true,
     bevelThickness: bev, bevelSize: bev, bevelOffset: 0, bevelSegments: 2, curveSegments: 1
   });
+  paintFrameGradient(geo);
   const m = new THREE.Mesh(geo, mat);
   m.position.z = z + bev;
   m.castShadow = true;
   g.add(m); CASTERS.push(m);
+  return m;
 }
 
 function hangWork(work){
@@ -3003,39 +3058,41 @@ function hangWork(work){
     m.position.z = z; g.add(m); return m;
   };
 
-  if (work.frame === "none"){
-    /* contemporary painting on its own stretcher, no frame */
-    const body = new THREE.Mesh(new THREE.BoxGeometry(W, H, 0.048), STRETCH);
-    body.position.z = 0.024; body.castShadow = true;
-    g.add(body); CASTERS.push(body);
-    face = mk(W, H, 0.0495);
-  } else {
-    const gilt = work.frame === "gilt";
-    const fw = Math.min(0.15, Math.max(0.055, Math.max(W, H) * (gilt ? 0.085 : 0.045)));
-    const mw = work.glass ? Math.min(0.13, Math.max(W, H) * 0.09) : 0;   /* mount board */
-    const depth = gilt ? 0.10 : 0.055;
-    if (gilt){
-      const back = new THREE.Mesh(new THREE.BoxGeometry(W + mw * 2, H + mw * 2, 0.028),
-        work.glass ? MOUNT : STRETCH);
-      back.position.z = 0.014; back.castShadow = true;
-      g.add(back); CASTERS.push(back);
-      buildFrame(g, W + mw * 2, H + mw * 2, fw, depth, GILT, 0);   /* profile catches the light */
-    } else {
-      /* one box reads as a slim modern frame and costs a sixth of the draw calls */
-      const body = new THREE.Mesh(
-        new THREE.BoxGeometry(W + (mw + fw) * 2, H + (mw + fw) * 2, depth), DARKFRAME);
-      body.position.z = depth / 2; body.castShadow = true;
-      g.add(body); CASTERS.push(body);
-      const mount = new THREE.Mesh(new THREE.PlaneGeometry(W + mw * 2, H + mw * 2),
-        work.glass ? MOUNT : STRETCH);
-      mount.position.z = depth + 0.001; g.add(mount);
-    }
-    face = mk(W, H, gilt ? 0.030 : depth + 0.003);
-    if (work.glass){
-      const gl = new THREE.Mesh(new THREE.PlaneGeometry(W + mw * 2, H + mw * 2), GLASS);
-      gl.position.z = gilt ? depth - 0.012 : depth + 0.010;
-      g.add(gl);
-    }
+  /* Three finishes of one frame. The historic works keep brass, because a
+     gallery does not reframe a Leonardo; everything contemporary takes the
+     house metal. Works on their own stretcher get a floater, where the bar
+     stands off and you can see daylight between it and the canvas. */
+  const gilt = work.frame === "gilt", floater = work.frame === "none";
+  const big = Math.max(W, H);
+  const fw = floater ? Math.min(0.046, Math.max(0.020, big * 0.028))
+           : gilt    ? Math.min(0.075, Math.max(0.034, big * 0.048))
+                     : Math.min(0.052, Math.max(0.024, big * 0.032));
+  const depth = gilt ? 0.075 : (floater ? 0.058 : 0.048);
+  const mw = work.glass ? Math.min(0.11, big * 0.075) : 0;   /* mount board */
+  const reveal = floater ? 0.022 : 0;                        /* the floater's gap */
+  const backD = floater ? 0.042 : 0.026;
+
+  const back = new THREE.Mesh(
+    new THREE.BoxGeometry(W + mw * 2, H + mw * 2, backD),
+    work.glass ? MOUNT : STRETCH);
+  back.position.z = backD / 2; back.castShadow = true;
+  g.add(back); CASTERS.push(back);
+
+  /* how far past the work the frame actually reaches — the label is placed
+     from this rather than from a fixed offset, or a wide mount plus a bar
+     puts the plate behind the moulding */
+  const reach = mw + reveal + fw;
+
+  /* every frame in the building carries the mark's gradient; the bar weight
+     is what separates a historic work from a contemporary one */
+  sgFrame(g, W + (mw + reveal) * 2, H + (mw + reveal) * 2, fw, depth,
+          frameMaterial(), 0);
+
+  face = mk(W, H, backD + 0.0025);
+  if (work.glass){
+    const gl = new THREE.Mesh(new THREE.PlaneGeometry(W + mw * 2, H + mw * 2), GLASS);
+    gl.position.z = depth - 0.010;
+    g.add(gl);
   }
 
   const cs = new THREE.Mesh(new THREE.PlaneGeometry(W + 0.55, H + 0.55), contactMaterial());
@@ -3047,7 +3104,7 @@ function hangWork(work){
       blending:THREE.AdditiveBlending, depthWrite:false }));
   glow.position.z = 0.003; g.add(glow);
 
-  addLabel(work, g, -(W / 2 + 0.30), 1.30 - centreY, 0.40);
+  addLabel(work, g, -(W / 2 + reach + 0.32), 1.30 - centreY, 0.40);
 
   const nrm = sideNormal(work.side);
   let pool = null;
