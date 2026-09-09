@@ -1103,6 +1103,37 @@ kbd{
   .rail-item{white-space:nowrap}
 }
 
+
+/* the admin's section header, with an action on the right */
+.ad-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.ad-head .ad-sub{margin-bottom:18px}
+
+/* sortable column headings */
+.ad-table th.sortable{cursor:pointer;user-select:none;transition:color .15s}
+.ad-table th.sortable:hover{color:var(--ink)}
+.ad-table th.sortable i{font-style:normal;font-size:8px;margin-left:5px;color:var(--brass)}
+
+/* the work being edited, shown at the top */
+.ad-hero{display:grid;gap:22px;grid-template-columns:minmax(160px,240px) minmax(0,1fr);align-items:start}
+.hero-shot{
+  background:var(--paper-2);border:1px solid var(--hair);border-radius:2px;
+  min-height:150px;display:grid;place-items:center;padding:12px;
+}
+.hero-shot img{max-width:100%;max-height:290px;display:block;box-shadow:0 8px 22px rgba(20,22,26,.18)}
+.hero-shot span{
+  font-family:var(--label);font-size:10px;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--pumice);
+}
+.hero-side .filebtn{max-width:340px}
+@media (max-width:700px){ .ad-hero{grid-template-columns:1fr} }
+
+/* the behaviour bars */
+.ad-table td.barcell{width:34%;min-width:90px}
+.bar{
+  display:block;height:9px;border-radius:5px;
+  background:linear-gradient(90deg,var(--brand-teal),var(--brand-blue));
+}
+
 /* screen-reader only */
 .sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
@@ -1473,6 +1504,8 @@ kbd{
       <button class="rail-item" data-sec="dash" aria-current="true">Dashboard</button>
       <button class="rail-item" data-sec="works">Artworks</button>
       <button class="rail-item" data-sec="hang">The Hang</button>
+      <button class="rail-item" data-sec="press">Press Room</button>
+      <button class="rail-item" data-sec="stats">Behaviour</button>
       <button class="rail-item" data-sec="subs">Submissions<span class="rail-count" id="adSubCount"></span></button>
     </nav>
     <div class="admin-main" id="adMain"></div>
@@ -1606,7 +1639,7 @@ const STORE_KEY = "sg.admin.v1";
 const ADMIN_PASS = "softgallery";
 
 let STORE = { series:{}, hangs:null, artists:{}, rooms:{}, press:null,
-              submissions:[], log:[] };
+              images:{}, stats:null, submissions:[], log:[] };
 let storeReady = false;
 
 (function initStore(){
@@ -1630,9 +1663,17 @@ function storeSave(){
   catch(e){ return false; }          /* usually the 5 MB quota */
 }
 function storeReset(){
-  STORE = { series:{}, hangs:null, artists:{}, rooms:{}, press:null, submissions:[], log:[] };
+  STORE = { series:{}, hangs:null, artists:{}, rooms:{}, press:null,
+            images:{}, stats:null, submissions:[], log:[] };
   if (storeReady) try { localStorage.removeItem(STORE_KEY); } catch(e){}
 }
+/* localStorage is about 5 MB and an uploaded painting is a couple of hundred
+   kilobytes of base64, so the admin shows how much is left */
+function storeBytes(){
+  try { return (localStorage.getItem(STORE_KEY) || "").length; } catch(e){ return 0; }
+}
+const STORE_LIMIT = 5 * 1024 * 1024;
+
 function storeNote(what){
   STORE.log = (STORE.log || []).slice(-60);
   STORE.log.push({ t: new Date().toISOString(), what });
@@ -1913,10 +1954,24 @@ Object.keys(SERIES).forEach(k => {
   if (S.onRequest === undefined) S.onRequest = false;
 });
 
+/* Anything created in the admin arrives as a whole entry rather than a patch,
+   so it needs every field the gallery reads. These are the fallbacks. */
+const SERIES_DEFAULTS = {
+  title:"Untitled", artist:"Unknown", place:"", year:new Date().getFullYear(),
+  medium:"Painting", movement:"Contemporary", colour:"Neutral", ratio:1,
+  frame:"none", glass:false, price:null, onRequest:false,
+  avail:"draft", rights:"pending", ph:true,
+  palette:["#B4AC9C","#8C887F","#E7E3DC","#4A4E57","#F7F5F1"],
+  story:"", quote:"", technique:"", exhibited:"Not previously exhibited", why:""
+};
+
 /* the admin's edits, laid over the top before anything is built from them */
 Object.keys(STORE.series || {}).forEach(k => {
-  if (SERIES[k]) Object.assign(SERIES[k], STORE.series[k]);
+  if (!SERIES[k]) SERIES[k] = Object.assign({}, SERIES_DEFAULTS);
+  Object.assign(SERIES[k], STORE.series[k]);
 });
+/* uploaded artwork images, held as data URIs beside the ones on disk */
+Object.assign(IMAGES, STORE.images || {});
 if (Array.isArray(STORE.hangs)){
   HANGS.length = 0;
   STORE.hangs.forEach(h => HANGS.push(h));
@@ -4455,8 +4510,9 @@ function frame(){
   if (Math.abs(camera.fov - P.fov) > 0.01){ camera.fov = P.fov; camera.updateProjectionMatrix(); }
 
   const r = roomAt(P.x, P.z);
-  if (r && !r.corridor && r !== P.room){ P.room = r; setRoomSign(r); }
+  if (r && !r.corridor && r !== P.room){ P.room = r; setRoomSign(r); statRoom(r.id).entries++; }
   setRoomTone(r);
+  statTick(dt, r);
   /* the eye adjusts: a dark corridor opens up, a bright room stops down.
      Slow enough to feel like adaptation rather than a fade. */
   if (r && r.ev){
@@ -4755,6 +4811,7 @@ function openPanel(work){
   $("#panel").classList.add("on");
   $("#panel").setAttribute("aria-hidden", "false");
   uiOpen = true;
+  statOpen(work.img || work.id);
   hideMarker();
   whoosh(true);
   const piece = pieceOf(work);
@@ -4816,6 +4873,7 @@ function closePanel(){
   $("#panel").setAttribute("aria-hidden", "true");
   current = null;
   whoosh(false);
+  statClose();
   endZoom();
   $("#lens").classList.remove("focus");
   if (!anySheetOpen()) uiOpen = false;
@@ -5013,7 +5071,12 @@ function renderPlanSheet(){
 function toggleSave(id){
   const i = saved.indexOf(id);
   if (i >= 0){ saved.splice(i, 1); toast("Removed from my gallery"); }
-  else { saved.push(id); toast("Saved to my gallery"); }
+  else {
+    saved.push(id);
+    const w = CATALOGUE.find(x => x.id === id);
+    if (w) statWork(w.img || w.id).saves++;
+    toast("Saved to my gallery");
+  }
   $("#mineDot").hidden = saved.length === 0;
   if (current && current.id === id) $("#pvSave").setAttribute("aria-pressed", String(i < 0));
   return i < 0;
@@ -5290,7 +5353,7 @@ function adRender(){
   const subs = (STORE.submissions || []).filter(s => s.stage !== "Declined").length;
   $("#adSubCount").textContent = subs || "";
   $("#adSubCount").hidden = !subs;
-  ({ dash:adDash, works:adWorks, hang:adHang, subs:adSubs }[adSection] || adDash)();
+  ({ dash:adDash, works:adWorks, hang:adHang, press:adPress, stats:adStats, subs:adSubs }[adSection] || adDash)();
   const main = $("#adMain");
   if (main) main.scrollTop = 0;
 }
@@ -5343,95 +5406,211 @@ function adDash(){
 }
 
 /* ─── artworks ──────────────────────────────────────────────── */
-let adEditing = null;
+let adEditing = null;                    /* a key, or "new" */
+let adSort = { by:"artist", dir:1 };
+
+/* an uploaded image, shrunk to roughly the size of the shipped ones */
+function adShrink(file, edge){
+  return new Promise((res, rej) => {
+    const im = new Image(), url = URL.createObjectURL(file);
+    im.onload = () => {
+      const sc = Math.min(1, edge / Math.max(im.width, im.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(im.width * sc); c.height = Math.round(im.height * sc);
+      c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      res({ src:c.toDataURL("image/jpeg", 0.74), w:im.width, h:im.height,
+            ratio:im.width / im.height });
+    };
+    im.onerror = () => { URL.revokeObjectURL(url); rej(new Error("unreadable")); };
+    im.src = url;
+  });
+}
+function adKeyFor(title){
+  const base = (title || "work").toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 14) || "work";
+  let k = base, i = 2;
+  while (SERIES[k]) k = base + (i++);
+  return k;
+}
+
+const AD_COLS = [
+  { id:"title",  label:"Work",         get:w => w.title },
+  { id:"artist", label:"Artist",       get:w => w.artist },
+  { id:"medium", label:"Medium",       get:w => w.medium },
+  { id:"avail",  label:"Availability", get:w => AVAIL[w.avail] || w.avail },
+  { id:"price",  label:"Price",        get:w => (w.price === null ? -1 : w.price), num:true },
+  { id:"rights", label:"Rights",       get:w => RIGHTS[w.rights] || w.rights },
+  { id:"hangs",  label:"Hangs",        get:(w, k, h) => h.filter(x => x.i === k).length, num:true }
+];
+
 function adWorks(){
   if (adEditing) return adWorkEditor(adEditing);
   const hangs = adHangs();
-  const rows = Object.keys(SERIES).map(k => {
+  const col = AD_COLS.find(c => c.id === adSort.by) || AD_COLS[1];
+  const keys = Object.keys(SERIES).sort((x, y) => {
+    const vx = col.get(SERIES[x], x, hangs), vy = col.get(SERIES[y], y, hangs);
+    const r = col.num ? vx - vy : String(vx).localeCompare(String(vy), "en");
+    return (r || String(SERIES[x].title).localeCompare(String(SERIES[y].title))) * adSort.dir;
+  });
+  const head = '<th></th>' + AD_COLS.map(c =>
+    '<th class="sortable' + (c.num ? " num" : "") + '" data-sort="' + c.id + '">' + c.label +
+    (adSort.by === c.id ? '<i>' + (adSort.dir > 0 ? "\u25b2" : "\u25bc") + '</i>' : '') + '</th>').join("");
+  const rows = keys.map(k => {
     const w = SERIES[k], n = hangs.filter(h => h.i === k).length;
     return '<tr class="click" data-k="' + k + '">' +
       '<td><img class="thumb" src="' + esc(IMAGES[k] || "") + '" alt=""></td>' +
-      '<td><span class="tt">' + esc(w.title) + '</span><br><small style="color:var(--pumice)">' + esc(w.artist) + '</small></td>' +
+      '<td><span class="tt">' + esc(w.title) + '</span>' +
+        (STORE.series[k] ? ' <small style="color:var(--brass)">edited</small>' : '') + '</td>' +
+      '<td>' + esc(w.artist) + '</td>' +
       '<td>' + esc(w.medium) + '</td>' +
       '<td>' + pill(w.avail, AVAIL[w.avail] || w.avail) + '</td>' +
-      '<td class="num">' + (w.onRequest ? "On request" : (w.price > 0 ? "£" + w.price.toLocaleString("en-GB") : "—")) + '</td>' +
+      '<td class="num">' + (w.onRequest ? "On request" : (w.price > 0 ? "\u00a3" + w.price.toLocaleString("en-GB") : "\u2014")) + '</td>' +
       '<td>' + pill(w.rights, RIGHTS[w.rights] || w.rights) + '</td>' +
       '<td class="num">' + n + '</td></tr>';
   }).join("");
+
+  const used = storeBytes();
   $("#adMain").innerHTML =
-    '<h3 class="ad-h">Artworks</h3>' +
-    '<p class="ad-sub">The catalogue. One row per work, however many times it is hung. Editing a work changes it everywhere it appears.</p>' +
-    '<div class="ad-block"><table class="ad-table"><thead><tr>' +
-      '<th></th><th>Work</th><th>Medium</th><th>Availability</th><th class="num">Price</th><th>Rights</th><th class="num">Hangs</th>' +
-    '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+    '<div class="ad-head"><div>' +
+      '<h3 class="ad-h">Artworks</h3>' +
+      '<p class="ad-sub">One row per work, however many times it is hung. Click any heading to sort by it.</p>' +
+    '</div><button class="btn" id="adNew">New artwork</button></div>' +
+    '<div class="ad-block"><table class="ad-table"><thead><tr>' + head +
+    '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '<p class="ad-note">' + keys.length + ' works. This browser is holding ' +
+      (used / 1024).toFixed(0) + ' KB of the ' + (STORE_LIMIT / 1048576).toFixed(0) +
+      ' MB available \u2014 room for roughly ' +
+      Math.max(0, Math.floor((STORE_LIMIT - used) / 220000)) + ' more uploaded images.</p>';
+
   $("#adMain").querySelectorAll("tr.click").forEach(tr =>
     tr.addEventListener("click", () => { adEditing = tr.dataset.k; adWorks(); }));
+  $("#adMain").querySelectorAll("[data-sort]").forEach(th =>
+    th.addEventListener("click", () => {
+      const id = th.dataset.sort;
+      adSort = { by:id, dir: adSort.by === id ? -adSort.dir : 1 };
+      adWorks();
+    }));
+  $("#adNew").addEventListener("click", () => { adEditing = "new"; adWorks(); });
 }
 
-function adWorkEditor(k){
-  const w = SERIES[k];
-  const sel = (id, label, map, val) =>
+function adWorkEditor(key){
+  const isNew = key === "new";
+  const w = isNew ? Object.assign({}, SERIES_DEFAULTS) : SERIES[key];
+  const onDisk = !isNew && !!IMAGES[key] && !/^data:/.test(IMAGES[key] || "");
+  let pending = null;                    /* an image chosen but not yet saved */
+
+  const sel = (id, label, map, val, hint) =>
     '<div class="field"><label for="' + id + '">' + label + '</label><select id="' + id + '">' +
-    Object.keys(map).map(o => '<option value="' + o + '"' + (o === val ? " selected" : "") + '>' + map[o] + '</option>').join("") +
-    '</select></div>';
-  const txt = (id, label, val, extra) =>
+    Object.keys(map).map(o => '<option value="' + o + '"' + (o === val ? " selected" : "") + '>' +
+      map[o] + '</option>').join("") + '</select>' +
+    (hint ? '<div class="hint">' + hint + '</div>' : '') + '</div>';
+  const txt = (id, label, val, type) =>
     '<div class="field"><label for="' + id + '">' + label + '</label><input id="' + id + '" type="' +
-    (extra || "text") + '" value="' + esc(val) + '"></div>';
+    (type || "text") + '" value="' + esc(val === null || val === undefined ? "" : val) + '"></div>';
   const area = (id, label, val) =>
-    '<div class="field"><label for="' + id + '">' + label + '</label><textarea id="' + id + '">' + esc(val) + '</textarea></div>';
+    '<div class="field"><label for="' + id + '">' + label + '</label><textarea id="' + id + '">' +
+    esc(val) + '</textarea></div>';
 
   $("#adMain").innerHTML =
-    '<button class="ad-back" id="adBack">← All artworks</button>' +
-    '<h3 class="ad-h">' + esc(w.title) + '</h3>' +
-    '<p class="ad-sub">' + esc(w.artist) + ' · ' + esc(w.medium) + ' · hung ' +
-      adHangs().filter(h => h.i === k).length + ' time(s). Dimensions come from the hang, and the height from the image file.</p>' +
+    '<button class="ad-back" id="adBack">\u2190 All artworks</button>' +
+    /* the picture at the top, because that is the thing being described */
+    '<div class="ad-block ad-hero">' +
+      '<div class="hero-shot" id="adHero">' +
+        (IMAGES[key] ? '<img src="' + esc(IMAGES[key]) + '" alt="">' : '<span>No image yet</span>') +
+      '</div>' +
+      '<div class="hero-side">' +
+        '<h3 class="ad-h" style="margin-bottom:6px">' + (isNew ? "New artwork" : esc(w.title)) + '</h3>' +
+        '<p class="ad-sub" style="margin-bottom:14px">' + (isNew
+          ? "Upload the image first. The aspect ratio is taken from the file, so the work can never end up stretched on a wall."
+          : esc(w.artist) + " \u00b7 " + esc(w.medium) + " \u00b7 hung " +
+            adHangs().filter(h => h.i === key).length + " time(s)") + '</p>' +
+        '<input id="adImg" type="file" accept="image/*" class="sr" tabindex="-1" aria-hidden="true">' +
+        '<button type="button" class="filebtn" id="adImgBtn">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">' +
+          '<path d="M12 16V4m0 0L7 9m5-5l5 5M4 18v1a2 2 0 002 2h12a2 2 0 002-2v-1"/></svg>' +
+          '<span id="adImgName">' + (IMAGES[key] ? "Replace the image" : "Choose an image") + '</span>' +
+        '</button>' +
+        '<div class="hint" id="adImgHint">' + (onDisk
+          ? "This one is a file in art/. Uploading here overrides it in this browser only."
+          : "JPEG or PNG. Held in this browser, so keep it modest.") + '</div>' +
+      '</div>' +
+    '</div>' +
     '<div class="ad-block"><h4>Catalogue</h4><div class="ad-form">' +
-      '<div class="ad-row">' + txt("eTitle","Title",w.title) + txt("eArtist","Artist",w.artist) + txt("eYear","Year",w.year,"number") + '</div>' +
-      '<div class="ad-row">' + txt("eMedium","Medium",w.medium) + txt("eMovement","Movement",w.movement) +
-        sel("eColour","Colour", {Warm:"Warm",Cool:"Cool",Neutral:"Neutral",Dark:"Dark",Vivid:"Vivid"}, w.colour) + '</div>' +
-      '<div class="ad-row">' + txt("eEdition","Edition",w.edition || "") +
-        sel("eFrame","Frame", {gilt:"Heavy bar (historic)",dark:"Slim bar",none:"Floater"}, w.frame) +
-        '<div class="field"><label for="eGlass">Behind glass</label><select id="eGlass">' +
-          '<option value="0"' + (!w.glass ? " selected" : "") + '>No</option>' +
-          '<option value="1"' + (w.glass ? " selected" : "") + '>Yes</option></select></div>' + '</div>' +
+      '<div class="ad-row">' + txt("eTitle", "Title", w.title) + txt("eArtist", "Artist", w.artist) +
+        txt("eYear", "Year", w.year, "number") + '</div>' +
+      '<div class="ad-row">' + txt("eMedium", "Medium", w.medium) + txt("eMovement", "Movement", w.movement) +
+        sel("eColour", "Colour", { Warm:"Warm", Cool:"Cool", Neutral:"Neutral", Dark:"Dark", Vivid:"Vivid" }, w.colour) + '</div>' +
+      '<div class="ad-row">' + txt("ePlace", "Where the artist works", w.place || "") +
+        txt("eEdition", "Edition", w.edition || "") +
+        sel("eFrame", "Frame", { gilt:"Heavy bar (historic)", dark:"Slim bar", none:"Floater" }, w.frame) +
+        sel("eGlass", "Behind glass", { "0":"No", "1":"Yes" }, w.glass ? "1" : "0") + '</div>' +
     '</div></div>' +
     '<div class="ad-block"><h4>Commerce</h4><div class="ad-form">' +
-      '<div class="ad-row">' + sel("eAvail","Availability", AVAIL, w.avail) +
-        txt("ePrice","Price in £", w.price === null ? "" : w.price, "number") +
-        '<div class="field"><label for="eReq">Price on request</label><select id="eReq">' +
-          '<option value="0"' + (!w.onRequest ? " selected" : "") + '>No — show the price</option>' +
-          '<option value="1"' + (w.onRequest ? " selected" : "") + '>Yes — hide it</option></select>' +
-          '<div class="hint">The About page promises a price on everything for sale. Use with care.</div></div>' + '</div>' +
-      '<div class="ad-row">' + sel("eRights","Rights", RIGHTS, w.rights) + txt("ePd","Source / collection", w.pd || "") + '</div>' +
+      '<div class="ad-row">' + sel("eAvail", "Availability", AVAIL, w.avail) +
+        txt("ePrice", "Price in \u00a3", w.price, "number") +
+        sel("eReq", "Price on request", { "0":"No \u2014 show the price", "1":"Yes \u2014 hide it" },
+            w.onRequest ? "1" : "0", "The About page promises a price on everything for sale.") + '</div>' +
+      '<div class="ad-row">' + sel("eRights", "Rights", RIGHTS, w.rights) +
+        txt("ePd", "Source / collection", w.pd || "") + '</div>' +
     '</div></div>' +
     '<div class="ad-block"><h4>Editorial</h4><div class="ad-form">' +
-      area("eStory","About this work", w.story) +
-      area("eQuote","The artist, in their own words", w.quote) +
-      area("eTech","How it was made", w.technique) +
-      '<div class="ad-row">' + txt("eExh","Exhibited", w.exhibited) + txt("eVoice","Audio file key", w.voice || "") + '</div>' +
-      area("eWhy","Why we chose it", w.why) +
+      area("eStory", "About this work", w.story) +
+      area("eQuote", "The artist, in their own words", w.quote) +
+      area("eTech", "How it was made", w.technique) +
+      '<div class="ad-row">' + txt("eExh", "Exhibited", w.exhibited) +
+        txt("eVoice", "Audio file key", w.voice || "") + '</div>' +
+      area("eWhy", "Why we chose it", w.why) +
     '</div></div>' +
     '<div class="ad-actions">' +
-      '<button class="btn" id="adSaveWork">Save</button>' +
-      '<button class="btn ghost" id="adRevert">Undo my changes to this work</button>' +
+      '<button class="btn" id="adSaveWork">' + (isNew ? "Create artwork" : "Save") + '</button>' +
+      (!isNew && STORE.series[key] ? '<button class="btn ghost" id="adRevert">Undo my changes</button>' : '') +
+      (!isNew && !onDisk ? '<button class="btn ghost" id="adDelete">Delete this artwork</button>' : '') +
       '<span class="ad-note" id="adWorkMsg"></span>' +
     '</div>';
 
   $("#adBack").addEventListener("click", () => { adEditing = null; adWorks(); });
-  $("#adRevert").addEventListener("click", () => {
-    delete STORE.series[k];
-    adSaveState("reverted " + k);
-    toast("Reverted to the shipped version — reload to see it");
+  $("#adImgBtn").addEventListener("click", () => $("#adImg").click());
+  $("#adImg").addEventListener("change", async e => {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    if (!/^image\//.test(f.type)){ $("#adImgHint").textContent = "Images only, please."; return; }
+    try {
+      pending = await adShrink(f, 1100);
+      $("#adHero").innerHTML = '<img src="' + pending.src + '" alt="">';
+      $("#adImgName").textContent = "Image chosen \u2014 save to keep it";
+      $("#adImgBtn").classList.add("has");
+      $("#adImgHint").textContent = f.name + " \u00b7 " + pending.w + " \u00d7 " + pending.h +
+        " \u00b7 stored at " + (pending.src.length / 1024).toFixed(0) + " KB \u00b7 ratio " +
+        pending.ratio.toFixed(3);
+    } catch(err){ $("#adImgHint").textContent = "That image could not be read."; }
+  });
+
+  if ($("#adRevert")) $("#adRevert").addEventListener("click", () => {
+    delete STORE.series[key];
+    adSaveState("reverted " + key);
+    toast("Reverted to the shipped version \u2014 reload to see it");
     adEditing = null; adWorks();
   });
+  if ($("#adDelete")) $("#adDelete").addEventListener("click", () => {
+    const n = adHangs().filter(h => h.i === key).length;
+    if (!confirm("Delete this artwork" + (n ? " and take it off " + n + " wall(s)" : "") + "?")) return;
+    STORE.hangs = adHangs().filter(h => h.i !== key);
+    delete STORE.series[key];
+    if (STORE.images) delete STORE.images[key];
+    delete SERIES[key];
+    adSaveState("deleted " + key);
+    adEditing = null; adWorks();
+  });
+
   $("#adSaveWork").addEventListener("click", () => {
     const num = v => { const f = parseFloat(v); return isFinite(f) ? f : null; };
     const patch = {
       title:$("#eTitle").value.trim(), artist:$("#eArtist").value.trim(),
-      year:num($("#eYear").value), medium:$("#eMedium").value.trim(),
-      movement:$("#eMovement").value.trim(), colour:$("#eColour").value,
-      edition:$("#eEdition").value.trim() || undefined,
-      frame:$("#eFrame").value, glass:$("#eGlass").value === "1" || undefined,
+      place:$("#ePlace").value.trim(), year:num($("#eYear").value),
+      medium:$("#eMedium").value.trim(), movement:$("#eMovement").value.trim(),
+      colour:$("#eColour").value, edition:$("#eEdition").value.trim() || undefined,
+      frame:$("#eFrame").value, glass:$("#eGlass").value === "1",
       avail:$("#eAvail").value, price:num($("#ePrice").value),
       onRequest:$("#eReq").value === "1",
       rights:$("#eRights").value, pd:$("#ePd").value.trim() || undefined,
@@ -5442,19 +5621,44 @@ function adWorkEditor(k){
     const problems = [];
     if (!patch.title) problems.push("A work needs a title.");
     if (!patch.artist) problems.push("A work needs an artist.");
+    if (isNew && !pending) problems.push("Upload an image \u2014 the aspect ratio comes from the file.");
     if (patch.avail === "available" && !patch.onRequest && !(patch.price > 0))
       problems.push("Marked available with no price. Either set a price or use price on request.");
     if (patch.rights === "pending" && patch.avail === "available")
       problems.push("Rights are unresolved, so this cannot be offered for sale.");
     const msg = $("#adWorkMsg");
     if (problems.length){
-      msg.innerHTML = '<span style="color:#9B3B2E">' + problems.join(" ") + '</span>';
+      msg.innerHTML = '<span style="color:#9B3B2E">' + esc(problems.join(" ")) + '</span>';
       return;
     }
-    Object.assign(adSeries(k), patch);
-    Object.assign(SERIES[k], patch);
-    adSaveState("edited " + k);
-    msg.innerHTML = '<span style="color:#2C6B45">Saved.</span>';
+
+    const k = isNew ? adKeyFor(patch.title) : key;
+    if (pending){
+      patch.ratio = pending.ratio;
+      STORE.images = STORE.images || {};
+      STORE.images[k] = pending.src;
+      IMAGES[k] = pending.src;
+    }
+    if (isNew){
+      STORE.series[k] = Object.assign({}, SERIES_DEFAULTS, patch);
+      SERIES[k] = Object.assign({}, SERIES_DEFAULTS, patch);
+    } else {
+      Object.assign(adSeries(k), patch);
+      Object.assign(SERIES[k], patch);
+    }
+    if (!adSaveState((isNew ? "created " : "edited ") + k)){
+      msg.innerHTML = '<span style="color:#9B3B2E">Out of room in this browser. ' +
+        'Delete an uploaded image, or export and reset.</span>';
+      return;
+    }
+    if (isNew){
+      adEditing = k;
+      toast("Created. Put it on a wall under The Hang.");
+      adWorks();
+    } else {
+      msg.innerHTML = '<span style="color:#2C6B45">Saved.</span>';
+      pending = null;
+    }
   });
 }
 
@@ -5705,6 +5909,215 @@ function adSubs(){
     }));
 }
 
+/* ─── the press room, editable ───────────────────────────────── */
+let adArticle = null;                    /* an index, or "new" */
+function adPressList(){ if (!Array.isArray(STORE.press)) STORE.press = PRESS.map(a => Object.assign({}, a)); return STORE.press; }
+const KINDS = { Article:"Article", Interview:"Interview", Newsletter:"Newsletter" };
+
+function adPress(){
+  const list = adPressList();
+  if (adArticle !== null) return adArticleEditor(adArticle);
+  const rows = list.map((a, i) =>
+    '<tr class="click" data-i="' + i + '">' +
+      '<td>' + pill(a.kind === "Newsletter" ? "loan" : a.kind === "Interview" ? "reserved" : "cleared", a.kind) + '</td>' +
+      '<td><span class="tt">' + esc(a.title) + '</span><br>' +
+        '<small style="color:var(--pumice)">' + esc((a.stand || "").slice(0, 96)) + '</small></td>' +
+      '<td>' + esc(a.author) + '</td>' +
+      '<td>' + esc(a.date) + '</td>' +
+      '<td class="num">' + (a.body || []).length + '</td>' +
+      '<td class="num">' + esc(a.read || "") + '</td></tr>').join("");
+  $("#adMain").innerHTML =
+    '<div class="ad-head"><div>' +
+      '<h3 class="ad-h">Press Room</h3>' +
+      '<p class="ad-sub">Articles, interviews and newsletter issues. What is here is what visitors read.</p>' +
+    '</div><button class="btn" id="adNewArt">New piece</button></div>' +
+    '<div class="ad-block"><table class="ad-table"><thead><tr>' +
+      '<th>Kind</th><th>Title</th><th>Author</th><th>Date</th><th class="num">Paras</th><th class="num">Read</th>' +
+    '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+  $("#adMain").querySelectorAll("tr.click").forEach(tr =>
+    tr.addEventListener("click", () => { adArticle = +tr.dataset.i; adPress(); }));
+  $("#adNewArt").addEventListener("click", () => { adArticle = "new"; adPress(); });
+}
+
+function adArticleEditor(idx){
+  const isNew = idx === "new";
+  const list = adPressList();
+  const a = isNew
+    ? { kind:"Article", title:"", stand:"", author:"Sasha Ryabchik", read:"5 min",
+        date:new Date().toLocaleDateString("en-GB", { day:"numeric", month:"long", year:"numeric" }), body:[""] }
+    : list[idx];
+  $("#adMain").innerHTML =
+    '<button class="ad-back" id="adPBack">\u2190 All writing</button>' +
+    '<h3 class="ad-h">' + (isNew ? "New piece" : esc(a.title)) + '</h3>' +
+    '<p class="ad-sub">One paragraph per line in the body. Blank lines are dropped.</p>' +
+    '<div class="ad-block"><div class="ad-form">' +
+      '<div class="ad-row">' +
+        '<div class="field"><label for="pKind">Kind</label><select id="pKind">' +
+          Object.keys(KINDS).map(k => '<option' + (k === a.kind ? " selected" : "") + '>' + k + '</option>').join("") +
+        '</select></div>' +
+        '<div class="field"><label for="pAuthor">Author</label><input id="pAuthor" type="text" value="' + esc(a.author) + '"></div>' +
+        '<div class="field"><label for="pDate">Date</label><input id="pDate" type="text" value="' + esc(a.date) + '"></div>' +
+        '<div class="field"><label for="pRead">Reading time</label><input id="pRead" type="text" value="' + esc(a.read) + '"></div>' +
+      '</div>' +
+      '<div class="field"><label for="pTitle">Title</label><input id="pTitle" type="text" value="' + esc(a.title) + '"></div>' +
+      '<div class="field"><label for="pStand">Standfirst</label><textarea id="pStand" style="min-height:64px">' + esc(a.stand) + '</textarea></div>' +
+      '<div class="field"><label for="pBody">Body</label><textarea id="pBody" style="min-height:260px">' +
+        esc((a.body || []).join("\n\n")) + '</textarea></div>' +
+    '</div></div>' +
+    '<div class="ad-actions">' +
+      '<button class="btn" id="adSaveArt">' + (isNew ? "Publish" : "Save") + '</button>' +
+      (isNew ? '' : '<button class="btn ghost" id="adDelArt">Delete this piece</button>') +
+      '<span class="ad-note" id="adArtMsg"></span>' +
+    '</div>';
+  $("#adPBack").addEventListener("click", () => { adArticle = null; adPress(); });
+  if ($("#adDelArt")) $("#adDelArt").addEventListener("click", () => {
+    if (!confirm("Delete \u201c" + a.title + "\u201d?")) return;
+    adPressList().splice(idx, 1);
+    adSaveState("deleted an article");
+    adArticle = null; adPress();
+  });
+  $("#adSaveArt").addEventListener("click", () => {
+    const body = $("#pBody").value.split(/\n\s*\n/).map(x => x.trim()).filter(Boolean);
+    const rec = { kind:$("#pKind").value, title:$("#pTitle").value.trim(),
+      stand:$("#pStand").value.trim(), author:$("#pAuthor").value.trim(),
+      date:$("#pDate").value.trim(), read:$("#pRead").value.trim(), body:body };
+    const bad = [];
+    if (!rec.title) bad.push("It needs a title.");
+    if (!rec.stand) bad.push("It needs a standfirst \u2014 that is what shows on the card.");
+    if (!body.length) bad.push("It needs at least one paragraph.");
+    if (bad.length){ $("#adArtMsg").innerHTML = '<span style="color:#9B3B2E">' + esc(bad.join(" ")) + '</span>'; return; }
+    if (isNew) adPressList().unshift(rec); else adPressList()[idx] = rec;
+    adSaveState((isNew ? "wrote " : "edited ") + rec.title);
+    adArticle = null; adPress();
+  });
+}
+
+/* ─── what visitors actually did ──────────────────────────────
+   Counted in this browser only: it is one person's behaviour, not an
+   audience. Real analytics needs a server and a lawful basis, and this
+   screen exists to decide whether the numbers are worth collecting. */
+function statsInit(){
+  if (!STORE.stats) STORE.stats = { sessions:[], works:{}, rooms:{}, started:new Date().toISOString() };
+  return STORE.stats;
+}
+function statWork(k){
+  const S = statsInit();
+  if (!S.works[k]) S.works[k] = { opens:0, saves:0, enquiries:0, seconds:0 };
+  return S.works[k];
+}
+function statRoom(id){
+  const S = statsInit();
+  if (!S.rooms[id]) S.rooms[id] = { entries:0, seconds:0 };
+  return S.rooms[id];
+}
+let statSession = null, statOpenAt = 0, statOpenKey = null, statRoomAt = 0, statFlush = 0;
+
+function statBegin(){
+  const S = statsInit();
+  statSession = { start:Date.now(), end:Date.now() };
+  S.sessions.push(statSession);
+  if (S.sessions.length > 200) S.sessions = S.sessions.slice(-200);
+  storeSave();
+}
+function statTick(dt, room){
+  if (!statSession) return;
+  statSession.end = Date.now();
+  if (room && !room.corridor){
+    statRoom(room.id).seconds += dt;
+  }
+  statFlush += dt;
+  if (statFlush > 20){ statFlush = 0; storeSave(); }   /* not on every frame */
+}
+function statOpen(k){
+  statWork(k).opens++;
+  statOpenKey = k; statOpenAt = Date.now();
+  storeSave();
+}
+function statClose(){
+  if (statOpenKey){
+    statWork(statOpenKey).seconds += (Date.now() - statOpenAt) / 1000;
+    statOpenKey = null;
+    storeSave();
+  }
+}
+function statsClear(){
+  STORE.stats = null; statSession = null;
+  statsInit(); storeSave();
+}
+
+function adStats(){
+  const S = statsInit();
+  const keys = Object.keys(S.works);
+  const tot = keys.reduce((a, k) => a + S.works[k].opens, 0);
+  const sess = S.sessions || [];
+  const lens = sess.map(x => Math.max(0, (x.end - x.start) / 1000)).filter(v => v > 2);
+  const avg = lens.length ? lens.reduce((a, b) => a + b, 0) / lens.length : 0;
+  const ranked = keys.slice().sort((a, b) => S.works[b].opens - S.works[a].opens);
+  const never = Object.keys(SERIES).filter(k => !S.works[k] || !S.works[k].opens);
+  const top = ranked.length ? S.works[ranked[0]].opens : 0;
+  const mins = s => s >= 60 ? (s / 60).toFixed(1) + " min" : Math.round(s) + " s";
+
+  const bar = (k) => {
+    const w = S.works[k];
+    return '<tr><td><img class="thumb" src="' + esc(IMAGES[k] || "") + '" alt=""></td>' +
+      '<td><span class="tt">' + esc(SERIES[k] ? SERIES[k].title : k) + '</span><br>' +
+        '<small style="color:var(--pumice)">' + esc(SERIES[k] ? SERIES[k].artist : "") + '</small></td>' +
+      '<td class="barcell"><span class="bar" style="width:' +
+        (top ? Math.max(3, w.opens / top * 100) : 3) + '%"></span></td>' +
+      '<td class="num">' + w.opens + '</td>' +
+      '<td class="num">' + (w.opens ? mins(w.seconds / w.opens) : "\u2014") + '</td>' +
+      '<td class="num">' + w.saves + '</td>' +
+      '<td class="num">' + w.enquiries + '</td></tr>';
+  };
+  const roomIds = Object.keys(S.rooms).sort((a, b) => S.rooms[b].seconds - S.rooms[a].seconds);
+  const roomTop = roomIds.length ? S.rooms[roomIds[0]].seconds : 0;
+
+  $("#adMain").innerHTML =
+    '<div class="ad-head"><div>' +
+      '<h3 class="ad-h">Behaviour</h3>' +
+      '<p class="ad-sub">Which works people step up to, how long they stay with them, and how often they come back.</p>' +
+    '</div><button class="hud-btn light" id="adClearStats" style="background:var(--paper-2);color:var(--slate)">Clear</button></div>' +
+    '<div class="ad-block"><div class="checks"><div class="chk warn">' +
+      '<b>This is one browser, not an audience.</b> Counts come from whoever has used this copy of the site. ' +
+      'Real figures need a server, and tracking identifiable visitors needs a lawful basis and a retention period. ' +
+      'Treat this as a rehearsal of the questions worth asking.</div></div></div>' +
+    '<div class="tiles">' +
+      '<div class="tile"><b>' + sess.length + '</b><span>Visits</span></div>' +
+      '<div class="tile"><b>' + Math.max(0, sess.length - 1) + '</b><span>Return visits</span></div>' +
+      '<div class="tile"><b>' + mins(avg) + '</b><span>Average visit</span></div>' +
+      '<div class="tile"><b>' + tot + '</b><span>Works opened</span></div>' +
+      '<div class="tile' + (never.length ? " warn" : "") + '"><b>' + never.length + '</b><span>Never opened</span></div>' +
+      '<div class="tile"><b>' + keys.reduce((a, k) => a + S.works[k].saves, 0) + '</b><span>Saved to a gallery</span></div>' +
+      '<div class="tile"><b>' + keys.reduce((a, k) => a + S.works[k].enquiries, 0) + '</b><span>Enquiries started</span></div>' +
+    '</div>' +
+    (tot
+      ? '<div class="ad-block" style="margin-top:18px"><h4>What people want to see</h4>' +
+        '<table class="ad-table"><thead><tr><th></th><th>Work</th><th>Interest</th>' +
+          '<th class="num">Opened</th><th class="num">Avg. dwell</th><th class="num">Saved</th><th class="num">Enquiries</th>' +
+        '</tr></thead><tbody>' + ranked.slice(0, 20).map(bar).join("") + '</tbody></table></div>'
+      : '<div class="ad-block" style="margin-top:18px"><div class="checks"><div class="chk ok">' +
+        'Nothing recorded yet. Walk the gallery and open a few works, then come back.</div></div></div>') +
+    (roomIds.length
+      ? '<div class="ad-block"><h4>Where the time goes</h4><table class="ad-table"><tbody>' +
+        roomIds.map(id => '<tr><td style="width:34%">' +
+          esc(ROOM[id] ? ROOM[id].name.replace("&amp;", "&") : id) + '</td>' +
+          '<td class="barcell"><span class="bar" style="width:' +
+            (roomTop ? Math.max(3, S.rooms[id].seconds / roomTop * 100) : 3) + '%"></span></td>' +
+          '<td class="num">' + mins(S.rooms[id].seconds) + '</td>' +
+          '<td class="num">' + S.rooms[id].entries + ' visits</td></tr>').join("") +
+        '</tbody></table></div>' : '') +
+    (never.length
+      ? '<div class="ad-block"><h4>Nobody has opened these</h4><p class="ad-note">' +
+        never.map(k => esc(SERIES[k].title)).join(" \u00b7 ") +
+        '</p><p class="ad-note" style="margin-top:10px">Worth asking whether they are badly hung, badly lit, or simply not interesting.</p></div>'
+      : '');
+
+  $("#adClearStats").addEventListener("click", () => {
+    if (!confirm("Clear all recorded behaviour?")) return;
+    statsClear(); adRender();
+  });
+}
+
 /* ─── wiring ────────────────────────────────────────────────── */
 function bindAdmin(){
   try { adUnlocked = sessionStorage.getItem("sg.admin.open") === "1"; } catch(e){}
@@ -5714,7 +6127,9 @@ function bindAdmin(){
   $("#adEnter").addEventListener("click", adUnlock);
   $("#adPass").addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); adUnlock(); } });
   $("#adRail").querySelectorAll(".rail-item").forEach(b =>
-    b.addEventListener("click", () => { adSection = b.dataset.sec; adEditing = null; adRender(); }));
+    b.addEventListener("click", () => {
+      adSection = b.dataset.sec; adEditing = null; adArticle = null; adRender();
+    }));
   $("#adReload").addEventListener("click", () => location.reload());
   $("#adExport").addEventListener("click", () => {
     const blob = new Blob([JSON.stringify({
@@ -6057,6 +6472,8 @@ function bindInput(){
   $("#pvSave").addEventListener("click",   () => { if (current) toggleSave(current.id); });
   $("#pvEnquire").addEventListener("click", () => {
     if (!current) return;
+    statWork(current.img || current.id).enquiries++;
+    storeSave();
     $("#enWork").textContent = current.title + " · " + current.artist;
     $("#eNote").value = "I would like to know more about “" + current.title + "”.";
     openSheet("sheetEnquire");
@@ -6284,6 +6701,7 @@ function enterGallery(withSound){
   $("#arrival").classList.add("gone");
   $("#hud").classList.add("on");
   if (withSound) setSound(true);
+  statBegin();
   $("#lens").classList.add("on");
   setRoomSign(ROOM.atrium);
   srSay("You are in the atrium. Click the floor to walk, drag to look, click a work to step up to it.");
