@@ -89,6 +89,7 @@
 }
 
 *,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none !important}   /* author display rules otherwise win */
 html,body{margin:0;padding:0;height:100%;overflow:hidden}
 body{
   background:var(--brand-navy);
@@ -328,7 +329,7 @@ kbd{
 /* toast */
 #toast{
   position:fixed;left:50%;bottom:calc(var(--pad) + 10px);transform:translate(-50%,14px);
-  z-index:70;background:var(--paper);color:var(--ink);
+  z-index:96;   /* above the admin, which needs to be able to warn you */background:var(--paper);color:var(--ink);
   border-radius:2px;border-top:2px solid var(--brass);
   padding:11px 20px;font-size:10.5px;font-weight:600;
   letter-spacing:.16em;text-transform:uppercase;
@@ -635,6 +636,18 @@ kbd{
 .done .didone{font-size:26px;font-style:italic;margin:0 0 10px}
 .done p{font-size:13.5px;color:var(--slate);margin:0;line-height:1.7}
 
+.opt{font-weight:400;letter-spacing:.1em;color:var(--pumice);text-transform:none}
+.shots{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.shots figure{margin:0;position:relative;width:66px;height:66px;border-radius:2px;overflow:hidden;border:1px solid var(--hair)}
+.shots img{width:100%;height:100%;object-fit:cover;display:block}
+.shots button{
+  position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;
+  background:rgba(12,19,29,.8);color:#fff;font-size:12px;line-height:1;display:grid;place-items:center;
+}
+.check{display:flex;gap:11px;align-items:flex-start;cursor:pointer}
+.check input{width:17px;height:17px;flex:0 0 auto;margin-top:1px;accent-color:var(--iris)}
+.check span{font-family:var(--body);font-size:13.5px;line-height:1.55;color:var(--slate)}
+
 /* the press room: a stack of cards, then a reading column */
 .press-list{display:flex;flex-direction:column;gap:2px;max-width:74ch}
 .press-card{
@@ -923,6 +936,173 @@ kbd{
 #lens.focus .dof{opacity:1}
 @media (prefers-reduced-motion:reduce){ #lens .grain{animation:none} }
 
+
+/* ══ administration ═══════════════════════════════════════════
+   A prototype surface, deliberately plainer than the gallery: dense,
+   legible, and unmistakably a back office rather than a front page. */
+#adminLink{
+  position:absolute;right:var(--pad);bottom:calc(var(--pad) * .6);
+  font-family:var(--label);font-size:9px;font-weight:600;letter-spacing:.18em;
+  text-transform:uppercase;color:rgba(247,245,241,.14);
+  padding:6px 8px;transition:color .25s;
+}
+#adminLink:hover,#adminLink:focus-visible{color:rgba(247,245,241,.55)}
+
+/* Reached from the arrival screen (z 80) and usable even when the WebGL
+   fallback is showing (z 90), so it sits above both. */
+.sheet.admin{background:#EEEBE4;display:flex;flex-direction:column;z-index:92}
+.admin-bar{
+  flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:12px var(--pad);background:var(--brand-navy);border-bottom:2px solid var(--brand-teal);
+}
+.admin-id{display:flex;align-items:center;gap:13px;color:var(--paper)}
+.admin-id b{
+  font-family:var(--display);font-size:15px;font-weight:500;letter-spacing:.06em;
+  text-transform:uppercase;display:block;
+}
+.admin-id small{
+  font-family:var(--label);font-size:9.5px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--brand-dim);display:block;margin-top:3px;
+}
+.admin-acts{display:flex;align-items:center;gap:6px}
+.hud-btn.light{background:rgba(247,245,241,.08);color:rgba(247,245,241,.8)}
+.hud-btn.light:hover{background:rgba(247,245,241,.18);color:var(--paper)}
+.admin-bar .x-btn{color:rgba(247,245,241,.7)}
+.admin-bar .x-btn:hover{background:rgba(247,245,241,.12);color:var(--paper)}
+
+.admin-gate{flex:1 1 auto;display:grid;place-items:center;padding:var(--pad)}
+.gate-box{
+  max-width:400px;background:var(--paper);border:1px solid var(--hair);
+  border-top:2px solid var(--brass);border-radius:2px;padding:clamp(24px,4vw,36px);
+}
+.gate-box h3{font-family:var(--display);font-size:28px;font-weight:500;
+  letter-spacing:.02em;text-transform:uppercase;margin:8px 0 14px}
+.gate-box p{font-family:var(--body);font-size:13px;line-height:1.65;color:var(--slate);margin:0 0 20px}
+.gate-box .field{margin-bottom:16px}
+
+.admin-body{flex:1 1 auto;display:grid;grid-template-columns:196px minmax(0,1fr);min-height:0}
+.admin-rail{
+  background:#E3DFD7;border-right:1px solid var(--hair);
+  padding:14px 10px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;
+}
+.rail-item{
+  font-family:var(--label);font-size:10.5px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--slate);text-align:left;
+  padding:12px 13px;border-radius:2px;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  transition:background .18s,color .18s;
+}
+.rail-item:hover{background:rgba(255,255,255,.6);color:var(--ink)}
+.rail-item[aria-current="true"]{background:var(--ink);color:var(--paper)}
+.rail-count{
+  font-size:9px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;
+  background:var(--brass);color:var(--paper);display:grid;place-items:center;
+}
+.rail-item[aria-current="true"] .rail-count{background:var(--brand-teal);color:var(--brand-navy)}
+.admin-main{overflow-y:auto;padding:clamp(18px,2.6vw,30px);min-height:0}
+
+.admin-foot{
+  flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:11px var(--pad);background:var(--paper);border-top:1px solid var(--hair);
+}
+.admin-foot span{
+  font-family:var(--label);font-size:10px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--pumice);
+}
+.admin-foot span.dirty{color:var(--brass)}
+
+/* headings and blocks inside the admin */
+.ad-h{
+  font-family:var(--display);font-size:clamp(20px,2.6vw,26px);font-weight:500;
+  letter-spacing:.02em;text-transform:uppercase;margin:0 0 4px;
+}
+.ad-sub{font-family:var(--body);font-size:13px;line-height:1.6;color:var(--slate);margin:0 0 22px;max-width:62ch}
+.ad-block{background:var(--paper);border:1px solid var(--hair);border-radius:2px;padding:20px;margin-bottom:16px}
+.ad-block > h4{
+  font-family:var(--label);font-size:9.5px;font-weight:600;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--pumice);margin:0 0 14px;
+}
+
+/* the dashboard tiles */
+.tiles{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(158px,1fr))}
+.tile{background:var(--paper);border:1px solid var(--hair);border-radius:2px;padding:16px 18px}
+.tile b{font-family:var(--display);font-size:34px;font-weight:500;line-height:1;display:block}
+.tile span{
+  font-family:var(--label);font-size:9.5px;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--pumice);display:block;margin-top:8px;
+}
+.tile.warn{border-left:2px solid var(--brass)}
+.tile.bad{border-left:2px solid #9B3B2E}
+.tile.bad b{color:#9B3B2E}
+
+/* the tables */
+.ad-table{width:100%;border-collapse:collapse;font-family:var(--body);font-size:13px}
+.ad-table th{
+  font-family:var(--label);font-size:9px;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--pumice);text-align:left;
+  padding:0 10px 9px;border-bottom:1px solid var(--hair);white-space:nowrap;
+}
+.ad-table td{padding:11px 10px;border-bottom:1px solid var(--hair-2);vertical-align:middle}
+.ad-table tr.click{cursor:pointer}
+.ad-table tr.click:hover td{background:var(--paper-2)}
+.ad-table .thumb{width:44px;height:44px;object-fit:cover;display:block;border:1px solid var(--hair-2);border-radius:1px}
+.ad-table .tt{font-family:var(--serif);font-style:italic;font-size:15px;color:var(--ink)}
+.ad-table .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.pill{
+  display:inline-block;font-family:var(--label);font-size:9px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;padding:4px 8px;border-radius:2px;white-space:nowrap;
+}
+.pill.available{background:#E4EDE6;color:#2C6B45}
+.pill.reserved{background:#F5EBD9;color:#8A5A22}
+.pill.sold{background:#E8E5E0;color:#6E6A62}
+.pill.loan,.pill.notforsale{background:#E7E9F2;color:#3A4A8C}
+.pill.draft,.pill.withdrawn{background:#EDEAE3;color:#8C887F}
+.pill.pending{background:#F7E4DF;color:#9B3B2E}
+.pill.cleared{background:#E4EDE6;color:#2C6B45}
+.pill.publicdomain{background:#E8EDE9;color:#2E6E6B}
+
+/* the editor */
+.ad-form{display:grid;gap:15px;max-width:none}
+.ad-row{display:grid;gap:15px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.ad-form .field label{margin-bottom:6px}
+.ad-form textarea{min-height:92px}
+.ad-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:6px}
+.ad-back{
+  font-family:var(--label);font-size:10px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--iris);margin-bottom:16px;display:inline-block;
+}
+.ad-note{font-family:var(--body);font-size:12.5px;color:var(--pumice);margin:0}
+
+/* validation results */
+.checks{display:flex;flex-direction:column;gap:7px;margin-top:4px}
+.chk{
+  display:flex;gap:10px;align-items:flex-start;font-family:var(--body);font-size:12.5px;
+  line-height:1.5;padding:9px 11px;border-radius:2px;
+}
+.chk.ok{background:#E9F0EA;color:#2C6B45}
+.chk.warn{background:#F7EEDC;color:#7E5518}
+.chk.err{background:#F8E5E0;color:#8E3327}
+.chk b{font-weight:600}
+
+/* submissions */
+.subs{display:flex;flex-direction:column;gap:12px}
+.sub-card{background:var(--paper);border:1px solid var(--hair);border-radius:2px;padding:18px}
+.sub-top{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.sub-name{font-family:var(--display);font-size:20px;font-weight:500;letter-spacing:.02em;text-transform:uppercase}
+.sub-meta{font-family:var(--label);font-size:9.5px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--pumice);margin-top:5px}
+.sub-bio{font-family:var(--body);font-size:13.5px;line-height:1.7;color:var(--slate);margin:13px 0}
+.sub-shots{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.sub-shots img{width:104px;height:104px;object-fit:cover;border:1px solid var(--hair);border-radius:1px;display:block}
+.sub-links{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--body);font-size:12.5px}
+.sub-links a{color:var(--iris)}
+.stage-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;align-items:center}
+@media (max-width:760px){
+  .admin-body{grid-template-columns:1fr}
+  .admin-rail{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--hair)}
+  .rail-item{white-space:nowrap}
+}
+
 /* screen-reader only */
 .sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
@@ -961,6 +1141,7 @@ kbd{
     <span><kbd>Click art</kbd> step up to it</span>
     <span><kbd>Esc</kbd> step back</span>
   </div>
+  <button id="adminLink" title="Administration">Administration</button>
   <div id="loadtxt">Opening the gallery</div>
   <div id="loadbar"><i></i></div>
 </section>
@@ -988,6 +1169,7 @@ kbd{
           <button class="more-item" id="navQuality" role="menuitem">Quality: high</button>
           <hr class="hairline">
           <button class="more-item" id="navAbout" role="menuitem">About Soft Gallery</button>
+          <button class="more-item" id="navAdmin" role="menuitem" hidden>Administration</button>
         </div>
       </div>
     </nav>
@@ -1179,19 +1361,24 @@ kbd{
       </div>
       <div class="two">
         <div class="field"><label for="jSocial">Instagram or social media</label><input id="jSocial" type="text" inputmode="url" placeholder="@yourname"></div>
-        <div class="field"><label for="jSite">Portfolio website</label><input id="jSite" type="text" inputmode="url" placeholder="yoursite.com"></div>
+        <div class="field"><label for="jSite">Portfolio website <span class="opt">optional</span></label><input id="jSite" type="text" inputmode="url" placeholder="yoursite.com"></div>
       </div>
       <div class="field" id="jFileField">
-        <label for="jFileBtn">Portfolio</label>
-        <input id="jFile" type="file" accept="application/pdf,.pdf" class="sr" tabindex="-1" aria-hidden="true">
+        <label for="jFileBtn">Three to five images of your work</label>
+        <input id="jFile" type="file" accept="image/*" multiple class="sr" tabindex="-1" aria-hidden="true">
         <button type="button" class="filebtn" id="jFileBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0L7 9m5-5l5 5M4 18v1a2 2 0 002 2h12a2 2 0 002-2v-1"/></svg>
-          <span id="jFileName">Choose a PDF</span>
+          <span id="jFileName">Choose images</span>
         </button>
-        <div class="hint" id="jFileHint">PDF, up to 25 MB. A website or social link on its own is fine too.</div>
+        <div class="shots" id="jShots"></div>
+        <div class="hint" id="jFileHint">JPEG or PNG. Three minimum, five maximum.</div>
       </div>
+      <label class="check">
+        <input type="checkbox" id="jConsent">
+        <span>I would like to receive Soft Gallery news and opportunities.</span>
+      </label>
       <button class="btn wide" type="submit">Submit</button>
-      <p class="formnote">This demonstration does not yet transmit submissions.</p>
+      <p class="formnote">Prototype. Submissions are kept in this browser only, and no email is sent.</p>
     </form>
   </div>
 </section>
@@ -1252,6 +1439,48 @@ kbd{
       <p>One work — <em>Iris</em> — carries a studio recording, as a test of whether the artist's own voice belongs on every piece. It has no transcript yet, which it needs before this is public.</p>
       <p>Replace the <code>IMAGES</code>, <code>VOICE</code> and <code>WORKS</code> blocks at the top of the source with the real cohort and the gallery re-hangs itself — sizes, labels, spotlights and scale diagrams follow the data.</p>
     </div>
+  </div>
+</section>
+
+<!-- ═══ admin ═══════════════════════════════════════════════ -->
+<section class="sheet admin" id="sheetAdmin" role="dialog" aria-modal="true" aria-labelledby="adH" aria-hidden="true">
+  <div class="admin-bar">
+    <div class="admin-id">
+      <span id="adMark"></span>
+      <span><b id="adH">Administration</b><small id="adStore">checking storage…</small></span>
+    </div>
+    <div class="admin-acts">
+      <button class="hud-btn light" id="adExport">Export JSON</button>
+      <button class="hud-btn light" id="adReset">Reset all</button>
+      <button class="x-btn" data-close="sheetAdmin" aria-label="Close administration">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="admin-gate" id="adGate">
+    <div class="gate-box">
+      <p class="eyebrow">Soft Gallery</p>
+      <h3>Administration</h3>
+      <p>This is a prototype. It is part of the public page, so its code and this passphrase are readable by anyone. It is not secured and must not hold anything confidential.</p>
+      <div class="field"><label for="adPass">Passphrase</label><input id="adPass" type="password" autocomplete="off"></div>
+      <button class="btn wide" id="adEnter">Enter</button>
+    </div>
+  </div>
+
+  <div class="admin-body" id="adBody" hidden>
+    <nav class="admin-rail" id="adRail" aria-label="Administration sections">
+      <button class="rail-item" data-sec="dash" aria-current="true">Dashboard</button>
+      <button class="rail-item" data-sec="works">Artworks</button>
+      <button class="rail-item" data-sec="hang">The Hang</button>
+      <button class="rail-item" data-sec="subs">Submissions<span class="rail-count" id="adSubCount"></span></button>
+    </nav>
+    <div class="admin-main" id="adMain"></div>
+  </div>
+
+  <div class="admin-foot" id="adFoot" hidden>
+    <span id="adDirty">No changes yet</span>
+    <button class="btn" id="adReload">Reload the gallery</button>
   </div>
 </section>
 
@@ -1359,6 +1588,55 @@ const ROOMS = [
 ];
 const ROOM = {}; ROOMS.forEach(r => ROOM[r.id] = r);
 const NAMED_ROOMS = ROOMS.filter(r => !r.corridor);
+
+/* ══════════════════════════════════════════════════════════════
+   THE ADMIN'S STORE
+   Everything the admin edits is kept as an overlay on top of the
+   data shipped in this file, so "reset" is always available and the
+   original is never lost. It persists in localStorage, which means
+   per-browser and per-person — not shared, and not a database.
+
+   localStorage misbehaves on file:// (Chrome isolates it per file,
+   Safari refuses it), so the gallery has to be served for any of
+   this to stick. storeReady tells the admin which it is.
+   ══════════════════════════════════════════════════════════════ */
+const STORE_KEY = "sg.admin.v1";
+/* The prototype gate. It is in the page source, so it keeps a curious
+   visitor out and nothing more. Real auth arrives with the backend. */
+const ADMIN_PASS = "softgallery";
+
+let STORE = { series:{}, hangs:null, artists:{}, rooms:{}, press:null,
+              submissions:[], log:[] };
+let storeReady = false;
+
+(function initStore(){
+  try {
+    localStorage.setItem("sg.probe", "1");
+    localStorage.removeItem("sg.probe");
+    storeReady = true;
+  } catch(e){ storeReady = false; return; }
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw){
+      const got = JSON.parse(raw);
+      Object.keys(got).forEach(k => { if (got[k] !== undefined) STORE[k] = got[k]; });
+    }
+  } catch(e){ /* corrupt or stale: fall back to what shipped */ }
+})();
+
+function storeSave(){
+  if (!storeReady) return false;
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(STORE)); return true; }
+  catch(e){ return false; }          /* usually the 5 MB quota */
+}
+function storeReset(){
+  STORE = { series:{}, hangs:null, artists:{}, rooms:{}, press:null, submissions:[], log:[] };
+  if (storeReady) try { localStorage.removeItem(STORE_KEY); } catch(e){}
+}
+function storeNote(what){
+  STORE.log = (STORE.log || []).slice(-60);
+  STORE.log.push({ t: new Date().toISOString(), what });
+}
 
 /* ─── the catalogue ─────────────────────────────────────────────
    One entry per work. A work hung in four rooms is still one work,
@@ -1625,6 +1903,25 @@ const SCULPTURES = [
   why:"Bent to the point just before the first one broke. You can feel where it stopped." }
 ];
 
+/* Availability and rights were implicit before — a null price meant "not for
+   sale" and a ph flag meant "unresolved". The admin needs them explicit, so
+   they are derived once here and can then be edited like any other field. */
+Object.keys(SERIES).forEach(k => {
+  const S = SERIES[k];
+  if (S.avail === undefined)  S.avail  = S.pd ? "notforsale" : (S.price === null ? "loan" : "available");
+  if (S.rights === undefined) S.rights = S.pd ? "publicdomain" : (S.ph ? "pending" : "cleared");
+  if (S.onRequest === undefined) S.onRequest = false;
+});
+
+/* the admin's edits, laid over the top before anything is built from them */
+Object.keys(STORE.series || {}).forEach(k => {
+  if (SERIES[k]) Object.assign(SERIES[k], STORE.series[k]);
+});
+if (Array.isArray(STORE.hangs)){
+  HANGS.length = 0;
+  STORE.hangs.forEach(h => HANGS.push(h));
+}
+
 /* every hang inherits its catalogue entry; the height comes from the file */
 const WORKS = HANGS.map((h, n) => Object.assign({}, SERIES[h.i], {
   id: "h" + (n + 1), img: h.i, room: h.r, side: h.s, u: h.u,
@@ -1736,6 +2033,13 @@ const ARTISTS = {
   shows:"Solo: One Degree Short, London (2026). Group: New Contemporaries (2021)." }
 };
 
+/* the admin's edits to the artists, the rooms and the writing */
+Object.keys(STORE.artists || {}).forEach(k => {
+  if (!ARTISTS[k]) ARTISTS[k] = {};
+  Object.assign(ARTISTS[k], STORE.artists[k]);
+});
+if (Array.isArray(STORE.press)) { PRESS.length = 0; STORE.press.forEach(a => PRESS.push(a)); }
+
 /* ─── each room its own surface, and the way out of it ──────── */
 /* wall / floor / ceiling, chosen so no two of the three sit at the
    same value. Read down the columns: light-mid-dark, light-dark-light,
@@ -1752,6 +2056,12 @@ const FIT = {
   cs:{ wall:"tadelakt", floor:"palestone", ceil:0x131211, ev:1.70, branch:"south" }
 };
 Object.keys(FIT).forEach(k => Object.assign(ROOM[k], FIT[k]));
+/* rooms may be renamed and re-themed from the admin; the geometry is not
+   editable in this pass, because moving a wall means re-validating the
+   whole hang against it */
+Object.keys(STORE.rooms || {}).forEach(k => {
+  if (ROOM[k]) Object.assign(ROOM[k], STORE.rooms[k]);
+});
 ROOMS.forEach(r => { r.branch = r.branch || (r.corridor ? null : (r.id === "atrium" ? null : r.id)); });
 
 /* which branch of the star am I on — used for routing */
@@ -4528,8 +4838,12 @@ function openSheet(id){
   const s = document.getElementById(id);
   s.classList.add("on"); s.setAttribute("aria-hidden","false");
   uiOpen = true; exitLock();
-  s.querySelector(".sheet-body").scrollTop = 0;
-  const f = s.querySelector("button, input, textarea, select");
+  /* every sheet scrolls somewhere, but not all of them in the same element:
+     the admin has a rail and a main pane instead of one body */
+  const scroller = s.querySelector(".sheet-body, .admin-main");
+  if (scroller) scroller.scrollTop = 0;
+  const f = s.querySelector(".sheet-body input, .sheet-body button, .sheet-body textarea, " +
+                            ".sheet-body select, .gate-box input, .x-btn");
   if (f) setTimeout(() => f.focus(), 60);
   if (id === "sheetIndex" && !ixBuilt){ ixBuilt = true; renderIndex(); }
   if (id === "sheetPress" && !pressBuilt){ pressBuilt = true; renderPress(null); }
@@ -4909,6 +5223,518 @@ function drawWordmark(g, x, y, cap, onDark){
 }
 
 /* ══════════════════════════════════════════════════════════════
+   ADMINISTRATION
+   A prototype back office over the same data the gallery is built
+   from. It writes to the store; the rooms are assembled once at
+   boot, so a change shows in the gallery after a reload — which is
+   what the footer bar is for.
+   ══════════════════════════════════════════════════════════════ */
+let adSection = "dash", adDirty = false, adUnlocked = false;
+
+const AVAIL = { available:"Available", reserved:"Reserved", sold:"Sold",
+                loan:"On loan", notforsale:"Not for sale",
+                draft:"Draft", withdrawn:"Withdrawn" };
+const RIGHTS = { cleared:"Cleared", pending:"Rights pending", publicdomain:"Public domain" };
+const STAGES = ["New","Under Review","Shortlisted","Approved","Declined"];
+
+function adMark(){ $("#adDirty").textContent = "Saved — reload to see it in the rooms";
+  $("#adDirty").classList.add("dirty"); adDirty = true; }
+function adSaveState(what){
+  const ok = storeSave();
+  storeNote(what);
+  if (ok) adMark();
+  else toast("Could not save — serve the site rather than opening the file");
+  return ok;
+}
+/* the admin only ever edits the overlay, never the shipped data */
+function adSeries(k){ if (!STORE.series[k]) STORE.series[k] = {}; return STORE.series[k]; }
+function adHangs(){ if (!Array.isArray(STORE.hangs)) STORE.hangs = HANGS.map(h => Object.assign({}, h)); return STORE.hangs; }
+
+function esc(v){ return String(v === undefined || v === null ? "" : v)
+  .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function pill(kind, label){ return '<span class="pill ' + kind + '">' + label + '</span>'; }
+
+function openAdmin(){
+  openSheet("sheetAdmin");
+  $("#adMark").innerHTML = brandMark(30, true, false);
+  $("#adStore").textContent = storeReady
+    ? "Changes persist in this browser"
+    : "Storage unavailable — nothing will persist";
+  if (adUnlocked){ $("#adGate").hidden = true; $("#adBody").hidden = false; $("#adFoot").hidden = false; adRender(); }
+  else { $("#adGate").hidden = false; $("#adBody").hidden = true; $("#adFoot").hidden = true; setTimeout(() => $("#adPass").focus(), 80); }
+}
+function adUnlock(){
+  if ($("#adPass").value !== ADMIN_PASS){
+    $("#adPass").closest(".field").classList.add("err");
+    $("#adPass").value = ""; $("#adPass").focus();
+    return;
+  }
+  adUnlocked = true;
+  try { sessionStorage.setItem("sg.admin.open", "1"); } catch(e){}
+  adReveal();
+  $("#adGate").hidden = true; $("#adBody").hidden = false; $("#adFoot").hidden = false;
+  adRender();
+}
+
+/* The front-page link is the only way in for a visitor. Once the passphrase
+   has been given in this session, add a route from inside the gallery too —
+   otherwise she has to reload to get back to the admin. */
+function adReveal(){
+  const b = $("#navAdmin");
+  if (b) b.hidden = !adUnlocked;
+}
+
+function adRender(){
+  $("#adRail").querySelectorAll(".rail-item").forEach(b =>
+    b.setAttribute("aria-current", String(b.dataset.sec === adSection)));
+  const subs = (STORE.submissions || []).filter(s => s.stage !== "Declined").length;
+  $("#adSubCount").textContent = subs || "";
+  $("#adSubCount").hidden = !subs;
+  ({ dash:adDash, works:adWorks, hang:adHang, subs:adSubs }[adSection] || adDash)();
+  const main = $("#adMain");
+  if (main) main.scrollTop = 0;
+}
+
+/* ─── dashboard ─────────────────────────────────────────────── */
+function adDash(){
+  const S = Object.keys(SERIES).map(k => SERIES[k]);
+  const hangs = adHangs();
+  const count = f => S.filter(f).length;
+  const noPrice = count(x => x.avail === "available" && !(x.price > 0));
+  const pending = count(x => x.rights === "pending");
+  const unhung = Object.keys(SERIES).filter(k => !hangs.some(h => h.i === k)).length;
+  const noVoice = count(x => !x.voice);
+  const subs = STORE.submissions || [];
+  const waiting = subs.filter(s => s.stage === "New" || s.stage === "Under Review").length;
+
+  const tile = (n, label, cls) =>
+    '<div class="tile ' + (cls || "") + '"><b>' + n + '</b><span>' + label + '</span></div>';
+
+  $("#adMain").innerHTML =
+    '<h3 class="ad-h">Dashboard</h3>' +
+    '<p class="ad-sub">The state of the gallery. These are counts of works, rooms and submissions — the people and sales side belongs in the CRM, not here.</p>' +
+    '<div class="tiles">' +
+      tile(Object.keys(SERIES).length, "Works in the catalogue") +
+      tile(hangs.length, "Hangs across the rooms") +
+      tile(NAMED_ROOMS.length, "Rooms") +
+      tile(count(x => x.avail === "available"), "Available") +
+      tile(count(x => x.avail === "sold"), "Sold") +
+      tile(count(x => x.avail === "reserved"), "Reserved") +
+      tile(waiting, "Submissions waiting", waiting ? "warn" : "") +
+      tile(pending, "Rights unresolved", pending ? "bad" : "") +
+      tile(noPrice, "Available with no price", noPrice ? "bad" : "") +
+      tile(unhung, "Works not hung anywhere", unhung ? "warn" : "") +
+      tile(noVoice, "Without an artist recording", noVoice ? "warn" : "") +
+    '</div>' +
+    '<div class="ad-block" style="margin-top:18px"><h4>Needs attention</h4>' +
+      (pending || noPrice || unhung || waiting
+        ? '<div class="checks">' +
+          (pending ? '<div class="chk err"><b>' + pending + ' works have unresolved rights.</b> They must not be published until authorship and reproduction are settled.</div>' : '') +
+          (noPrice ? '<div class="chk err"><b>' + noPrice + ' works are marked available with no price.</b> The catalogue promises a price on everything for sale.</div>' : '') +
+          (unhung  ? '<div class="chk warn"><b>' + unhung + ' works hang nowhere.</b> They appear in the catalogue but not in any room.</div>' : '') +
+          (waiting ? '<div class="chk warn"><b>' + waiting + ' submissions are waiting.</b> Oldest first, under Submissions.</div>' : '') +
+          '</div>'
+        : '<div class="checks"><div class="chk ok">Nothing outstanding.</div></div>') +
+    '</div>' +
+    (storeReady ? '' :
+      '<div class="ad-block"><h4>Storage</h4><div class="checks"><div class="chk err">' +
+      '<b>This browser will not keep changes.</b> localStorage is blocked, which happens when a page is opened directly from disk. ' +
+      'Serve the folder instead — <code>python3 -m http.server</code> — or use the published site.</div></div></div>');
+}
+
+/* ─── artworks ──────────────────────────────────────────────── */
+let adEditing = null;
+function adWorks(){
+  if (adEditing) return adWorkEditor(adEditing);
+  const hangs = adHangs();
+  const rows = Object.keys(SERIES).map(k => {
+    const w = SERIES[k], n = hangs.filter(h => h.i === k).length;
+    return '<tr class="click" data-k="' + k + '">' +
+      '<td><img class="thumb" src="' + esc(IMAGES[k] || "") + '" alt=""></td>' +
+      '<td><span class="tt">' + esc(w.title) + '</span><br><small style="color:var(--pumice)">' + esc(w.artist) + '</small></td>' +
+      '<td>' + esc(w.medium) + '</td>' +
+      '<td>' + pill(w.avail, AVAIL[w.avail] || w.avail) + '</td>' +
+      '<td class="num">' + (w.onRequest ? "On request" : (w.price > 0 ? "£" + w.price.toLocaleString("en-GB") : "—")) + '</td>' +
+      '<td>' + pill(w.rights, RIGHTS[w.rights] || w.rights) + '</td>' +
+      '<td class="num">' + n + '</td></tr>';
+  }).join("");
+  $("#adMain").innerHTML =
+    '<h3 class="ad-h">Artworks</h3>' +
+    '<p class="ad-sub">The catalogue. One row per work, however many times it is hung. Editing a work changes it everywhere it appears.</p>' +
+    '<div class="ad-block"><table class="ad-table"><thead><tr>' +
+      '<th></th><th>Work</th><th>Medium</th><th>Availability</th><th class="num">Price</th><th>Rights</th><th class="num">Hangs</th>' +
+    '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+  $("#adMain").querySelectorAll("tr.click").forEach(tr =>
+    tr.addEventListener("click", () => { adEditing = tr.dataset.k; adWorks(); }));
+}
+
+function adWorkEditor(k){
+  const w = SERIES[k];
+  const sel = (id, label, map, val) =>
+    '<div class="field"><label for="' + id + '">' + label + '</label><select id="' + id + '">' +
+    Object.keys(map).map(o => '<option value="' + o + '"' + (o === val ? " selected" : "") + '>' + map[o] + '</option>').join("") +
+    '</select></div>';
+  const txt = (id, label, val, extra) =>
+    '<div class="field"><label for="' + id + '">' + label + '</label><input id="' + id + '" type="' +
+    (extra || "text") + '" value="' + esc(val) + '"></div>';
+  const area = (id, label, val) =>
+    '<div class="field"><label for="' + id + '">' + label + '</label><textarea id="' + id + '">' + esc(val) + '</textarea></div>';
+
+  $("#adMain").innerHTML =
+    '<button class="ad-back" id="adBack">← All artworks</button>' +
+    '<h3 class="ad-h">' + esc(w.title) + '</h3>' +
+    '<p class="ad-sub">' + esc(w.artist) + ' · ' + esc(w.medium) + ' · hung ' +
+      adHangs().filter(h => h.i === k).length + ' time(s). Dimensions come from the hang, and the height from the image file.</p>' +
+    '<div class="ad-block"><h4>Catalogue</h4><div class="ad-form">' +
+      '<div class="ad-row">' + txt("eTitle","Title",w.title) + txt("eArtist","Artist",w.artist) + txt("eYear","Year",w.year,"number") + '</div>' +
+      '<div class="ad-row">' + txt("eMedium","Medium",w.medium) + txt("eMovement","Movement",w.movement) +
+        sel("eColour","Colour", {Warm:"Warm",Cool:"Cool",Neutral:"Neutral",Dark:"Dark",Vivid:"Vivid"}, w.colour) + '</div>' +
+      '<div class="ad-row">' + txt("eEdition","Edition",w.edition || "") +
+        sel("eFrame","Frame", {gilt:"Heavy bar (historic)",dark:"Slim bar",none:"Floater"}, w.frame) +
+        '<div class="field"><label for="eGlass">Behind glass</label><select id="eGlass">' +
+          '<option value="0"' + (!w.glass ? " selected" : "") + '>No</option>' +
+          '<option value="1"' + (w.glass ? " selected" : "") + '>Yes</option></select></div>' + '</div>' +
+    '</div></div>' +
+    '<div class="ad-block"><h4>Commerce</h4><div class="ad-form">' +
+      '<div class="ad-row">' + sel("eAvail","Availability", AVAIL, w.avail) +
+        txt("ePrice","Price in £", w.price === null ? "" : w.price, "number") +
+        '<div class="field"><label for="eReq">Price on request</label><select id="eReq">' +
+          '<option value="0"' + (!w.onRequest ? " selected" : "") + '>No — show the price</option>' +
+          '<option value="1"' + (w.onRequest ? " selected" : "") + '>Yes — hide it</option></select>' +
+          '<div class="hint">The About page promises a price on everything for sale. Use with care.</div></div>' + '</div>' +
+      '<div class="ad-row">' + sel("eRights","Rights", RIGHTS, w.rights) + txt("ePd","Source / collection", w.pd || "") + '</div>' +
+    '</div></div>' +
+    '<div class="ad-block"><h4>Editorial</h4><div class="ad-form">' +
+      area("eStory","About this work", w.story) +
+      area("eQuote","The artist, in their own words", w.quote) +
+      area("eTech","How it was made", w.technique) +
+      '<div class="ad-row">' + txt("eExh","Exhibited", w.exhibited) + txt("eVoice","Audio file key", w.voice || "") + '</div>' +
+      area("eWhy","Why we chose it", w.why) +
+    '</div></div>' +
+    '<div class="ad-actions">' +
+      '<button class="btn" id="adSaveWork">Save</button>' +
+      '<button class="btn ghost" id="adRevert">Undo my changes to this work</button>' +
+      '<span class="ad-note" id="adWorkMsg"></span>' +
+    '</div>';
+
+  $("#adBack").addEventListener("click", () => { adEditing = null; adWorks(); });
+  $("#adRevert").addEventListener("click", () => {
+    delete STORE.series[k];
+    adSaveState("reverted " + k);
+    toast("Reverted to the shipped version — reload to see it");
+    adEditing = null; adWorks();
+  });
+  $("#adSaveWork").addEventListener("click", () => {
+    const num = v => { const f = parseFloat(v); return isFinite(f) ? f : null; };
+    const patch = {
+      title:$("#eTitle").value.trim(), artist:$("#eArtist").value.trim(),
+      year:num($("#eYear").value), medium:$("#eMedium").value.trim(),
+      movement:$("#eMovement").value.trim(), colour:$("#eColour").value,
+      edition:$("#eEdition").value.trim() || undefined,
+      frame:$("#eFrame").value, glass:$("#eGlass").value === "1" || undefined,
+      avail:$("#eAvail").value, price:num($("#ePrice").value),
+      onRequest:$("#eReq").value === "1",
+      rights:$("#eRights").value, pd:$("#ePd").value.trim() || undefined,
+      story:$("#eStory").value.trim(), quote:$("#eQuote").value.trim(),
+      technique:$("#eTech").value.trim(), exhibited:$("#eExh").value.trim(),
+      voice:$("#eVoice").value.trim() || undefined, why:$("#eWhy").value.trim()
+    };
+    const problems = [];
+    if (!patch.title) problems.push("A work needs a title.");
+    if (!patch.artist) problems.push("A work needs an artist.");
+    if (patch.avail === "available" && !patch.onRequest && !(patch.price > 0))
+      problems.push("Marked available with no price. Either set a price or use price on request.");
+    if (patch.rights === "pending" && patch.avail === "available")
+      problems.push("Rights are unresolved, so this cannot be offered for sale.");
+    const msg = $("#adWorkMsg");
+    if (problems.length){
+      msg.innerHTML = '<span style="color:#9B3B2E">' + problems.join(" ") + '</span>';
+      return;
+    }
+    Object.assign(adSeries(k), patch);
+    Object.assign(SERIES[k], patch);
+    adSaveState("edited " + k);
+    msg.innerHTML = '<span style="color:#2C6B45">Saved.</span>';
+  });
+}
+
+/* ─── the hang ──────────────────────────────────────────────────
+   The one thing no CRM will ever do. Every rule the build relies on
+   is checked here before a change is accepted, so Sasha sees the
+   same failures I would have caught in a test run.              */
+function hangGeom(h){
+  const S = SERIES[h.i];
+  if (!S) return null;
+  const A = h.w / 100, B = Math.round(h.w / S.ratio) / 100;
+  const big = Math.max(A, B);
+  const gilt = S.frame === "gilt", floater = S.frame === "none";
+  const fw = floater ? Math.min(0.046, Math.max(0.020, big * 0.028))
+           : gilt    ? Math.min(0.075, Math.max(0.034, big * 0.048))
+                     : Math.min(0.052, Math.max(0.024, big * 0.032));
+  const mw = S.glass ? Math.min(0.11, big * 0.075) : 0;
+  const reveal = floater ? 0.022 : 0;
+  const half = A / 2 + mw + reveal + fw;
+  const reach = mw + reveal + fw;
+  const lab = A / 2 + reach + 0.52;
+  const low = (h.s === "n" || h.s === "e");
+  return { A, B, fw, half, vhalf: B / 2 + mw + reveal + fw,
+           lo: h.u - (low ? Math.max(half, lab) : half),
+           hi: h.u + (low ? half : Math.max(half, lab)) };
+}
+/* every rule the rooms depend on, in one place */
+function hangCheck(list){
+  const out = [];
+  const push = (level, text) => out.push({ level, text });
+  list.forEach(h => {
+    const r = ROOM[h.r], g = hangGeom(h);
+    if (!r){ push("err", h.i + ": no room called " + h.r); return; }
+    if (!g){ push("err", h.i + ": no such work"); return; }
+    const horiz = (h.s === "n" || h.s === "s");
+    const a = horiz ? r.x1 : r.z1, b = horiz ? r.x2 : r.z2;
+    if (g.lo < a || g.hi > b)
+      push("err", SERIES[h.i].title + " in " + r.name.replace("&amp;","&") +
+        " runs off its wall (" + g.lo.toFixed(2) + " to " + g.hi.toFixed(2) + " on a wall of " + a + " to " + b + ")");
+    const op = r.open && r.open[h.s];
+    if (Array.isArray(op) && !(g.hi < op[0] || g.lo > op[1]))
+      push("err", SERIES[h.i].title + " overlaps the doorway in " + r.name.replace("&amp;","&"));
+    const cy = Math.max(1.52, g.B / 2 + 0.40);
+    if (cy + g.vhalf > r.h - 0.35)
+      push("err", SERIES[h.i].title + " is too tall for the " + r.h + "m ceiling in " + r.name.replace("&amp;","&"));
+    if (cy - g.vhalf < 0.13)
+      push("err", SERIES[h.i].title + " would reach the skirting");
+  });
+  /* the placeholder works are all unresolved, so this is one line rather
+     than forty-four identical ones */
+  const unresolved = [];
+  list.forEach(h => {
+    if (SERIES[h.i] && SERIES[h.i].rights === "pending" && unresolved.indexOf(h.i) < 0)
+      unresolved.push(h.i);
+  });
+  if (unresolved.length)
+    push("warn", unresolved.length + " of the works hung here have unresolved rights (" +
+      unresolved.slice(0, 3).map(k => SERIES[k].title).join(", ") +
+      (unresolved.length > 3 ? " and others" : "") + "). None may be published until that is settled.");
+  /* two works on one wall must not touch */
+  const walls = {};
+  list.forEach(h => { const k = h.r + "/" + h.s; (walls[k] = walls[k] || []).push(h); });
+  Object.keys(walls).forEach(k => {
+    const L = walls[k].slice().sort((x, y) => x.u - y.u);
+    for (let i = 1; i < L.length; i++){
+      const p = hangGeom(L[i-1]), c = hangGeom(L[i]);
+      if (!p || !c) continue;
+      const gap = c.lo - p.hi;
+      if (gap < 0.12)
+        push("err", SERIES[L[i-1].i].title + " and " + SERIES[L[i].i].title +
+          " are only " + gap.toFixed(2) + "m apart on the same wall");
+      else if (gap < 0.30)
+        push("warn", SERIES[L[i-1].i].title + " and " + SERIES[L[i].i].title + " are tight at " + gap.toFixed(2) + "m");
+    }
+  });
+  /* the same work twice in one room reads as a mistake */
+  const seen = {};
+  list.forEach(h => {
+    const k = h.r + "/" + h.i;
+    if (seen[k]) push("warn", SERIES[h.i].title + " hangs twice in " + ROOM[h.r].name.replace("&amp;","&"));
+    seen[k] = 1;
+  });
+  return out;
+}
+
+const WALLNAME = { n:"North", s:"South", e:"East", w:"West" };
+function adHang(){
+  const list = adHangs();
+  const problems = hangCheck(list);
+  const errs = problems.filter(p => p.level === "err");
+  const roomBlock = r => {
+    const mine = list.map((h, i) => ({ h, i })).filter(x => x.h.r === r.id)
+                     .sort((a, b) => a.h.s.localeCompare(b.h.s) || a.h.u - b.h.u);
+    const rows = mine.map(x =>
+      '<tr><td><img class="thumb" src="' + esc(IMAGES[x.h.i] || "") + '" alt=""></td>' +
+      '<td><span class="tt">' + esc(SERIES[x.h.i] ? SERIES[x.h.i].title : x.h.i) + '</span></td>' +
+      '<td><select data-f="s" data-i="' + x.i + '">' +
+        Object.keys(WALLNAME).map(o => '<option value="' + o + '"' + (o === x.h.s ? " selected" : "") + '>' + WALLNAME[o] + '</option>').join("") +
+      '</select></td>' +
+      '<td><input type="number" step="0.1" value="' + x.h.u + '" data-f="u" data-i="' + x.i + '" style="width:5.5em"></td>' +
+      '<td><input type="number" step="1" min="10" value="' + x.h.w + '" data-f="w" data-i="' + x.i + '" style="width:5em"></td>' +
+      '<td><select data-f="r" data-i="' + x.i + '">' +
+        NAMED_ROOMS.map(o => '<option value="' + o.id + '"' + (o.id === x.h.r ? " selected" : "") + '>' + o.name.replace("&amp;","&") + '</option>').join("") +
+      '</select></td>' +
+      '<td><button class="ad-back" style="margin:0" data-del="' + x.i + '">Remove</button></td></tr>').join("");
+    return '<div class="ad-block"><h4>Room ' + r.no + ' · ' + r.name.replace("&amp;","&") +
+      ' — ' + mine.length + ' hung</h4>' +
+      (mine.length ? '<table class="ad-table"><thead><tr><th></th><th>Work</th><th>Wall</th>' +
+        '<th>Position (m)</th><th>Width (cm)</th><th>Room</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>'
+        : '<p class="ad-note">Nothing hung in this room.</p>') + '</div>';
+  };
+
+  $("#adMain").innerHTML =
+    '<h3 class="ad-h">The Hang</h3>' +
+    '<p class="ad-sub">Which work is on which wall, and where along it. Position is measured along the wall in metres from the centre of the room; width is the work in centimetres, and the height follows from the image. Every change is checked against the architecture before it is accepted.</p>' +
+    '<div class="ad-block"><h4>Checks</h4><div class="checks">' +
+      (problems.length
+        ? problems.slice(0, 14).map(p => '<div class="chk ' + p.level + '">' + esc(p.text) + '</div>').join("") +
+          (problems.length > 14 ? '<div class="chk warn">…and ' + (problems.length - 14) + ' more</div>' : '')
+        : '<div class="chk ok">The hang is sound: nothing runs off a wall, blocks a doorway, touches a neighbour or fouls a ceiling.</div>') +
+    '</div></div>' +
+    '<div class="ad-block"><h4>Add a hang</h4><div class="ad-form"><div class="ad-row">' +
+      '<div class="field"><label for="nhWork">Work</label><select id="nhWork">' +
+        Object.keys(SERIES).map(kk => '<option value="' + kk + '">' + esc(SERIES[kk].title) + '</option>').join("") + '</select></div>' +
+      '<div class="field"><label for="nhRoom">Room</label><select id="nhRoom">' +
+        NAMED_ROOMS.map(o => '<option value="' + o.id + '">' + o.name.replace("&amp;","&") + '</option>').join("") + '</select></div>' +
+      '<div class="field"><label for="nhWall">Wall</label><select id="nhWall">' +
+        Object.keys(WALLNAME).map(o => '<option value="' + o + '">' + WALLNAME[o] + '</option>').join("") + '</select></div>' +
+      '<div class="field"><label for="nhU">Position</label><input id="nhU" type="number" step="0.1" value="0"></div>' +
+      '<div class="field"><label for="nhW">Width in cm</label><input id="nhW" type="number" step="1" value="100"></div>' +
+    '</div><div class="ad-actions"><button class="btn" id="nhAdd">Hang it</button>' +
+      '<span class="ad-note" id="nhMsg"></span></div></div></div>' +
+    NAMED_ROOMS.map(roomBlock).join("") +
+    (errs.length ? '' : '');
+
+  /* edits are validated as a whole before they are kept */
+  const tryChange = fn => {
+    const next = adHangs().map(h => Object.assign({}, h));
+    fn(next);
+    const bad = hangCheck(next).filter(p => p.level === "err");
+    if (bad.length){ toast(bad[0].text); adHang(); return false; }
+    STORE.hangs = next;
+    adSaveState("changed the hang");
+    adHang();
+    return true;
+  };
+  $("#adMain").querySelectorAll("[data-f]").forEach(el =>
+    el.addEventListener("change", () => {
+      const i = +el.dataset.i, f = el.dataset.f;
+      const v = (f === "u" || f === "w") ? parseFloat(el.value) : el.value;
+      if ((f === "u" || f === "w") && !isFinite(v)){ adHang(); return; }
+      tryChange(n => { n[i][f] = v; });
+    }));
+  $("#adMain").querySelectorAll("[data-del]").forEach(b =>
+    b.addEventListener("click", () => tryChange(n => n.splice(+b.dataset.del, 1))));
+  $("#nhAdd").addEventListener("click", () => {
+    const h = { i:$("#nhWork").value, r:$("#nhRoom").value, s:$("#nhWall").value,
+                u:parseFloat($("#nhU").value), w:parseFloat($("#nhW").value) };
+    if (!isFinite(h.u) || !isFinite(h.w) || h.w < 10){ $("#nhMsg").textContent = "Check the position and width."; return; }
+    const next = adHangs().map(x => Object.assign({}, x)).concat([h]);
+    const bad = hangCheck(next).filter(p => p.level === "err");
+    if (bad.length){ $("#nhMsg").innerHTML = '<span style="color:#9B3B2E">' + esc(bad[0].text) + '</span>'; return; }
+    STORE.hangs = next;
+    adSaveState("hung " + h.i + " in " + h.r);
+    adHang();
+  });
+}
+
+/* ─── submissions ───────────────────────────────────────────────
+   The Join form writes here, so the loop closes without a backend:
+   apply as an artist, then read it, stage it and approve it.     */
+function adSubs(){
+  const subs = STORE.submissions || [];
+  if (!subs.length){
+    $("#adMain").innerHTML =
+      '<h3 class="ad-h">Submissions</h3>' +
+      '<p class="ad-sub">Applications from Join Soft Gallery arrive here.</p>' +
+      '<div class="ad-block"><div class="checks"><div class="chk ok">' +
+      'Nothing waiting. Submit through <b>Join</b> on the site and it will appear here.' +
+      '</div></div></div>';
+    return;
+  }
+  const card = (sub, i) =>
+    '<div class="sub-card">' +
+      '<div class="sub-top"><div>' +
+        '<div class="sub-name">' + esc(sub.first + " " + sub.last) + '</div>' +
+        '<div class="sub-meta">' + new Date(sub.when).toLocaleDateString("en-GB",
+          { day:"numeric", month:"long", year:"numeric" }) + ' · ' + esc(sub.email) +
+          (sub.consent ? ' · consented to news' : ' · no marketing consent') + '</div>' +
+      '</div>' + pill(sub.stage === "Declined" ? "withdrawn" :
+                      sub.stage === "Approved" ? "available" : "reserved", sub.stage) + '</div>' +
+      '<p class="sub-bio">' + esc(sub.bio) + '</p>' +
+      '<div class="sub-shots">' + (sub.shots || []).map(sh =>
+        '<img src="' + sh.src + '" alt="" title="' + esc(sh.name) + ' · ' + sh.w + '×' + sh.h + '">').join("") + '</div>' +
+      '<div class="sub-links">' +
+        (sub.social ? '<span>Social: <b>' + esc(sub.social) + '</b></span>' : '') +
+        (sub.site ? '<span>Portfolio: <a href="' + esc(/^https?:/.test(sub.site) ? sub.site : "https://" + sub.site) +
+          '" target="_blank" rel="noopener">' + esc(sub.site) + '</a></span>' : '') +
+      '</div>' +
+      '<div class="field" style="margin-top:14px"><label for="sn' + i + '">Internal notes</label>' +
+        '<textarea id="sn' + i + '" data-note="' + i + '" style="min-height:64px">' + esc(sub.notes || "") + '</textarea></div>' +
+      '<div class="stage-row">' +
+        STAGES.map(st => '<button class="hud-btn' + (st === sub.stage ? "" : " light") +
+          '" style="' + (st === sub.stage ? "background:var(--ink);color:var(--paper)" :
+          "background:var(--paper-2);color:var(--slate)") + '" data-stage="' + i + '" data-to="' + st + '">' + st + '</button>').join("") +
+        '<button class="ad-back" style="margin:0 0 0 auto" data-drop="' + i + '">Delete</button>' +
+      '</div>' +
+      (sub.stage === "Approved"
+        ? '<div class="checks" style="margin-top:12px"><div class="chk ok">' +
+          'Approved. In the real system this triggers the invitation to create an artist account. ' +
+          'Here, add them to the catalogue by hand.</div></div>' : '') +
+    '</div>';
+
+  $("#adMain").innerHTML =
+    '<h3 class="ad-h">Submissions</h3>' +
+    '<p class="ad-sub">' + subs.length + ' application' + (subs.length === 1 ? "" : "s") +
+    ', newest first. Stages follow the CRM pipeline, so this screen can be replaced by the CRM later without changing the vocabulary.</p>' +
+    '<div class="ad-block"><div class="checks"><div class="chk warn">' +
+    'Prototype: these are held in this browser only, and no acknowledgement email is sent. ' +
+    'Applications contain personal data, so a retention period and a deletion route are needed before this is live.' +
+    '</div></div></div>' +
+    '<div class="subs">' + subs.map(card).join("") + '</div>';
+
+  $("#adMain").querySelectorAll("[data-stage]").forEach(b =>
+    b.addEventListener("click", () => {
+      const s = STORE.submissions[+b.dataset.stage];
+      s.stage = b.dataset.to;
+      if (s.stage === "Approved"){
+        /* an approved artist gets a public profile stub to fill in */
+        const name = s.first + " " + s.last;
+        if (!STORE.artists[name]) STORE.artists[name] = {
+          born:"", based:"", since:new Date().getFullYear(), school:"",
+          bio:s.bio, shows:"" };
+      }
+      adSaveState("submission " + s.id + " -> " + s.stage);
+      adRender();
+    }));
+  $("#adMain").querySelectorAll("[data-note]").forEach(t =>
+    t.addEventListener("change", () => {
+      STORE.submissions[+t.dataset.note].notes = t.value;
+      adSaveState("note on a submission");
+    }));
+  $("#adMain").querySelectorAll("[data-drop]").forEach(b =>
+    b.addEventListener("click", () => {
+      STORE.submissions.splice(+b.dataset.drop, 1);
+      adSaveState("deleted a submission");
+      adRender();
+    }));
+}
+
+/* ─── wiring ────────────────────────────────────────────────── */
+function bindAdmin(){
+  try { adUnlocked = sessionStorage.getItem("sg.admin.open") === "1"; } catch(e){}
+  adReveal();
+  $("#adminLink").addEventListener("click", openAdmin);
+  $("#navAdmin").addEventListener("click", () => { closeMore(); openAdmin(); });
+  $("#adEnter").addEventListener("click", adUnlock);
+  $("#adPass").addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); adUnlock(); } });
+  $("#adRail").querySelectorAll(".rail-item").forEach(b =>
+    b.addEventListener("click", () => { adSection = b.dataset.sec; adEditing = null; adRender(); }));
+  $("#adReload").addEventListener("click", () => location.reload());
+  $("#adExport").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify({
+      exported:new Date().toISOString(), store:STORE,
+      series:SERIES, hangs:adHangs(), rooms:ROOMS.map(r => ({ id:r.id, name:r.name, no:r.no }))
+    }, null, 2)], { type:"application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "softgallery-" + new Date().toISOString().slice(0, 10) + ".json";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  });
+  $("#adReset").addEventListener("click", () => {
+    if (!confirm("Discard every change and go back to the version that shipped? This cannot be undone.")) return;
+    storeReset();
+    location.reload();
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
    SOUND — all of it generated, so the file stays self-contained
    ══════════════════════════════════════════════════════════════ */
 let AC = null, soundOn = false;
@@ -5256,58 +6082,102 @@ function bindInput(){
     replaceForm($("#viewForm"), "Your list is with us",
       "We will come back with availability, framing and what else these artists have.");
   });
-  /* ─── artist submissions ───────────────────────────────────── */
-  let joinFile = null;
+  /* ─── artist submissions ─────────────────────────────────────
+     Sasha's spec: three to five images, social link required, portfolio
+     link optional, consent explicit. Images are downscaled in the browser
+     before being held, because localStorage is about 5 MB in total and a
+     phone photograph is 4 MB on its own. */
+  let joinShots = [];
   $("#jBio").addEventListener("input", e => { $("#jCount").textContent = e.target.value.length; });
   $("#jFileBtn").addEventListener("click", () => $("#jFile").click());
-  $("#jFile").addEventListener("change", e => {
-    const f = e.target.files && e.target.files[0];
-    const btn = $("#jFileBtn"), hint = $("#jFileHint"), field = $("#jFileField");
-    field.classList.remove("err");
-    if (!f){ joinFile = null; btn.classList.remove("has"); $("#jFileName").textContent = "Choose a PDF"; return; }
-    const isPdf = f.type === "application/pdf" || /\.pdf$/i.test(f.name);
-    if (!isPdf){
-      joinFile = null; e.target.value = "";
-      btn.classList.remove("has"); $("#jFileName").textContent = "Choose a PDF";
-      field.classList.add("err"); hint.textContent = "That is not a PDF. Please export your portfolio as one.";
-      return;
+
+  function shrink(file, edge){
+    return new Promise((res, rej) => {
+      const im = new Image(), url = URL.createObjectURL(file);
+      im.onload = () => {
+        const sc = Math.min(1, edge / Math.max(im.width, im.height));
+        const c = document.createElement("canvas");
+        c.width = Math.round(im.width * sc); c.height = Math.round(im.height * sc);
+        c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        res({ name:file.name, w:im.width, h:im.height,
+              src:c.toDataURL("image/jpeg", 0.72) });
+      };
+      im.onerror = () => { URL.revokeObjectURL(url); rej(); };
+      im.src = url;
+    });
+  }
+  function drawShots(){
+    $("#jShots").innerHTML = joinShots.map((sh, i) =>
+      '<figure><img src="' + sh.src + '" alt=""><button type="button" data-i="' + i +
+      '" aria-label="Remove">×</button></figure>').join("");
+    $("#jShots").querySelectorAll("button").forEach(b =>
+      b.addEventListener("click", () => { joinShots.splice(+b.dataset.i, 1); drawShots(); }));
+    const btn = $("#jFileBtn");
+    btn.classList.toggle("has", joinShots.length > 0);
+    $("#jFileName").textContent = joinShots.length
+      ? joinShots.length + (joinShots.length === 1 ? " image" : " images") + " chosen"
+      : "Choose images";
+    $("#jFileHint").textContent = joinShots.length && joinShots.length < 3
+      ? "Three minimum — " + (3 - joinShots.length) + " more, please."
+      : "JPEG or PNG. Three minimum, five maximum.";
+  }
+  $("#jFile").addEventListener("change", async e => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = "";
+    $("#jFileField").classList.remove("err");
+    for (const f of files){
+      if (joinShots.length >= 5){ toast("Five images is the maximum"); break; }
+      if (!/^image\//.test(f.type)){ toast("Images only, please"); continue; }
+      try { joinShots.push(await shrink(f, 900)); } catch(err){ toast("That image could not be read"); }
     }
-    if (f.size > 25 * 1024 * 1024){
-      joinFile = null; e.target.value = "";
-      btn.classList.remove("has"); $("#jFileName").textContent = "Choose a PDF";
-      field.classList.add("err");
-      hint.textContent = "That file is " + (f.size / 1048576).toFixed(0) + " MB. The limit is 25 MB.";
-      return;
-    }
-    joinFile = f;
-    btn.classList.add("has");
-    $("#jFileName").textContent = f.name;
-    hint.textContent = (f.size / 1048576).toFixed(1) + " MB · ready";
+    drawShots();
   });
 
   $("#joinForm").addEventListener("submit", e => {
     e.preventDefault();
     const ok = validate([
-      { sel:"#jFirst", test:v => v.length > 1, bad:"We need a first name." },
-      { sel:"#jLast",  test:v => v.length > 1, bad:"We need a last name." },
-      { sel:"#jEmail", test:v => EMAIL.test(v), bad:"That email address will not reach you." },
-      { sel:"#jBio",   test:v => v.length > 29,
+      { sel:"#jFirst",  test:v => v.length > 1, bad:"We need a first name." },
+      { sel:"#jLast",   test:v => v.length > 1, bad:"We need a last name." },
+      { sel:"#jEmail",  test:v => EMAIL.test(v), bad:"That email address will not reach you." },
+      { sel:"#jBio",    test:v => v.length > 29,
         bad:"A few sentences, please — thirty characters at minimum.",
-        hint:$("#jBio").value.length + " / 700 characters" }
+        hint:$("#jBio").value.length + " / 700 characters" },
+      { sel:"#jSocial", test:v => v.trim().length > 2, bad:"An Instagram handle or a social link, please." }
     ]);
-    /* something to actually look at: a file, a site, or a social handle */
-    const hasWork = !!joinFile || $("#jSite").value.trim().length > 3 || $("#jSocial").value.trim().length > 2;
-    const ff = $("#jFileField");
-    ff.classList.toggle("err", !hasWork);
-    if (!hasWork){
-      $("#jFileHint").textContent = "Please attach a PDF or give us a website or social link.";
+    const enough = joinShots.length >= 3 && joinShots.length <= 5;
+    $("#jFileField").classList.toggle("err", !enough);
+    if (!enough){
+      $("#jFileHint").textContent = joinShots.length < 3
+        ? "Three images minimum — that is what we review an artist on."
+        : "Five images maximum.";
       if (ok) $("#jFileBtn").focus();
-    } else if (!joinFile){
-      $("#jFileHint").textContent = "PDF, up to 25 MB. A website or social link on its own is fine too.";
     }
-    if (!ok || !hasWork) return;
+    if (!ok || !enough) return;
+
+    const sub = {
+      id: "sub" + Date.now().toString(36),
+      when: new Date().toISOString(),
+      stage: "New",
+      first: $("#jFirst").value.trim(), last: $("#jLast").value.trim(),
+      email: $("#jEmail").value.trim(), bio: $("#jBio").value.trim(),
+      social: $("#jSocial").value.trim(), site: $("#jSite").value.trim(),
+      consent: $("#jConsent").checked,
+      shots: joinShots.slice(), notes: ""
+    };
+    STORE.submissions = STORE.submissions || [];
+    STORE.submissions.unshift(sub);
+    storeNote("submission from " + sub.first + " " + sub.last);
+    const saved = storeSave();
+    if (!saved && STORE.submissions.length > 1){
+      /* almost always the quota: keep the newest and say so */
+      STORE.submissions = [sub];
+      storeSave();
+    }
+    joinShots = [];
     replaceForm($("#joinForm"), "Thank you",
-      "Your submission is with us. We read every one, and a curator will reply whether or not it is a fit — usually within three weeks.");
+      "The Soft Gallery team will review your application and get back to you." +
+      (saved ? "" : " (This browser could not store the submission — serve the site rather than opening the file directly.)"));
   });
 
   $("#fallbackBtn").addEventListener("click", () => {
@@ -5430,6 +6300,8 @@ $("#readBtn").addEventListener("click", () => {
 /* the mark, on the door and in the corner */
 $("#arrMark").innerHTML = brandLockup(Math.min(330, innerWidth * 0.66), true, !REDUCED);
 $("#hudMark").innerHTML = brandLockupH(168, true);
+
+bindAdmin();          /* independent of the 3D, so it works before and without it */
 
 $("#enterBtn").disabled = true;
 $("#enterQuiet").disabled = true;
