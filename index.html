@@ -225,6 +225,8 @@ kbd{
 #hud button,#hud a{pointer-events:auto}
 
 .hud-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+/* The gallery is now near-white, so the head-up display is dark on light.
+   Chips carry a faint white scrim so they stay legible over a painting. */
 .wordmark{
   font-family:var(--display);font-size:15px;letter-spacing:.34em;
   text-transform:uppercase;color:var(--paper);
@@ -2689,7 +2691,7 @@ function tileBoxUVs(geo, sx, sy, sz, t){
    light wall / dark floor / bright ceiling, or the reverse. The
    floor is doing most of that work, so it gets six treatments. */
 const FLOORS = {
-  /* pale polished terrazzo — the atrium */
+  /* pale aggregate in a light matrix, polished */
   terrazzo(g, W, H, r){
     g.fillStyle = "#DFDBD2"; g.fillRect(0, 0, W, H);
     const chip = ["#A89E8C","#C9C2B4","#8E8578","#E6E1D6","#B8AE9A","#6F675C"];
@@ -2733,7 +2735,7 @@ const FLOORS = {
         g.stroke();
       }
       g.globalAlpha = 0.30; g.fillStyle = "#402D19";
-      g.fillRect(0, (i + 1) * bh - 2.5, W, 2.5);          /* the board joint */
+      g.fillRect(0, (i + 1) * bh - 2.5, W, 2.5);
       g.globalAlpha = 1;
     }
   },
@@ -2773,7 +2775,7 @@ const FLOORS = {
       for (let k = 0; k < 240; k++){
         g.fillStyle = r() > 0.5 ? "#8E9092" : "#1E1F20";
         const x = rx * s + r() * s, y = ry * s + r() * s;
-        g.fillRect(x, y, 2 + r() * 22, 1 + r() * 2);       /* the cleave lines */
+        g.fillRect(x, y, 2 + r() * 22, 1 + r() * 2);
       }
       g.globalAlpha = 1;
     }
@@ -2903,6 +2905,8 @@ function trimMat(){
   return TRIMMAT;
 }
 function darkMat(){
+  /* the shadow gap at the ceiling: cool and far lighter, so a white room
+     does not get a black line drawn round it */
   if (!DARKMAT) DARKMAT = new THREE.MeshStandardMaterial({
     color:0x1E1D1B, roughness:0.9, metalness:0, envMapIntensity:0.1 });
   return DARKMAT;
@@ -2930,17 +2934,154 @@ function box(cx, cy, cz, sx, sy, sz, mat, opts){
    thrown on the floor opposite.
    ══════════════════════════════════════════════════════════════ */
 let SKYMAT = null, GLAZING = null, PATCHTEX = null;
+const FOLIAGE = [];
+
+/* The sky behind the glass. Two things matter here beyond the colour:
+
+   toneMapped:false — an unlit material still passes through ACES tone
+   mapping, which compresses bright values into the same range the walls
+   occupy, so a white sky comes out looking like more wall. Exempting it
+   lets the sky sit brighter than any wall can render, which is most of
+   what makes a window read as an opening.
+
+   DoubleSide — the plane sits outside the building and used to face the
+   wrong way on all four elevations, so what you actually saw through the
+   window was scene.background, which was near-black. Hence night. */
 function skyMaterial(){
   if (SKYMAT) return SKYMAT;
-  const c = textCanvas(64, 256, (g, W, H) => {
+  const c = textCanvas(512, 1024, (g, W, H) => {
     const v = g.createLinearGradient(0, 0, 0, H);
-    v.addColorStop(0.00, "#FDFBF6");
-    v.addColorStop(0.55, "#EFF3F7");
-    v.addColorStop(1.00, "#D8DFE6");
+    v.addColorStop(0.00, "#6E9CC8");     /* zenith */
+    v.addColorStop(0.34, "#A6C6E0");
+    v.addColorStop(0.62, "#D2E2EE");
+    v.addColorStop(0.86, "#EBE9E0");     /* haze building toward the horizon */
+    v.addColorStop(1.00, "#F4EFE4");
     g.fillStyle = v; g.fillRect(0, 0, W, H);
+
+    /* the sun, off to one side and well up */
+    const sx = W * 0.74, sy = H * 0.17;
+    const sun = g.createRadialGradient(sx, sy, 0, sx, sy, W * 0.62);
+    sun.addColorStop(0.00, "rgba(255,252,242,0.95)");
+    sun.addColorStop(0.14, "rgba(255,248,230,0.44)");
+    sun.addColorStop(0.42, "rgba(255,246,228,0.14)");
+    sun.addColorStop(1.00, "rgba(255,246,228,0)");
+    g.fillStyle = sun; g.fillRect(0, 0, W, H);
+
+    /* a few soft banks of cloud, flatter toward the horizon */
+    const r = rng(90210);
+    for (let i = 0; i < 26; i++){
+      const y = H * (0.10 + r() * 0.72);
+      const flat = 0.16 + (y / H) * 0.5;
+      const x = r() * W, rad = W * (0.10 + r() * 0.26);
+      g.globalAlpha = 0.07 + r() * 0.16;
+      g.fillStyle = r() > 0.35 ? "#FFFFFF" : "#C6D6E4";
+      g.beginPath();
+      g.ellipse(x, y, rad, rad * flat, 0, 0, Math.PI * 2);
+      g.fill();
+      if (x < rad){ g.beginPath(); g.ellipse(x + W, y, rad, rad * flat, 0, 0, Math.PI * 2); g.fill(); }
+      if (x > W - rad){ g.beginPath(); g.ellipse(x - W, y, rad, rad * flat, 0, 0, Math.PI * 2); g.fill(); }
+    }
+    g.globalAlpha = 1;
   });
-  SKYMAT = new THREE.MeshBasicMaterial({ map: tex(c, 2), fog: false });
+  /* Standing close to a long window, the view cone is far wider than any
+     sane plane, so the sky tiles horizontally instead of being stretched —
+     the cloud pass above draws duplicates across the canvas edge so the
+     repeat is seamless. Vertically it clamps: the gradient must not wrap. */
+  const t = tex(c, 2);
+  t.wrapS = THREE.RepeatWrapping;
+  t.wrapT = THREE.ClampToEdgeWrapping;
+  SKYMAT = new THREE.MeshBasicMaterial({ map: t, fog: false,
+    side: THREE.DoubleSide, toneMapped: false });
   return SKYMAT;
+}
+
+/* Foliage, as three billboard layers at different distances. The parallax
+   between them as you walk is what reads as depth — a single painted plane
+   reads as a poster however well it is drawn. Aerial perspective: the far
+   layer is paler and bluer, the near one darker and greener. */
+/* The window only ever shows the top of a canopy, so the canopy is built
+   from the top down: a ragged skyline profile about a fifth of the way down
+   the canvas, dense leaf mass below it, and highlights along the upper
+   surfaces where the light would catch. Drawing it dense at the foot — as
+   this did at first — wastes the whole texture on the part behind the wall
+   and leaves a thin sparse smudge at the sill. */
+function foliageMaterial(layer){
+  if (FOLIAGE[layer]) return FOLIAGE[layer];
+  const t = layer / 2;                                  /* 0 near, 1 far */
+  const mix = (a, b) => Math.round(a + (b - a) * t);
+  const c = textCanvas(512, 512, (g, W, H) => {
+    g.clearRect(0, 0, W, H);
+    const r = rng(4400 + layer * 97);
+
+    /* the skyline: a few crossed waves so no two crowns are alike */
+    /* The opening only shows about a fifth of the canvas, so the skyline has
+       to vary by about that much — any more and a whole column reads as
+       either solid canopy or bare sky, which is the blocky look this had. */
+    const N = 96, prof = new Array(N);
+    const p1 = r() * 6.3, p2 = r() * 6.3, p3 = r() * 6.3;
+    for (let i = 0; i < N; i++){
+      const u = i / N * Math.PI * 2;
+      prof[i] = H * (0.24
+        + 0.050 * Math.sin(u * 2 + p1)
+        + 0.032 * Math.sin(u * 5 + p2)
+        + 0.018 * Math.sin(u * 11 + p3)
+        + (r() - 0.5) * 0.03);
+    }
+    const topAt = x => {
+      const f = (x / W) * N, i = Math.floor(f) % N, j = (i + 1) % N;
+      return prof[i] + (prof[j] - prof[i]) * (f - i);
+    };
+    const leaf = (x, y, rad, shade, alpha) => {
+      const cr = mix(74, 168) * shade, cg = mix(110, 188) * shade, cb = mix(76, 192) * shade;
+      g.fillStyle = "rgb(" + Math.round(cr) + "," + Math.round(cg) + "," + Math.round(cb) + ")";
+      g.globalAlpha = alpha;
+      g.beginPath();
+      g.ellipse(x, y, rad, rad * (0.60 + r() * 0.62), r() * Math.PI, 0, Math.PI * 2);
+      g.fill();
+    };
+
+    /* the mass, filling everything below the skyline */
+    for (let i = 0; i < 2600; i++){
+      const x = r() * W, top = topAt(x);
+      const y = top + (H - top) * Math.pow(r(), 0.62);
+      leaf(x, y, W * (0.016 + r() * 0.040), 0.72 + r() * 0.42, 0.86 + r() * 0.14);
+    }
+    /* light catching the upper surfaces */
+    for (let i = 0; i < 1500; i++){
+      const x = r() * W, top = topAt(x);
+      const y = top + (H - top) * Math.pow(r(), 2.6) * 0.55;
+      leaf(x, y, W * (0.013 + r() * 0.030), 1.24 + r() * 0.44, 0.70 + r() * 0.30);
+    }
+    /* the ragged fringe above the skyline — separate sprigs against the sky */
+    for (let i = 0; i < 1100; i++){
+      const x = r() * W, top = topAt(x);
+      const y = top - Math.pow(r(), 1.9) * H * 0.12;
+      leaf(x, y, W * (0.007 + r() * 0.019), 0.78 + r() * 0.40, 0.72 + r() * 0.28);
+    }
+    /* trunks and limbs, on the near layer only, where they would read */
+    if (layer === 0){
+      g.globalAlpha = 0.82;
+      for (let i = 0; i < 4; i++){
+        const x = W * (0.12 + r() * 0.76), w = W * (0.010 + r() * 0.013);
+        const top = topAt(x) + H * (0.16 + r() * 0.2);
+        g.fillStyle = "rgb(58,52,45)";
+        g.fillRect(x, top, w, H - top);
+        g.strokeStyle = "rgb(58,52,45)"; g.lineWidth = w * 0.55;
+        for (let k = 0; k < 3; k++){
+          const ly = top + (H - top) * (0.1 + r() * 0.5), dir = r() > 0.5 ? 1 : -1;
+          g.beginPath(); g.moveTo(x + w / 2, ly);
+          g.lineTo(x + w / 2 + dir * W * (0.03 + r() * 0.06), ly - H * (0.02 + r() * 0.05));
+          g.stroke();
+        }
+      }
+    }
+    g.globalAlpha = 1;
+  });
+  /* alphaTest rather than blending, so the depth buffer sorts the three
+     layers and no ordering mistake is possible */
+  FOLIAGE[layer] = new THREE.MeshBasicMaterial({ map: tex(c, 4), fog: false,
+    side: THREE.DoubleSide, toneMapped: false, alphaTest: 0.30 });
+  return FOLIAGE[layer];
 }
 function glazing(){
   if (!GLAZING) GLAZING = new THREE.MeshStandardMaterial({
@@ -2984,16 +3125,71 @@ function clerestory(room, side, a, b, fx, horiz, sill, head){
   }
   scene.add(pane);
 
-  const sky = new THREE.Mesh(
-    new THREE.PlaneGeometry(len + 0.4, band + 0.3), skyMaterial());
+  /* How far out the sky can sit depends on where the wall is. The four outer
+     rooms look at open ground, so their sky goes a long way back. The foyer
+     is in the middle of the plan — its high windows borrow light over the
+     corridor roofs, so its sky has to stay close and stay above 3.0 m, or it
+     would appear inside a corridor. It gets no trees either, which is right:
+     there is no outside to see from an interior room. */
+  const openAir = (room.id !== "atrium");
+  const far  = openAir ? 11.0 : 3.2;
+  const yBot = openAir ? sill - 7.5 : 3.25;
+  const yTop = openAir ? head + 8.5 : head + 2.2;
+  const skyH = yTop - yBot, skyY = (yTop + yBot) / 2;
+
+  const skyW = len + far * 13;                  /* covers the cone from close up */
+  const skyGeo = new THREE.PlaneGeometry(skyW, skyH);
+  /* one sky tile every 34 m, so the clouds keep their proportions */
+  const uv = skyGeo.attributes.uv, tiles = Math.max(1, Math.round(skyW / 34));
+  for (let i = 0; i < uv.count; i++) uv.setX(i, uv.getX(i) * tiles);
+  uv.needsUpdate = true;
+  const sky = new THREE.Mesh(skyGeo, skyMaterial());
   if (horiz){
-    sky.position.set(mid, sill + band / 2, fx - inward * 0.55);
-    if (side === "n") sky.rotation.y = Math.PI;
+    sky.position.set(mid, skyY, fx - inward * far);
+    if (side === "s") sky.rotation.y = Math.PI;          /* as the glass does */
   } else {
-    sky.rotation.y = (side === "w") ? -Math.PI / 2 : Math.PI / 2;
-    sky.position.set(fx - inward * 0.55, sill + band / 2, mid);
+    sky.rotation.y = (side === "w") ? Math.PI / 2 : -Math.PI / 2;
+    sky.position.set(fx - inward * far, skyY, mid);
   }
+  sky.renderOrder = -20;
   scene.add(sky);
+
+  /* Treetops, set so they break the lower part of the opening and leave sky
+     above it — which is all you can see through a window this high. */
+  if (openAir){
+    const fr = rng(Math.round(Math.abs(mid) * 61 + Math.abs(fx) * 13 + (horiz ? 5 : 11)) + 1);
+    const clumps = Math.max(2, Math.round(len / 7));
+    [0.30, 0.46, 0.68].forEach((t, layer) => {
+      const spread = len + far * t * 2.2;           /* wider the further back */
+      for (let i = 0; i < clumps; i++){
+        /* Each clump gets its own distance. Sharing one made every clump in a
+           layer exactly coplanar, and coplanar surfaces fight in the depth
+           buffer — which is what the flickering was. */
+        const d = far * t * (0.86 + fr() * 0.28);
+        /* Shallow enough that the window sees a fifth of the canvas, which is
+           where the skyline variation is pitched. */
+        const h = 5.5 + fr() * 2.6;
+        /* Where the skyline lands in the opening, by layer: pale distant trees
+           low, nearer darker ones higher, none of them reaching the head — so
+           there is always sky along the top of the window. */
+        const lo = [0.40, 0.24, 0.10][layer], hi = [0.72, 0.52, 0.34][layer];
+        const skyline = sill + band * (lo + fr() * (hi - lo));
+        const cy = skyline + h * 0.24 - h / 2;      /* canvas skyline at 24% */
+        const w = 4.0 + fr() * 7.0;
+        const off = ((i + 0.5) / clumps - 0.5) * spread + (fr() - 0.5) * spread / clumps;
+        const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), foliageMaterial(layer));
+        if (horiz){
+          m.position.set(mid + off, cy, fx - inward * d);
+          if (side === "s") m.rotation.y = Math.PI;
+        } else {
+          m.rotation.y = (side === "w") ? Math.PI / 2 : -Math.PI / 2;
+          m.position.set(fx - inward * d, cy, mid + off);
+        }
+        m.renderOrder = -19 + layer;
+        scene.add(m);
+      }
+    });
+  }
 
   /* the light it throws on the floor, a few metres in */
   const reach = 3.1;
@@ -3678,6 +3874,11 @@ let lightTick = 0;
 function buildLights(){
   scene.add(new THREE.HemisphereLight(0xF2EEE6, 0x9C9384, 0.55));
   scene.add(new THREE.AmbientLight(0xFFF6EA, 0.16));
+  /* a soft sun from the same quarter the sky texture puts it in, so the
+     interior lighting agrees with the view out */
+  const sun = new THREE.DirectionalLight(0xFFF4E4, 0.26);
+  sun.position.set(-16, 28, -20);
+  scene.add(sun);
 
   for (let i = 0; i < 3; i++){
     const p = new THREE.PointLight(0xFFF2DE, 0, 26, 1.9);
@@ -3762,7 +3963,7 @@ function exitCanvas(){
 let EXITTEX = null, BRASS = null, GRILLE = null;
 function brassMat(){
   if (!BRASS) BRASS = new THREE.MeshStandardMaterial({
-    color:0x9C7C3E, roughness:0.38, metalness:0.9, envMapIntensity:1.4 });
+    color:0x9C7C3E, roughness:0.38, metalness:0.9, envMapIntensity:1.4 });   /* was brass */
   return BRASS;
 }
 function grilleTexture(){
@@ -3837,7 +4038,7 @@ function buildFittings(){
 
   /* ── services: sockets, switches, vents, detectors ── */
   const sockGeo = new THREE.BoxGeometry(0.09, 0.09, 0.018);
-  const sockMat = new THREE.MeshStandardMaterial({ color:0xEDEAE3, roughness:0.42, metalness:0, envMapIntensity:0.5 });
+  const sockMat = new THREE.MeshStandardMaterial({ color:0xEDF1F5, roughness:0.42, metalness:0, envMapIntensity:0.5 });
   const socks = [], switches = [], vents = [], dets = [];
   NAMED_ROOMS.concat(ROOMS.filter(r => r.corridor)).forEach(r => {
     const cx = (r.x1 + r.x2) / 2, cz = (r.z1 + r.z2) / 2;
@@ -4007,7 +4208,7 @@ function buildReception(){
   const pc = document.createElement("canvas");
   pc.width = pc.height = 512;
   drawPlan(pc.getContext("2d"), 512, { pad:34, bg:"#F7F5F1", room:"#E4E0D8", corridor:"#EDEAE3",
-    here:"#E4E0D8", stroke:"rgba(20,22,26,.30)", lw:2, ink:"#14161A",
+    here:"#E4E0D8", stroke:"rgba(20,22,26,.28)", lw:2, ink:"#14161A",
     dot:"#A3854A", you:"#F7F5F1", dots:true, labels:true });
   const pg = pc.getContext("2d");
   pg.fillStyle = "#F7F5F1"; pg.fillRect(0, 0, 512, 58);
@@ -4060,7 +4261,8 @@ function buildBarriers(){
 
 function buildScene(){
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x14151A);
+  /* seen only through the glazing, so it wants to be sky rather than night */
+  scene.background = new THREE.Color(0xAECAE2);
   scene.fog = new THREE.Fog(0x8E887C, 20, 78);
 
   camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.08, 200);
@@ -5042,7 +5244,7 @@ function renderPress(article){
 function renderPlanSheet(){
   const cv = $("#plancanvas"), ctx = cv.getContext("2d");
   const T = drawPlan(ctx, 900, { pad:34, bg:"#F7F5F1", room:"#E4E0D8", corridor:"#EDEAE3",
-    here:"#D6D0C2", stroke:"rgba(20,22,26,.22)", lw:2, ink:"#14161A",
+    here:"#D6D0C2", stroke:"rgba(20,22,26,.20)", lw:2, ink:"#14161A",
     dot:"#A3854A", you:"#4B3F72", dots:true, labels:true });
   cv.onclick = e => {
     const r = cv.getBoundingClientRect();
