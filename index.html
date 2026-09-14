@@ -2990,8 +2990,11 @@ function skyMaterial(){
   const t = tex(c, 2);
   t.wrapS = THREE.RepeatWrapping;
   t.wrapT = THREE.ClampToEdgeWrapping;
+  /* Nothing in the world is behind the sky, so it does not need to write
+     depth — which means two sky surfaces can never fight, whatever else
+     changes later. */
   SKYMAT = new THREE.MeshBasicMaterial({ map: t, fog: false,
-    side: THREE.DoubleSide, toneMapped: false });
+    side: THREE.DoubleSide, toneMapped: false, depthWrite: false });
   return SKYMAT;
 }
 
@@ -3017,15 +3020,24 @@ function foliageMaterial(layer){
     /* The opening only shows about a fifth of the canvas, so the skyline has
        to vary by about that much — any more and a whole column reads as
        either solid canopy or bare sky, which is the blocky look this had. */
+    /* The mass used to run the full width of the canvas, so every clump ended
+       in a hard vertical line where the texture stopped. The crown now falls
+       away toward both edges — by the time it reaches them it is far below
+       the window and simply out of sight, so the tree tapers off instead. */
     const N = 96, prof = new Array(N);
     const p1 = r() * 6.3, p2 = r() * 6.3, p3 = r() * 6.3;
+    const lean = 0.36 + r() * 0.28;                  /* where the crown peaks */
     for (let i = 0; i < N; i++){
-      const u = i / N * Math.PI * 2;
-      prof[i] = H * (0.24
-        + 0.050 * Math.sin(u * 2 + p1)
-        + 0.032 * Math.sin(u * 5 + p2)
-        + 0.018 * Math.sin(u * 11 + p3)
-        + (r() - 0.5) * 0.03);
+      const u = i / N;
+      /* an asymmetric bell: 1 at the peak, 0 at either edge */
+      const e = u < lean ? u / lean : (1 - u) / (1 - lean);
+      const crown = Math.pow(Math.max(0, Math.sin(e * Math.PI / 2)), 0.30);
+      const w = u * Math.PI * 2;
+      const ripple = 0.050 * Math.sin(w * 2 + p1)
+                   + 0.032 * Math.sin(w * 5 + p2)
+                   + 0.018 * Math.sin(w * 11 + p3)
+                   + (r() - 0.5) * 0.03;
+      prof[i] = H * (0.95 - (0.95 - 0.24) * crown + ripple * crown);
     }
     const topAt = x => {
       const f = (x / W) * N, i = Math.floor(f) % N, j = (i + 1) % N;
@@ -3102,6 +3114,12 @@ function patchTexture(){
 }
 
 /* one glazed band across one wall segment */
+/* The sky and the trees belong to the wall, not to each window in it. This
+   is called once per segment, and the Foyer has two segments on every side,
+   so it used to build two identical coplanar sky planes per side — which is
+   exactly the sort of thing the depth buffer cannot resolve. */
+const SKY_DONE = new Set();
+
 function clerestory(room, side, a, b, fx, horiz, sill, head){
   const len = b - a, mid = (a + b) / 2, band = head - sill;
   const bays = Math.max(1, Math.round(len / 2.3));
@@ -3131,13 +3149,24 @@ function clerestory(room, side, a, b, fx, horiz, sill, head){
      corridor roofs, so its sky has to stay close and stay above 3.0 m, or it
      would appear inside a corridor. It gets no trees either, which is right:
      there is no outside to see from an interior room. */
+  /* size the sky to the whole wall, and build it only once for that wall */
+  const skyKey = room.id + "/" + side;
+  const alreadySky = SKY_DONE.has(skyKey);
+  SKY_DONE.add(skyKey);
+  const wallA = horiz ? room.x1 : room.z1;
+  const wallB = horiz ? room.x2 : room.z2;
+  const wallLen = wallB - wallA, wallMid = (wallA + wallB) / 2;
+
   const openAir = (room.id !== "atrium");
   const far  = openAir ? 11.0 : 3.2;
   const yBot = openAir ? sill - 7.5 : 3.25;
   const yTop = openAir ? head + 8.5 : head + 2.2;
   const skyH = yTop - yBot, skyY = (yTop + yBot) / 2;
 
-  const skyW = len + far * 13;                  /* covers the cone from close up */
+  /* the sky and the trees are per wall; everything after this block is
+     per segment again, so it must not be skipped */
+  if (!alreadySky){
+  const skyW = wallLen + far * 13;              /* covers the cone from close up */
   const skyGeo = new THREE.PlaneGeometry(skyW, skyH);
   /* one sky tile every 34 m, so the clouds keep their proportions */
   const uv = skyGeo.attributes.uv, tiles = Math.max(1, Math.round(skyW / 34));
@@ -3145,11 +3174,11 @@ function clerestory(room, side, a, b, fx, horiz, sill, head){
   uv.needsUpdate = true;
   const sky = new THREE.Mesh(skyGeo, skyMaterial());
   if (horiz){
-    sky.position.set(mid, skyY, fx - inward * far);
+    sky.position.set(wallMid, skyY, fx - inward * far);
     if (side === "s") sky.rotation.y = Math.PI;          /* as the glass does */
   } else {
     sky.rotation.y = (side === "w") ? Math.PI / 2 : -Math.PI / 2;
-    sky.position.set(fx - inward * far, skyY, mid);
+    sky.position.set(fx - inward * far, skyY, wallMid);
   }
   sky.renderOrder = -20;
   scene.add(sky);
@@ -3157,15 +3186,14 @@ function clerestory(room, side, a, b, fx, horiz, sill, head){
   /* Treetops, set so they break the lower part of the opening and leave sky
      above it — which is all you can see through a window this high. */
   if (openAir){
-    const fr = rng(Math.round(Math.abs(mid) * 61 + Math.abs(fx) * 13 + (horiz ? 5 : 11)) + 1);
-    const clumps = Math.max(2, Math.round(len / 7));
+    const fr = rng(Math.round(Math.abs(wallMid) * 61 + Math.abs(fx) * 13 + (horiz ? 5 : 11)) + 1);
+    const clumps = Math.max(3, Math.round(wallLen / 4.5));
     [0.30, 0.46, 0.68].forEach((t, layer) => {
-      const spread = len + far * t * 2.2;           /* wider the further back */
+      const spread = wallLen + far * t * 2.2;       /* wider the further back */
       for (let i = 0; i < clumps; i++){
-        /* Each clump gets its own distance. Sharing one made every clump in a
-           layer exactly coplanar, and coplanar surfaces fight in the depth
-           buffer — which is what the flickering was. */
-        const d = far * t * (0.86 + fr() * 0.28);
+        /* Each clump gets its own distance, stepped rather than random, so no
+           two can ever land on the same plane however the dice fall. */
+        const d = far * t * (0.84 + 0.32 * (i + 0.5) / clumps);
         /* Shallow enough that the window sees a fifth of the canvas, which is
            where the skyline variation is pitched. */
         const h = 5.5 + fr() * 2.6;
@@ -3175,21 +3203,22 @@ function clerestory(room, side, a, b, fx, horiz, sill, head){
         const lo = [0.40, 0.24, 0.10][layer], hi = [0.72, 0.52, 0.34][layer];
         const skyline = sill + band * (lo + fr() * (hi - lo));
         const cy = skyline + h * 0.24 - h / 2;      /* canvas skyline at 24% */
-        const w = 4.0 + fr() * 7.0;
-        const off = ((i + 0.5) / clumps - 0.5) * spread + (fr() - 0.5) * spread / clumps;
+        const w = 5.0 + fr() * 8.0;
+        const off = ((i + 0.5) / clumps - 0.5) * spread + (fr() - 0.5) * spread / clumps * 0.7;
         const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), foliageMaterial(layer));
         if (horiz){
-          m.position.set(mid + off, cy, fx - inward * d);
+          m.position.set(wallMid + off, cy, fx - inward * d);
           if (side === "s") m.rotation.y = Math.PI;
         } else {
           m.rotation.y = (side === "w") ? Math.PI / 2 : -Math.PI / 2;
-          m.position.set(fx - inward * d, cy, mid + off);
+          m.position.set(fx - inward * d, cy, wallMid + off);
         }
         m.renderOrder = -19 + layer;
         scene.add(m);
       }
     });
   }
+  }   /* end of the per-wall block */
 
   /* the light it throws on the floor, a few metres in */
   const reach = 3.1;
@@ -3473,18 +3502,26 @@ function labelTexture(work){
   return LABELTEX[k];
 }
 function addLabel(work, group, x, y, wide){
+  /* the same 14 mm problem as the wall plates, and there are fifty-six of
+     these, so they are the panels most likely to be seen shimmering */
   const m = new THREE.Mesh(new THREE.PlaneGeometry(wide, wide * 300 / 560),
-    new THREE.MeshStandardMaterial({ map: labelTexture(work), roughness:0.82, metalness:0, envMapIntensity:0.4 }));
-  m.position.set(x, y, 0.014);
+    new THREE.MeshStandardMaterial({ map: labelTexture(work), roughness:0.82, metalness:0, envMapIntensity:0.4,
+      polygonOffset:true, polygonOffsetFactor:-3, polygonOffsetUnits:-3 }));
+  m.position.set(x, y, 0.030);
   group.add(m);
   return m;
 }
 function addPlate(canvas, group, x, y, wide){
   const t = tex(canvas, 8);
   const h = wide * canvas.height / canvas.width;
+  /* 14 mm off the wall is inside the depth precision of a 16-bit buffer at
+     any distance, which is how these came to shimmer on some machines. Out
+     to 32 mm, and a polygon offset so the panel always wins against the
+     wall behind it whatever the buffer depth turns out to be. */
   const m = new THREE.Mesh(new THREE.PlaneGeometry(wide, h),
-    new THREE.MeshStandardMaterial({ map:t, roughness:0.82, metalness:0, envMapIntensity:0.4 }));
-  m.position.set(x, y, 0.014);
+    new THREE.MeshStandardMaterial({ map:t, roughness:0.82, metalness:0, envMapIntensity:0.4,
+      polygonOffset:true, polygonOffsetFactor:-3, polygonOffsetUnits:-3 }));
+  m.position.set(x, y, 0.032);
   group.add(m);
   return m;
 }
@@ -3501,7 +3538,11 @@ function contactMaterial(){
     g.fillRect(20, 20, W - 40, H - 40);
     unblur(g);
   });
-  CONTACT = new THREE.MeshBasicMaterial({ map: tex(c, 2), transparent:true, opacity:0.34, depthWrite:false });
+  /* one of these sits behind every work, and at 1.5 mm off the wall it was
+     well inside the depth precision of a low-bit buffer — the same fault as
+     the labels, and in the same place on screen */
+  CONTACT = new THREE.MeshBasicMaterial({ map: tex(c, 2), transparent:true, opacity:0.34,
+    depthWrite:false, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-2 });
   return CONTACT;
 }
 
@@ -3657,13 +3698,14 @@ function hangWork(work){
   }
 
   const cs = new THREE.Mesh(new THREE.PlaneGeometry(W + 0.55, H + 0.55), contactMaterial());
-  cs.position.set(0.012, -0.028, 0.0015);
+  cs.position.set(0.012, -0.028, 0.010);
   g.add(cs);
 
   const glow = new THREE.Mesh(new THREE.PlaneGeometry(W * 2.0, H * 1.8),
     new THREE.MeshBasicMaterial({ color:0xFFF3DF, transparent:true, opacity:0,
-      blending:THREE.AdditiveBlending, depthWrite:false }));
-  glow.position.z = 0.003; g.add(glow);
+      blending:THREE.AdditiveBlending, depthWrite:false,
+      polygonOffset:true, polygonOffsetFactor:-3, polygonOffsetUnits:-3 }));
+  glow.position.z = 0.020; g.add(glow);
 
   addLabel(work, g, -(W / 2 + reach + 0.32), 1.30 - centreY, 0.40);
 
