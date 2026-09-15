@@ -1255,17 +1255,26 @@ kbd{
 .pg.blank{background:#FCFBF8}
 
 .toc{list-style:none;margin:0;padding:0;flex:1 1 auto}
+/* Fixed tracks, not auto. A percentage width on an item inside an auto track
+   is cyclic — the browser falls back to the image's intrinsic size, the thumb
+   column swallows the row and the title collapses to one word per line. */
 .toc li{
-  display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:baseline;
-  padding:clamp(8px,1.6%,15px) 0;border-bottom:1px solid var(--hair-2);cursor:pointer;
+  display:grid;grid-template-columns:var(--tw) minmax(0,1fr) auto;
+  gap:0 14px;align-items:center;
+  padding:clamp(7px,1.4%,13px) 0;border-bottom:1px solid var(--hair-2);cursor:pointer;
+  --tw:clamp(44px,13%,72px);
 }
 .toc li:hover .toc-t{color:var(--iris)}
 .toc-k{
-  grid-column:1/-1;font-family:var(--label);font-size:8px;font-weight:600;
+  font-family:var(--label);font-size:8px;font-weight:600;
   letter-spacing:.22em;text-transform:uppercase;color:var(--brass);
 }
-.toc-t{font-family:var(--serif);font-size:clamp(12px,1.25vw,17px);line-height:1.25;transition:color .2s}
-.toc-p{font-family:var(--label);font-size:10px;font-weight:600;color:var(--pumice)}
+.toc-t{
+  font-family:var(--serif);font-size:clamp(11px,1.15vw,16px);line-height:1.22;
+  transition:color .2s;overflow-wrap:anywhere;
+}
+.toc-p{font-family:var(--label);font-size:10px;font-weight:600;color:var(--pumice);
+  font-variant-numeric:tabular-nums;padding-left:4px}
 .toc-note{font-family:var(--body);font-size:10px;color:var(--pumice);margin:14px 0 0;line-height:1.55}
 
 .pg-nav{
@@ -1353,18 +1362,19 @@ kbd{
   font-family:var(--serif);font-style:italic;font-size:clamp(15px,1.9vw,27px);
   line-height:1.32;margin:0;color:var(--brand-word);
 }
-.ft-q::before{content:"\\201C"}
-.ft-q::after{content:"\\201D"}
+.ft-q::before{content:"\201C"}
+.ft-q::after{content:"\201D"}
 .ft-by{
   margin-top:clamp(12px,2.4%,22px);font-family:var(--label);font-size:9px;font-weight:600;
   letter-spacing:.24em;text-transform:uppercase;color:rgba(247,245,241,.6);
 }
 
 /* contents, now with thumbnails */
-.toc li{grid-template-columns:auto 1fr auto;gap:0 14px;align-items:center}
-.toc-thumb{width:clamp(38px,6%,60px);aspect-ratio:1;overflow:hidden;border-radius:1px;background:var(--paper-2)}
+.toc-thumb{
+  width:var(--tw);height:var(--tw);overflow:hidden;border-radius:1px;
+  background:var(--paper-2);flex:0 0 auto;
+}
 .toc-txt{display:flex;flex-direction:column;gap:4px;min-width:0}
-.toc-k{grid-column:auto}
 
 /* the surface key, drawn from the live materials */
 .rooms-key{list-style:none;margin:clamp(10px,2%,18px) 0 0;padding:0;flex:1 1 auto}
