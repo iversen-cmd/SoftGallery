@@ -587,6 +587,23 @@ kbd{
 .work-cap .wp{font-size:12.5px;font-weight:500;margin-top:7px}
 .work-cap .wp.sold{color:var(--pumice);font-style:italic}
 
+/* how a work is being offered, stated the same way everywhere */
+.st-chip{
+  display:inline-block;font-family:var(--label);font-size:9.5px;font-weight:600;
+  letter-spacing:.16em;text-transform:uppercase;
+  padding:4px 9px;border-radius:2px;border-left:2px solid currentColor;white-space:nowrap;
+}
+.st-chip.sm{font-size:8.5px;padding:3px 7px;margin-left:9px;vertical-align:2px}
+.st-chip.available {color:#1E5B38;background:#DCEBE1}
+.st-chip.reserved  {color:#7A4A12;background:#F7E9D2}
+.st-chip.sold      {color:#5A5650;background:#E2DFD9}
+.st-chip.loan,
+.st-chip.notforsale{color:#2B3E7A;background:#DEE4F4}
+.st-chip.draft,
+.st-chip.withdrawn {color:#5A5650;background:#E2DFD9}
+.price .pl{display:flex;align-items:center;gap:9px}
+#pvReserve[disabled]{opacity:.55;cursor:default}
+
 .empty{
   grid-column:1/-1;text-align:center;padding:clamp(40px,9vh,86px) 20px;
 }
@@ -1136,6 +1153,242 @@ kbd{
   background:linear-gradient(90deg,var(--brand-teal),var(--brand-blue));
 }
 
+
+/* ══ the press room, as a bound issue ═════════════════════════ */
+.pr-switch{display:flex;gap:6px;margin-bottom:18px}
+#prStage{min-height:40vh}
+
+.book-wrap{
+  display:flex;align-items:center;gap:10px;
+  justify-content:center;perspective:2600px;
+}
+.book{
+  position:relative;flex:0 1 min(1040px, 74vh * 1.42);
+  aspect-ratio:1.42 / 1;
+  transform-style:preserve-3d;
+  filter:drop-shadow(0 26px 48px rgba(20,22,26,.26));
+}
+.book-spine{
+  position:absolute;top:0;bottom:0;left:50%;width:22px;margin-left:-11px;z-index:0;
+  background:linear-gradient(90deg,rgba(20,22,26,.16),rgba(20,22,26,.03) 42%,
+    rgba(20,22,26,.03) 58%,rgba(20,22,26,.16));
+}
+.leaf{
+  position:absolute;top:0;left:50%;width:50%;height:100%;
+  transform-origin:left center;transform-style:preserve-3d;
+  transition:transform .82s cubic-bezier(.46,.03,.32,1);
+}
+.leaf.flipped{transform:rotateY(-180deg)}
+.face{
+  position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  overflow:hidden;background:#FCFBF8;
+}
+.face.front{box-shadow:inset 7px 0 18px -10px rgba(20,22,26,.4)}
+.face.back{transform:rotateY(180deg);box-shadow:inset -7px 0 18px -10px rgba(20,22,26,.4)}
+
+.pg{position:absolute;inset:0;padding:clamp(18px,3.1%,34px) clamp(20px,3.6%,40px);
+  display:flex;flex-direction:column;overflow:hidden}
+.pg-head{
+  font-family:var(--label);font-size:9px;font-weight:600;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--pumice);
+  padding-bottom:9px;border-bottom:1px solid var(--hair);margin-bottom:clamp(12px,2.4%,22px);
+}
+.pg-foot{
+  margin-top:auto;padding-top:10px;border-top:1px solid var(--hair-2);
+  display:flex;justify-content:space-between;
+  font-family:var(--label);font-size:8.5px;font-weight:600;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--pumice);
+}
+.art-h{
+  font-family:var(--display);font-weight:500;text-transform:uppercase;letter-spacing:.012em;
+  font-size:clamp(19px,2.6vw,34px);line-height:1.04;margin:0 0 12px;
+}
+.art-stand{
+  font-family:var(--serif);font-style:italic;font-size:clamp(12px,1.25vw,16px);
+  line-height:1.45;color:var(--ink);margin:0 0 10px;
+}
+.art-by{
+  font-family:var(--label);font-size:8.5px;font-weight:600;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--pumice);margin:0 0 clamp(10px,1.8%,18px);
+  padding-bottom:10px;border-bottom:1px solid var(--hair-2);
+}
+.art-cols{
+  column-count:2;column-gap:clamp(14px,2.4%,26px);column-rule:1px solid var(--hair-2);
+  font-family:var(--body);font-size:clamp(9.5px,.86vw,12px);line-height:1.62;
+  color:var(--slate);text-align:justify;hyphens:auto;overflow:hidden;flex:1 1 auto;
+}
+.art-cols p{margin:0 0 .72em}
+.art-cols p.drop::first-letter{
+  font-family:var(--serif);font-size:3.1em;line-height:.82;float:left;
+  padding:.06em .09em 0 0;color:var(--ink);
+}
+.pull{
+  margin:clamp(10px,1.8%,18px) 0 0;padding:12px 0 0;border-top:2px solid var(--brass);
+  font-family:var(--serif);font-style:italic;font-size:clamp(11px,1.15vw,15px);
+  line-height:1.4;color:var(--ink);
+}
+.pg.cover{background:var(--brand-navy);color:var(--paper);justify-content:center;gap:clamp(10px,2%,20px)}
+.cv-mark{display:flex;justify-content:center;margin-bottom:6px}
+.cv-issue{
+  font-family:var(--label);font-size:9px;font-weight:600;letter-spacing:.3em;
+  text-transform:uppercase;color:var(--brand-dim);text-align:center;
+}
+.cv-line{
+  font-family:var(--serif);font-size:clamp(26px,3.6vw,50px);line-height:1.02;
+  text-align:center;margin:0;font-weight:400;
+}
+.cv-line em{font-style:italic;color:var(--brand-word)}
+.cv-lead{
+  text-align:center;font-family:var(--body);font-size:clamp(10px,1vw,13px);
+  color:rgba(247,245,241,.72);margin-top:clamp(8px,1.6%,16px);
+}
+.cv-lead span{
+  display:block;font-family:var(--label);font-size:8.5px;font-weight:600;
+  letter-spacing:.22em;text-transform:uppercase;color:var(--brand-dim);margin-bottom:6px;
+}
+.cv-foot{
+  margin-top:auto;text-align:center;font-family:var(--label);font-size:8px;
+  font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:rgba(247,245,241,.4);
+}
+.pg.back{background:var(--paper-2);align-items:center;justify-content:center;text-align:center;gap:18px}
+.pg.back p{font-family:var(--body);font-size:11.5px;line-height:1.7;color:var(--pumice);max-width:30ch}
+.pg.blank{background:#FCFBF8}
+
+.toc{list-style:none;margin:0;padding:0;flex:1 1 auto}
+.toc li{
+  display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:baseline;
+  padding:clamp(8px,1.6%,15px) 0;border-bottom:1px solid var(--hair-2);cursor:pointer;
+}
+.toc li:hover .toc-t{color:var(--iris)}
+.toc-k{
+  grid-column:1/-1;font-family:var(--label);font-size:8px;font-weight:600;
+  letter-spacing:.22em;text-transform:uppercase;color:var(--brass);
+}
+.toc-t{font-family:var(--serif);font-size:clamp(12px,1.25vw,17px);line-height:1.25;transition:color .2s}
+.toc-p{font-family:var(--label);font-size:10px;font-weight:600;color:var(--pumice)}
+.toc-note{font-family:var(--body);font-size:10px;color:var(--pumice);margin:14px 0 0;line-height:1.55}
+
+.pg-nav{
+  width:40px;height:40px;flex:0 0 auto;border-radius:50%;display:grid;place-items:center;
+  background:var(--paper);border:1px solid var(--hair);color:var(--slate);
+  transition:background .2s,color .2s,opacity .2s;
+}
+.pg-nav:hover:not([disabled]){background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.pg-nav[disabled]{opacity:.28;cursor:default}
+.pg-nav svg{width:17px;height:17px}
+.book-bar{
+  display:flex;align-items:center;gap:16px;justify-content:center;
+  margin:20px auto 0;max-width:520px;
+}
+.book-bar span{
+  font-family:var(--label);font-size:9.5px;font-weight:600;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--pumice);white-space:nowrap;
+}
+.book-bar input[type=range]{flex:1 1 auto;accent-color:var(--iris)}
+@media (max-width:900px){
+  .book-wrap{gap:4px}
+  .pg-nav{width:32px;height:32px}
+}
+
+
+/* ── pictures in the magazine ───────────────────────────────── */
+.pg-img{display:block;width:100%;height:100%;object-fit:cover;cursor:pointer}
+.pg-img.flat{cursor:pointer}
+.fig{margin:0;position:relative;overflow:hidden;flex:0 0 auto}
+.fig.top{height:38%;margin:0 0 clamp(10px,1.8%,18px)}
+.fig.bottom{height:30%;margin:clamp(10px,1.8%,18px) 0 0}
+.fig figcaption{
+  position:absolute;left:0;right:0;bottom:0;padding:16px 12px 7px;
+  font-family:var(--label);font-size:8px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:#fff;
+  background:linear-gradient(0deg,rgba(14,16,20,.82),rgba(14,16,20,0));
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.art-cols.one{column-count:1}
+
+/* the cover: full bleed, masthead reversed out */
+.pg.cover{padding:0;background:var(--brand-navy);overflow:hidden}
+.cv-bleed{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cv-scrim{
+  position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(9,14,20,.80) 0%,rgba(9,14,20,.22) 38%,
+    rgba(9,14,20,.30) 62%,rgba(9,14,20,.92) 100%);
+}
+.cv-body{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  padding:clamp(20px,4%,40px);color:var(--paper);
+}
+.cv-mark{display:flex;justify-content:center}
+.cv-issue{
+  text-align:center;margin-top:10px;
+  font-family:var(--label);font-size:8.5px;font-weight:600;letter-spacing:.3em;
+  text-transform:uppercase;color:var(--brand-word);
+}
+.cv-line{
+  font-family:var(--serif);font-size:clamp(26px,3.7vw,52px);line-height:1.0;
+  text-align:center;margin:auto 0;font-weight:400;
+  text-shadow:0 2px 26px rgba(0,0,0,.5);
+}
+.cv-line em{font-style:italic;color:var(--brand-word)}
+.cv-lines{display:flex;flex-direction:column;gap:7px;text-align:center;margin-bottom:6px}
+.cv-lines b{
+  font-family:var(--display);font-weight:500;text-transform:uppercase;
+  letter-spacing:.04em;font-size:clamp(11px,1.15vw,15px);
+}
+.cv-lines span{font-family:var(--body);font-size:clamp(9px,.9vw,11.5px);color:rgba(247,245,241,.72)}
+.cv-cap{
+  position:absolute;right:10px;bottom:6px;transform-origin:100% 100%;
+  font-family:var(--label);font-size:7px;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(247,245,241,.42);
+}
+
+/* the tinted quote page */
+.pg.feature{padding:0;background:var(--brand-navy);overflow:hidden}
+.ft-bleed{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.5}
+.ft-bleed.duo{filter:grayscale(1) contrast(1.15) sepia(1) hue-rotate(140deg) saturate(2.6)}
+.ft-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(12,19,29,.62),rgba(12,19,29,.88))}
+.ft-body{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;
+  padding:clamp(22px,5%,46px);color:var(--paper)}
+.ft-q{
+  font-family:var(--serif);font-style:italic;font-size:clamp(15px,1.9vw,27px);
+  line-height:1.32;margin:0;color:var(--brand-word);
+}
+.ft-q::before{content:"\\201C"}
+.ft-q::after{content:"\\201D"}
+.ft-by{
+  margin-top:clamp(12px,2.4%,22px);font-family:var(--label);font-size:9px;font-weight:600;
+  letter-spacing:.24em;text-transform:uppercase;color:rgba(247,245,241,.6);
+}
+
+/* contents, now with thumbnails */
+.toc li{grid-template-columns:auto 1fr auto;gap:0 14px;align-items:center}
+.toc-thumb{width:clamp(38px,6%,60px);aspect-ratio:1;overflow:hidden;border-radius:1px;background:var(--paper-2)}
+.toc-txt{display:flex;flex-direction:column;gap:4px;min-width:0}
+.toc-k{grid-column:auto}
+
+/* the surface key, drawn from the live materials */
+.rooms-key{list-style:none;margin:clamp(10px,2%,18px) 0 0;padding:0;flex:1 1 auto}
+.rooms-key li{
+  display:grid;grid-template-columns:auto 1fr repeat(3, clamp(30px,7%,52px));
+  gap:0 9px;align-items:center;padding:clamp(6px,1.3%,12px) 0;
+  border-bottom:1px solid var(--hair-2);
+}
+.rm-n{font-family:var(--label);font-size:9px;font-weight:600;letter-spacing:.16em;color:var(--brass);width:2.2em}
+.rm-t{font-family:var(--serif);font-size:clamp(11px,1.1vw,15px);min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sw{
+  position:relative;aspect-ratio:1;border-radius:1px;background-size:cover;
+  border:1px solid var(--hair);
+}
+.sw i{
+  position:absolute;left:0;right:0;bottom:-15px;text-align:center;font-style:normal;
+  font-family:var(--label);font-size:6.5px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--pumice);
+}
+.rooms-key li{padding-bottom:calc(clamp(6px,1.3%,12px) + 11px)}
+.bk-url{font-family:var(--label);font-size:9px;font-weight:600;letter-spacing:.26em;
+  text-transform:uppercase;color:var(--brass)}
+
 /* screen-reader only */
 .sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
@@ -1237,12 +1490,13 @@ kbd{
   <div class="panel-body" id="pvBody"></div>
   <div class="panel-foot">
     <div class="price">
-      <div class="pl">Price</div>
+      <div class="pl">Price <span class="st-chip" id="pvStatus" hidden></span></div>
       <div class="pn" id="pvPrice">—</div>
     </div>
     <button class="icon-btn" id="pvSave" aria-pressed="false" aria-label="Save to my gallery" title="Save to my gallery">
       <svg viewBox="0 0 24 24"><path d="M6 3h12a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z"/></svg>
     </button>
+    <button class="btn ghost" id="pvReserve">Reserve</button>
     <button class="btn" id="pvEnquire">Enquire</button>
   </div>
 </aside>
@@ -1359,7 +1613,7 @@ kbd{
     <div>
       <p class="eyebrow">Writing</p>
       <h2 id="prH">Press Room</h2>
-      <p class="lede">Articles, studio interviews and the monthly newsletter. Everything Soft Gallery publishes lives here rather than scattered across the building.</p>
+      <p class="lede">Articles, studio interviews and the newsletter, bound as an issue you turn. Use the arrows, the arrow keys, or click the outer edge of a page.</p>
     </div>
     <button class="x-btn" data-close="sheetPress" aria-label="Close the press room">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -3423,29 +3677,64 @@ function artTexture(key){
 }
 
 /* the wall label, as an object in the room */
+/* How a work is being offered, in the one word a visitor needs. */
+const STATUS = {
+  available:  { label:"For sale",      ink:"#1E5B38", bg:"#DCEBE1" },
+  reserved:   { label:"Reserved",      ink:"#7A4A12", bg:"#F7E9D2" },
+  sold:       { label:"Sold",          ink:"#5A5650", bg:"#E2DFD9" },
+  loan:       { label:"On loan",       ink:"#2B3E7A", bg:"#DEE4F4" },
+  notforsale: { label:"Not for sale",  ink:"#2B3E7A", bg:"#DEE4F4" },
+  draft:      { label:"Not yet shown", ink:"#5A5650", bg:"#E2DFD9" },
+  withdrawn:  { label:"Withdrawn",     ink:"#5A5650", bg:"#E2DFD9" }
+};
+function statusOf(work){
+  const S = SERIES[work.img] || work;
+  return STATUS[S.avail] ? S.avail : (S.price === null ? "notforsale" : "available");
+}
+
+/* The label was light type on a light wall at 21 px, which is why it was
+   hard to read. It is now half as large again on the wall, the artist is
+   reversed out of a dark band to give the plaque an anchor, every size is
+   up by roughly a third, and the status sits in a coloured chip. */
 function labelCanvas(work){
-  return textCanvas(560, 300, (g, W, H) => {
-    g.fillStyle = "#F7F5F1"; g.fillRect(0, 0, W, H);
-    g.fillStyle = "#A3854A"; g.fillRect(0, 0, W, 7);
-    g.strokeStyle = "rgba(20,22,26,.18)"; g.lineWidth = 2;
-    g.strokeRect(1, 1, W - 2, H - 2);
-    g.fillStyle = "#8C887F"; g.font = "600 22px " + F_BRAND;
-    g.fillText(fitText(g, work.artist.toUpperCase(), W - 70), 34, 60);
-    g.fillStyle = "#14161A"; g.font = "italic 400 38px " + F_SERIF;
-    g.fillText(fitText(g, work.title, W - 70), 34, 118);
-    g.fillStyle = "#4A4E57"; g.font = "400 21px " + F_BODY;
-    g.fillText(work.year + " · " + work.medium, 34, 162);
-    g.fillText(work.w + " × " + work.h + " cm", 34, 196);
-    g.strokeStyle = "rgba(20,22,26,.10)"; g.lineWidth = 2;
-    g.beginPath(); g.moveTo(34, 224); g.lineTo(W - 34, 224); g.stroke();
-    drawMark(g, W - 78, 240, 44, false);
+  return textCanvas(680, 400, (g, W, H) => {
+    g.fillStyle = "#FBFAF7"; g.fillRect(0, 0, W, H);
+    g.strokeStyle = "rgba(20,22,26,.32)"; g.lineWidth = 3;
+    g.strokeRect(1.5, 1.5, W - 3, H - 3);
+
+    g.fillStyle = "#14161A"; g.fillRect(0, 0, W, 78);
+    g.fillStyle = "#A3854A"; g.fillRect(0, 74, W, 4);
+    g.fillStyle = "#FBFAF7"; g.font = "600 32px " + F_BRAND;
+    g.fillText(fitText(g, work.artist.toUpperCase(), W - 62), 30, 52);
+
+    g.fillStyle = "#14161A"; g.font = "italic 400 50px " + F_SERIF;
+    g.fillText(fitText(g, work.title, W - 62), 30, 150);
+
+    g.fillStyle = "#2E333A"; g.font = "500 27px " + F_BODY;
+    g.fillText(work.year + " · " + work.medium, 30, 198);
+    g.fillText(work.w + " × " + work.h + " cm", 30, 236);
+
+    g.strokeStyle = "rgba(20,22,26,.20)"; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(30, 266); g.lineTo(W - 30, 266); g.stroke();
+
+    const st = STATUS[statusOf(work)] || STATUS.available;
+    const shown = work.onRequest ? "PRICE ON REQUEST"
+                : (work.price === null ? "" : "£" + work.price.toLocaleString("en-GB"));
+    g.fillStyle = "#14161A"; g.font = "600 34px " + F_BRAND;
+    if (shown) g.fillText(shown, 30, 316);
+
+    g.font = "600 22px " + F_BRAND;
+    const cw = g.measureText(st.label.toUpperCase()).width + 36;
+    const cy = shown ? 338 : 292;
+    g.fillStyle = st.bg; g.fillRect(30, cy, cw, 40);
+    g.fillStyle = st.ink; g.fillRect(30, cy, 5, 40);
+    g.fillText(st.label.toUpperCase(), 51, cy + 27);
+
     if (work.pd){
-      g.fillStyle = "#8C887F"; g.font = "600 18px " + F_BRAND;
-      g.fillText(fitText(g, work.pd.toUpperCase(), W - 160), 34, 262);
-    } else {
-      g.fillStyle = "#4B3F72"; g.font = "600 20px " + F_BRAND;
-      g.fillText(work.price === null ? "NOT FOR SALE" : "£" + work.price.toLocaleString("en-GB"), 34, 262);
+      g.fillStyle = "#6E6A62"; g.font = "600 20px " + F_BRAND;
+      g.fillText(fitText(g, work.pd.toUpperCase(), W - cw - 120), 30 + cw + 20, cy + 27);
     }
+    drawMark(g, W - 76, H - 76, 46, false);
   });
 }
 function signCanvas(title, sub, numeral){
@@ -3501,14 +3790,29 @@ function labelTexture(work){
   if (!LABELTEX[k]) LABELTEX[k] = tex(labelCanvas(work), 8);
   return LABELTEX[k];
 }
+/* every mesh showing a given work's label, so a change of status can be
+   repainted onto all of them without rebuilding the room */
+const LABELMESH = {};
+function refreshLabels(key){
+  const w = CATALOGUE.find(c => (c.img || c.id) === key) || WORKS.find(c => (c.img || c.id) === key);
+  if (!w) return;
+  const old = LABELTEX[key];
+  delete LABELTEX[key];
+  const t = labelTexture(w);
+  (LABELMESH[key] || []).forEach(m => { m.material.map = t; m.material.needsUpdate = true; });
+  if (old && old.dispose) old.dispose();
+}
+
 function addLabel(work, group, x, y, wide){
   /* the same 14 mm problem as the wall plates, and there are fifty-six of
      these, so they are the panels most likely to be seen shimmering */
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(wide, wide * 300 / 560),
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(wide, wide * 400 / 680),
     new THREE.MeshStandardMaterial({ map: labelTexture(work), roughness:0.82, metalness:0, envMapIntensity:0.4,
       polygonOffset:true, polygonOffsetFactor:-3, polygonOffsetUnits:-3 }));
   m.position.set(x, y, 0.030);
   group.add(m);
+  const k = work.img || work.id;
+  (LABELMESH[k] = LABELMESH[k] || []).push(m);
   return m;
 }
 function addPlate(canvas, group, x, y, wide){
@@ -3707,7 +4011,7 @@ function hangWork(work){
       polygonOffset:true, polygonOffsetFactor:-3, polygonOffsetUnits:-3 }));
   glow.position.z = 0.020; g.add(glow);
 
-  addLabel(work, g, -(W / 2 + reach + 0.32), 1.30 - centreY, 0.40);
+  addLabel(work, g, -(W / 2 + reach + 0.40), 1.30 - centreY, 0.52);   /* bigger, to be legible */
 
   const nrm = sideNormal(work.side);
   let pool = null;
@@ -5031,9 +5335,10 @@ function openPanel(work){
   body.scrollTop = 0;
 
   const pn = $("#pvPrice");
-  pn.textContent = money(work.price);
-  pn.className = "pn" + (work.price === null ? " sold" : "");
+  pn.textContent = work.onRequest ? "On request" : money(work.price);
+  pn.className = "pn" + (work.price === null || work.onRequest ? " sold" : "");
   $("#pvEnquire").textContent = work.price === null ? "Ask about the artist" : "Enquire";
+  paintStatus(work);
   $("#pvSave").setAttribute("aria-pressed", String(saved.includes(work.id)));
 
   body.querySelectorAll(".pv-tab").forEach(tb => tb.addEventListener("click", () => {
@@ -5061,6 +5366,48 @@ function openPanel(work){
   const piece = pieceOf(work);
   if (piece && !REDUCED){ beginZoom(piece); $("#lens").classList.add("focus"); }
   srSay(work.title + " by " + work.artist + ". " + money(work.price));
+}
+
+/* ─── is it for sale ─────────────────────────────────────────
+   Status lives on the catalogue entry, so a change follows the work to
+   every wall it hangs on and into the admin. Reserving holds it in this
+   browser — a real hold needs the backend, and the panel says so. */
+function openEnquiry(note){
+  if (!current) return;
+  statWork(current.img || current.id).enquiries++;
+  storeSave();
+  $("#enWork").textContent = current.title + " · " + current.artist;
+  $("#eNote").value = note || ("I would like to know more about “" + current.title + "”.");
+  openSheet("sheetEnquire");
+}
+function paintStatus(work){
+  const key = work.img || work.id;
+  const st = statusOf(work), meta = STATUS[st] || STATUS.available;
+  const chip = $("#pvStatus");
+  chip.textContent = meta.label;
+  chip.className = "st-chip " + st;
+  chip.hidden = false;
+  const btn = $("#pvReserve");
+  const canReserve = (st === "available");
+  btn.hidden = !(canReserve || st === "reserved");
+  btn.disabled = !canReserve;
+  btn.textContent = (st === "reserved") ? "Reserved" : "Reserve";
+  btn.dataset.key = key;
+}
+function reserveWork(key){
+  const S = SERIES[key];
+  if (!S || S.avail !== "available") return;
+  S.avail = "reserved";
+  if (!STORE.series[key]) STORE.series[key] = {};
+  STORE.series[key].avail = "reserved";
+  storeNote("reserved " + key);
+  const kept = storeSave();
+  refreshLabels(key);                 /* repaint every wall it hangs on */
+  ixBuilt = false;                    /* the catalogue restates it on reopen */
+  if (current) paintStatus(current);
+  renderMine();
+  toast(kept ? "Reserved for you — we will be in touch"
+             : "Held for this visit only; this browser cannot keep it");
 }
 
 /* ─── the artist, out loud ────────────────────────────────────
@@ -5148,7 +5495,7 @@ function openSheet(id){
                             ".sheet-body select, .gate-box input, .x-btn");
   if (f) setTimeout(() => f.focus(), 60);
   if (id === "sheetIndex" && !ixBuilt){ ixBuilt = true; renderIndex(); }
-  if (id === "sheetPress" && !pressBuilt){ pressBuilt = true; renderPress(null); }
+  if (id === "sheetPress" && !pressBuilt){ pressBuilt = true; renderPress(); }
   if (id === "sheetPlan") renderPlanSheet();
   if (id === "sheetMine") renderMine();
 }
@@ -5157,6 +5504,13 @@ function closeSheet(id){
   s.classList.remove("on"); s.setAttribute("aria-hidden","true");
   if (!$("#panel").classList.contains("on") && !anySheetOpen()) uiOpen = false;
 }
+/* the arrow keys turn the page while the issue is open */
+addEventListener("keydown", e => {
+  if (!$("#sheetPress").classList.contains("on") || pressMode !== "book") return;
+  if (e.key === "ArrowRight" && $("#pgNext")){ e.preventDefault(); $("#pgNext").click(); }
+  if (e.key === "ArrowLeft"  && $("#pgPrev")){ e.preventDefault(); $("#pgPrev").click(); }
+});
+
 function closeMore(){
   const m = $("#moreMenu");
   if (m && !m.hidden){ m.hidden = true; $("#navMore").setAttribute("aria-expanded", "false"); }
@@ -5222,7 +5576,9 @@ function workCard(w, onClick){
       '<div class="wa">' + w.artist + '</div>' +
       '<div class="wt">' + w.title + '</div>' +
       '<div class="wm">' + w.medium + ' · ' + w.year + ' · ' + w.w + '×' + w.h + ' cm</div>' +
-      '<div class="wp' + (w.price === null ? " sold" : "") + '">' + money(w.price) + '</div>' +
+      '<div class="wp' + (w.price === null || w.onRequest ? " sold" : "") + '">' +
+        (w.onRequest ? "On request" : money(w.price)) +
+        '<span class="st-chip sm ' + statusOf(w) + '">' + STATUS[statusOf(w)].label + '</span></div>' +
     '</div>';
   const c = cloneCanvas(w, 300);
   c.style.width = "100%"; c.style.maxWidth = (w.w > w.h ? 200 : 150) + "px";
@@ -5253,33 +5609,274 @@ function clearFilters(){
 }
 
 /* ─── press room ────────────────────────────────────────────── */
-let pressBuilt = false;
-function renderPress(article){
+/* ─── the press room, as a magazine ─────────────────────────────
+   Barnaby asked for something closer to FlipHTML5 or Flipsnack: a
+   bound issue you turn rather than a list you scroll. The pages are
+   laid out from the same PRESS data, so editing an article in the
+   admin re-typesets the magazine.
+
+   Leaves are stacked and rotated about their inner edge; each leaf
+   carries a recto on its front and a verso on its back, so turning
+   one reveals two new pages at once, as a real spread does.        */
+let pressBuilt = false, pressMode = null, leafAt = 0;
+
+/* Which works illustrate which piece. Sasha would set this in the admin
+   beside the copy; here it is a map so the magazine can be typeset from
+   the collection without any new assets. */
+const MAGART = {
+  0:["popart","relief"], 1:["eye","bloom"], 2:["mona","parasol"],
+  3:["butterfly","mandala"], 4:["hands","umbrellas"]
+};
+const COVER_WORK = "eye";
+
+function artOf(i, n){ const a = MAGART[i] || []; return a[n] || a[0] || COVER_WORK; }
+function workByKey(k){ return CATALOGUE.find(c => (c.img || c.id) === k) || SERIES[k]; }
+function capOf(k){
+  const w = SERIES[k];
+  return w ? (w.title + " · " + w.artist + " · " + w.year) : "";
+}
+function imgTag(k, cls){
+  const src = IMAGES[k] || "";
+  return '<img class="pg-img ' + (cls || "") + '" src="' + esc(src) +
+         '" alt="' + esc(capOf(k)) + '" data-work="' + esc(k) + '" loading="lazy">';
+}
+/* a real swatch of a real surface, generated from the same code the rooms
+   are built with — so the diagram cannot drift from the building */
+const SWATCH = {};
+function swatchURL(kind){
+  if (SWATCH[kind]) return SWATCH[kind];
+  const gen = (SURFACE[kind] || FLOORS[kind]);
+  if (!gen) return "";
+  const c = textCanvas(128, 128, (g, W, H) => gen(g, W, H, rng(kind.length * 31 + 7)));
+  SWATCH[kind] = c.toDataURL("image/jpeg", 0.8);
+  return SWATCH[kind];
+}
+
+function pressPages(){
+  const list = (Array.isArray(STORE.press) && STORE.press.length) ? STORE.press : PRESS;
+  const issue = new Date().toLocaleDateString("en-GB", { month:"long", year:"numeric" });
+  const pages = [], starts = [];
+  const contents = { kind:"contents", list:list, issue:issue, starts:starts };
+
+  pages.push({ kind:"cover", issue:issue, lead:list[0], art:COVER_WORK });
+  pages.push(contents);
+  list.forEach((a, i) => {
+    const half = Math.ceil(a.body.length / 2);
+    starts.push(pages.length + 1);                 /* 1-based page number */
+    pages.push({ kind:"open", a:a, body:a.body.slice(0, half), art:artOf(i, 0) });
+    pages.push({ kind:"cont", a:a, body:a.body.slice(half), art:artOf(i, 1) });
+    /* a tinted quote page after the interview, and the swatch page after the
+       piece about rooms — the two places where a change of pace helps */
+    if (a.kind === "Interview")
+      pages.push({ kind:"feature", a:a, art:artOf(i, 1) });
+    if (/room does to a painting/i.test(a.title))
+      pages.push({ kind:"rooms" });
+  });
+  pages.push({ kind:"back" });
+  while (pages.length % 2) pages.push({ kind:"blank" });
+  return pages;
+}
+
+function pageHTML(p, num){
+  const foot = '<div class="pg-foot"><span>' + (num || "") + '</span><span>SoftGallery.art</span></div>';
+
+  if (p.kind === "cover"){
+    return '<div class="pg cover">' +
+      imgTag(p.art, "cv-bleed") +
+      '<div class="cv-scrim"></div>' +
+      '<div class="cv-body">' +
+        '<div class="cv-mark" id="cvMark"></div>' +
+        '<div class="cv-issue">' + esc(p.issue) + ' · Issue One</div>' +
+        '<h1 class="cv-line">Where art<br><em>comes to life</em></h1>' +
+        '<div class="cv-lines">' +
+          (p.lead ? '<b>' + esc(p.lead.title) + '</b>' : '') +
+          '<span>Naila Ergasheva on stopping too early</span>' +
+          '<span>What a room does to a painting</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="cv-cap">' + esc(capOf(p.art)) + '</div></div>';
+  }
+
+  if (p.kind === "contents"){
+    return '<div class="pg">' +
+      '<div class="pg-head">Contents · ' + esc(p.issue) + '</div>' +
+      '<ol class="toc">' + p.list.map((a, i) =>
+        '<li data-goto="' + (p.starts[i] || 3) + '">' +
+          '<span class="toc-thumb">' + imgTag(artOf(i, 0), "flat") + '</span>' +
+          '<span class="toc-txt"><span class="toc-k">' + esc(a.kind) + '</span>' +
+          '<span class="toc-t">' + esc(a.title) + '</span></span>' +
+          '<span class="toc-p">' + (p.starts[i] || "") + '</span>' +
+        '</li>').join("") + '</ol>' +
+      '<p class="toc-note">Turn with the arrows, the arrow keys, or by clicking the outer edge of a page. Tap any work to go and stand in front of it.</p>' +
+      foot + '</div>';
+  }
+
+  if (p.kind === "open"){
+    const a = p.a;
+    return '<div class="pg">' +
+      '<figure class="fig top">' + imgTag(p.art) +
+        '<figcaption>' + esc(capOf(p.art)) + '</figcaption></figure>' +
+      '<div class="pg-head tight">' + esc(a.kind) + '</div>' +
+      '<h2 class="art-h">' + esc(a.title) + '</h2>' +
+      '<p class="art-stand">' + esc(a.stand) + '</p>' +
+      '<p class="art-by">' + esc(a.author) + ' · ' + esc(a.date) + ' · ' + esc(a.read) + ' read</p>' +
+      '<div class="art-cols one">' + p.body.map((t, i) =>
+        '<p' + (i === 0 ? ' class="drop"' : '') + '>' + esc(t) + '</p>').join("") + '</div>' +
+      foot + '</div>';
+  }
+
+  if (p.kind === "cont"){
+    const a = p.a;
+    return '<div class="pg">' +
+      '<div class="pg-head">' + esc(a.title) + '</div>' +
+      '<div class="art-cols">' + p.body.map(t => '<p>' + esc(t) + '</p>').join("") + '</div>' +
+      '<figure class="fig bottom">' + imgTag(p.art) +
+        '<figcaption>' + esc(capOf(p.art)) + '</figcaption></figure>' +
+      foot + '</div>';
+  }
+
+  if (p.kind === "feature"){
+    const a = p.a;
+    const pull = (a.quote || a.body[1] || a.stand).replace(/^\u201c|\u201d$/g, "");
+    return '<div class="pg feature">' +
+      imgTag(p.art, "ft-bleed duo") +
+      '<div class="ft-scrim"></div>' +
+      '<div class="ft-body">' +
+        '<blockquote class="ft-q">' + esc(pull.slice(0, 220)) + '</blockquote>' +
+        '<div class="ft-by">' + esc(a.author === "Nastia" ? a.title.split(" on ")[0] : a.author) + '</div>' +
+      '</div></div>';
+  }
+
+  if (p.kind === "rooms"){
+    const rows = NAMED_ROOMS.map(r => {
+      const f = FIT[r.id] || {};
+      const ceil = "#" + (f.ceil || 0xCCCCCC).toString(16).padStart(6, "0");
+      return '<li><span class="rm-n">' + esc(r.no) + '</span>' +
+        '<span class="rm-t">' + esc(r.name.replace("&amp;", "&")) + '</span>' +
+        '<span class="sw" style="background-image:url(' + swatchURL(f.wall) + ')"><i>Wall</i></span>' +
+        '<span class="sw" style="background-image:url(' + swatchURL(f.floor) + ')"><i>Floor</i></span>' +
+        '<span class="sw" style="background:' + ceil + '"><i>Ceiling</i></span></li>';
+    }).join("");
+    return '<div class="pg">' +
+      '<div class="pg-head">The building, in five surfaces</div>' +
+      '<h2 class="art-h">Same work,<br>different room</h2>' +
+      '<p class="art-stand">These are the actual materials the rooms are built from, taken from the same code that renders them. Hang a painting against each in turn and it is not the same painting twice.</p>' +
+      '<ul class="rooms-key">' + rows + '</ul>' +
+      foot + '</div>';
+  }
+
+  if (p.kind === "back"){
+    return '<div class="pg back"><div class="bk-mark" id="bkMark"></div>' +
+      '<p>Published by Soft Gallery.<br>Every price shown, every provenance written by the person who made it.</p>' +
+      '<span class="bk-url">softgallery.art</span></div>';
+  }
+  return '<div class="pg blank"></div>';
+}
+
+function renderPress(){
   const host = $("#pressBody");
+  if (pressMode === null) pressMode = (innerWidth < 860 || TOUCH) ? "list" : "book";
+  host.innerHTML =
+    '<div class="pr-switch">' +
+      '<button class="hud-btn" id="prBook" aria-pressed="' + (pressMode === "book") + '">Read as pages</button>' +
+      '<button class="hud-btn" id="prList" aria-pressed="' + (pressMode === "list") + '">Read as a list</button>' +
+    '</div><div id="prStage"></div>';
+  $("#prBook").addEventListener("click", () => { pressMode = "book"; renderPress(); });
+  $("#prList").addEventListener("click", () => { pressMode = "list"; renderPress(); });
+  if (pressMode === "book") renderBook(); else renderList();
+}
+
+function renderList(article){
+  const stage = $("#prStage");
+  const list = (Array.isArray(STORE.press) && STORE.press.length) ? STORE.press : PRESS;
   if (article === undefined || article === null){
-    host.innerHTML = '<div class="press-list">' + PRESS.map((a, i) =>
+    stage.innerHTML = '<div class="press-list">' + list.map((a, i) =>
       '<button class="press-card" data-i="' + i + '">' +
-        '<span class="pc-kind">' + a.kind + '</span>' +
-        '<span class="pc-title">' + a.title + '</span>' +
-        '<span class="pc-stand">' + a.stand + '</span>' +
-        '<span class="pc-meta">' + a.author + ' · ' + a.date + ' · ' + a.read + '</span>' +
+        '<span class="pc-kind">' + esc(a.kind) + '</span>' +
+        '<span class="pc-title">' + esc(a.title) + '</span>' +
+        '<span class="pc-stand">' + esc(a.stand) + '</span>' +
+        '<span class="pc-meta">' + esc(a.author) + ' · ' + esc(a.date) + ' · ' + esc(a.read) + '</span>' +
       '</button>').join("") + '</div>';
-    host.querySelectorAll(".press-card").forEach(c =>
-      c.addEventListener("click", () => renderPress(+c.dataset.i)));
+    stage.querySelectorAll(".press-card").forEach(c =>
+      c.addEventListener("click", () => renderList(+c.dataset.i)));
   } else {
-    const a = PRESS[article];
-    host.innerHTML =
+    const a = list[article];
+    stage.innerHTML =
       '<button class="linkish" id="prBack">← All writing</button>' +
       '<article class="press-read">' +
-        '<p class="eyebrow">' + a.kind + '</p>' +
-        '<h3>' + a.title + '</h3>' +
-        '<p class="pr-stand">' + a.stand + '</p>' +
-        '<p class="pr-meta">' + a.author + ' · ' + a.date + ' · ' + a.read + ' read</p>' +
-        a.body.map(par => '<p>' + par + '</p>').join("") +
+        '<p class="eyebrow">' + esc(a.kind) + '</p>' +
+        '<h3>' + esc(a.title) + '</h3>' +
+        '<p class="pr-stand">' + esc(a.stand) + '</p>' +
+        '<p class="pr-meta">' + esc(a.author) + ' · ' + esc(a.date) + ' · ' + esc(a.read) + ' read</p>' +
+        a.body.map(par => '<p>' + esc(par) + '</p>').join("") +
       '</article>';
-    host.querySelector("#prBack").addEventListener("click", () => renderPress(null));
+    stage.querySelector("#prBack").addEventListener("click", () => renderList(null));
   }
-  host.scrollTop = 0;
+  $("#pressBody").scrollTop = 0;
+}
+
+function renderBook(){
+  const pages = pressPages(), leaves = pages.length / 2;
+  leafAt = Math.min(leafAt, leaves);
+  const stage = $("#prStage");
+  stage.innerHTML =
+    '<div class="book-wrap">' +
+      '<button class="pg-nav prev" id="pgPrev" aria-label="Previous page">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M15 5l-7 7 7 7"/></svg></button>' +
+      '<div class="book" id="book">' +
+        '<div class="book-spine"></div>' +
+        Array.from({ length: leaves }, (_, i) =>
+          '<div class="leaf" data-i="' + i + '">' +
+            '<div class="face front">' + pageHTML(pages[i * 2], i * 2 + 1) + '</div>' +
+            '<div class="face back">' + pageHTML(pages[i * 2 + 1], i * 2 + 2) + '</div>' +
+          '</div>').join("") +
+      '</div>' +
+      '<button class="pg-nav next" id="pgNext" aria-label="Next page">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 5l7 7-7 7"/></svg></button>' +
+    '</div>' +
+    '<div class="book-bar"><span id="pgWhere"></span>' +
+      '<input type="range" id="pgSlide" min="0" max="' + leaves + '" value="' + leafAt + '" aria-label="Page"></div>';
+
+  const book = $("#book"), all = [...book.querySelectorAll(".leaf")];
+  const paint = () => {
+    all.forEach((L, i) => {
+      const done = i < leafAt;
+      L.classList.toggle("flipped", done);
+      /* the leaf just turned must sit on top of the left stack, and the next
+         one to turn on top of the right — otherwise the pile shows through */
+      L.style.zIndex = done ? i + 1 : leaves - i;
+    });
+    const l = Math.min(leafAt * 2, pages.length);
+    $("#pgWhere").textContent = leafAt === 0 ? "Cover"
+      : (leafAt >= leaves ? "Back cover" : "Pages " + l + "–" + (l + 1));
+    $("#pgSlide").value = leafAt;
+    $("#pgPrev").disabled = leafAt === 0;
+    $("#pgNext").disabled = leafAt >= leaves;
+    const cm = $("#cvMark"); if (cm && !cm.firstChild) cm.innerHTML = brandLockup(210, false, false);
+    const bm = $("#bkMark"); if (bm && !bm.firstChild) bm.innerHTML = brandMark(64, false, false);
+  };
+  const go = to => { leafAt = Math.max(0, Math.min(leaves, to)); paint(); };
+  $("#pgNext").addEventListener("click", () => go(leafAt + 1));
+  $("#pgPrev").addEventListener("click", () => go(leafAt - 1));
+  $("#pgSlide").addEventListener("input", e => go(+e.target.value));
+  book.addEventListener("click", e => {
+    /* a work in the magazine is a way into the gallery, not a dead end */
+    const im = e.target.closest("[data-work]");
+    if (im && im.dataset.work){
+      const key = im.dataset.work;
+      const piece = WORKS.find(w => w.img === key);
+      const w = workByKey(key);
+      closeSheet("sheetPress");
+      setTimeout(() => { if (piece) jumpToPiece(piece, true); else if (w) openPanel(w); }, 240);
+      return;
+    }
+    if (e.target.closest("[data-goto]")){ go(Math.floor(+e.target.closest("[data-goto]").dataset.goto / 2)); return; }
+    const r = book.getBoundingClientRect(), x = e.clientX - r.left;
+    if (x > r.width * 0.86) go(leafAt + 1);
+    else if (x < r.width * 0.14) go(leafAt - 1);
+  });
+  paint();
+  $("#pressBody").scrollTop = 0;
 }
 
 /* ─── plan sheet ────────────────────────────────────────────── */
@@ -6714,13 +7311,12 @@ function bindInput(){
   $("#pvClose").addEventListener("click",  closePanel);
   $("#ixClear").addEventListener("click",  clearFilters);
   $("#pvSave").addEventListener("click",   () => { if (current) toggleSave(current.id); });
-  $("#pvEnquire").addEventListener("click", () => {
-    if (!current) return;
-    statWork(current.img || current.id).enquiries++;
-    storeSave();
-    $("#enWork").textContent = current.title + " · " + current.artist;
-    $("#eNote").value = "I would like to know more about “" + current.title + "”.";
-    openSheet("sheetEnquire");
+  $("#pvEnquire").addEventListener("click", () => openEnquiry());
+  $("#pvReserve").addEventListener("click", () => {
+    const k = $("#pvReserve").dataset.key;
+    if (!k || !current) return;
+    reserveWork(k);
+    openEnquiry("I would like to reserve “" + current.title + "”.");
   });
   document.querySelectorAll("[data-close]").forEach(b =>
     b.addEventListener("click", () => closeSheet(b.dataset.close)));
