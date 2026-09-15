@@ -1179,6 +1179,7 @@ kbd{
   transition:transform .82s cubic-bezier(.46,.03,.32,1);
 }
 .leaf.flipped{transform:rotateY(-180deg)}
+.book.no-anim .leaf{transition:none}   /* jumping from the contents */
 .face{
   position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
   overflow:hidden;background:#FCFBF8;
@@ -5848,13 +5849,26 @@ function renderBook(){
       '<input type="range" id="pgSlide" min="0" max="' + leaves + '" value="' + leafAt + '" aria-label="Page"></div>';
 
   const book = $("#book"), all = [...book.querySelectorAll(".leaf")];
-  const paint = () => {
+  let turnTimer = 0;
+
+  /* Stacking, and the one case it has to handle specially.
+
+     At rest the two stacks never overlap: flipped leaves lie on the left,
+     unflipped on the right. So the left wants the most recently turned page
+     on top (z rising with i) and the right wants the next one to turn on top
+     (z falling with i).
+
+     A page mid-turn is the exception — it sweeps across the right-hand side
+     on its way over. Given its resting z it would pass *behind* the pages it
+     is turning over, and it did: with eight leaves the first four turns were
+     buried, which is exactly the range where i+1 <= leaves-i-1. So the leaf
+     that is moving is lifted above everything for the length of the
+     animation, then dropped back into its stack. */
+  const paint = (lift) => {
     all.forEach((L, i) => {
       const done = i < leafAt;
       L.classList.toggle("flipped", done);
-      /* the leaf just turned must sit on top of the left stack, and the next
-         one to turn on top of the right — otherwise the pile shows through */
-      L.style.zIndex = done ? i + 1 : leaves - i;
+      L.style.zIndex = (i === lift) ? leaves + 5 : (done ? i : leaves - i);
     });
     const l = Math.min(leafAt * 2, pages.length);
     $("#pgWhere").textContent = leafAt === 0 ? "Cover"
@@ -5865,7 +5879,25 @@ function renderBook(){
     const cm = $("#cvMark"); if (cm && !cm.firstChild) cm.innerHTML = brandLockup(210, false, false);
     const bm = $("#bkMark"); if (bm && !bm.firstChild) bm.innerHTML = brandMark(64, false, false);
   };
-  const go = to => { leafAt = Math.max(0, Math.min(leaves, to)); paint(); };
+  const go = to => {
+    const next = Math.max(0, Math.min(leaves, to));
+    if (next === leafAt) return;
+    const jump = Math.abs(next - leafAt) > 1;      /* from the contents */
+    const lift = (next > leafAt) ? leafAt : next;  /* the leaf that moves */
+    leafAt = next;
+    if (jump){
+      /* several leaves change at once, so turning them all looks like a
+         shuffle — go straight there instead */
+      book.classList.add("no-anim");
+      paint(-1);
+      void book.offsetWidth;                       /* commit before re-enabling */
+      requestAnimationFrame(() => book.classList.remove("no-anim"));
+      return;
+    }
+    paint(lift);
+    clearTimeout(turnTimer);
+    turnTimer = setTimeout(() => paint(-1), 900);  /* just after the .82s turn */
+  };
   $("#pgNext").addEventListener("click", () => go(leafAt + 1));
   $("#pgPrev").addEventListener("click", () => go(leafAt - 1));
   $("#pgSlide").addEventListener("input", e => go(+e.target.value));
