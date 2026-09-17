@@ -602,7 +602,29 @@ kbd{
 .st-chip.draft,
 .st-chip.withdrawn {color:#5A5650;background:#E2DFD9}
 .price .pl{display:flex;align-items:center;gap:9px}
-#pvReserve[disabled]{opacity:.55;cursor:default}
+
+/* the control set: where the work stands, and what you can do about it */
+.ctl-row{
+  grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;
+  gap:14px;flex-wrap:wrap;padding-top:14px;margin-top:2px;border-top:1px solid var(--hair);
+}
+.ctl-track{display:flex;gap:6px}
+.ctl-seg{
+  font-family:var(--label);font-size:9.5px;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;padding:7px 11px;border-radius:2px;
+  background:var(--paper-2);color:var(--pumice);border:1px solid transparent;
+}
+.ctl-seg.on{background:var(--brand-navy);color:var(--brand-teal);border-color:var(--brand-teal)}
+.ctl-acts{display:flex;gap:6px;flex-wrap:wrap}
+.ctl{
+  font-family:var(--label);font-size:9.5px;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;padding:9px 14px;border-radius:2px;
+  background:var(--paper-2);color:var(--slate);border:1px solid var(--hair);
+  transition:background .2s,color .2s,border-color .2s;
+}
+.ctl:hover:not([disabled]){background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.ctl.on{background:var(--brand-navy);color:var(--brand-teal);border-color:var(--brand-teal)}
+.ctl[disabled]{opacity:.55;cursor:default}
 
 .empty{
   grid-column:1/-1;text-align:center;padding:clamp(40px,9vh,86px) 20px;
@@ -1400,6 +1422,46 @@ kbd{
 .bk-url{font-family:var(--label);font-size:9px;font-weight:600;letter-spacing:.26em;
   text-transform:uppercase;color:var(--brass)}
 
+
+/* ── the artist, in full ────────────────────────────────────── */
+.art-hero{position:relative;border-radius:2px;overflow:hidden;margin-bottom:clamp(20px,3vw,34px);
+  background:var(--brand-navy);min-height:clamp(180px,26vw,320px)}
+.art-hero img{width:100%;height:clamp(180px,26vw,320px);object-fit:cover;display:block;opacity:.5}
+.art-hero-t{position:absolute;inset:auto 0 0 0;padding:clamp(18px,3vw,32px);color:var(--paper);
+  background:linear-gradient(0deg,rgba(12,19,29,.9),rgba(12,19,29,0))}
+.art-hero-t h2{font-family:var(--display);font-size:clamp(26px,4.4vw,46px);font-weight:500;
+  letter-spacing:.012em;text-transform:uppercase;margin:6px 0 0;line-height:1.02}
+.art-hero-t .eyebrow{color:var(--brand-word)}
+.art-where{font-family:var(--body);font-size:13.5px;color:rgba(247,245,241,.68);margin:8px 0 0}
+.art-grid{display:grid;gap:clamp(20px,3vw,40px);grid-template-columns:minmax(0,1fr) clamp(190px,24%,260px)}
+@media (max-width:760px){ .art-grid{grid-template-columns:1fr} }
+.art-main h3{font-family:var(--label);font-size:10px;font-weight:600;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--pumice);margin:26px 0 10px}
+.art-main h3:first-child{margin-top:0}
+.art-main p{font-family:var(--body);font-size:15px;line-height:1.75;color:var(--slate);margin:0 0 14px;max-width:62ch}
+.art-quote{margin:20px 0 0;padding-left:18px;border-left:2px solid var(--brass);
+  font-family:var(--serif);font-style:italic;font-size:19px;line-height:1.5;color:var(--ink)}
+.art-film{display:flex;align-items:center;gap:14px;width:100%;text-align:left;
+  padding:16px 18px;border:1px solid var(--hair);border-radius:2px;background:var(--paper);
+  transition:border-color .2s,background .2s}
+.art-film:hover{border-color:var(--iris);background:var(--paper-2)}
+.af-play{width:38px;height:38px;flex:0 0 auto;border-radius:50%;background:var(--iris);
+  display:grid;place-items:center;color:var(--paper)}
+.af-play svg{width:16px;height:16px}
+.art-film b{display:block;font-family:var(--label);font-size:12px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--ink)}
+.art-film small{display:block;font-family:var(--body);font-size:12px;color:var(--pumice);margin-top:4px}
+.art-facts{margin:0;padding:18px;background:var(--paper);border:1px solid var(--hair);border-radius:2px}
+.art-facts .af{padding:11px 0;border-bottom:1px solid var(--hair-2)}
+.art-facts .af:last-child{border-bottom:0;padding-bottom:0}
+.art-facts .af:first-child{padding-top:0}
+.art-facts dt{font-family:var(--label);font-size:9px;font-weight:600;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--pumice)}
+.art-facts dd{font-family:var(--body);font-size:13.5px;line-height:1.55;color:var(--slate);margin:6px 0 0}
+.art-more-h{font-family:var(--label);font-size:10px;font-weight:600;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--pumice);margin:clamp(26px,4vw,44px) 0 14px}
+.art-more{display:grid;gap:18px;grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+
 /* screen-reader only */
 .sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
@@ -1501,14 +1563,20 @@ kbd{
   <div class="panel-body" id="pvBody"></div>
   <div class="panel-foot">
     <div class="price">
-      <div class="pl">Price <span class="st-chip" id="pvStatus" hidden></span></div>
+      <div class="pl">Price</div>
       <div class="pn" id="pvPrice">—</div>
     </div>
     <button class="icon-btn" id="pvSave" aria-pressed="false" aria-label="Save to my gallery" title="Save to my gallery">
       <svg viewBox="0 0 24 24"><path d="M6 3h12a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z"/></svg>
     </button>
-    <button class="btn ghost" id="pvReserve">Reserve</button>
     <button class="btn" id="pvEnquire">Enquire</button>
+  </div>
+  <div class="ctl-row">
+    <div class="ctl-track" id="pvTrack" role="status" aria-live="polite"></div>
+    <div class="ctl-acts">
+      <button class="ctl" id="pvReserve">Reserve</button>
+      <button class="ctl" id="pvCollect" aria-pressed="false">Add to my collection</button>
+    </div>
   </div>
 </aside>
 
@@ -1618,6 +1686,20 @@ kbd{
   </div>
 </section>
 
+<!-- ═══ the artist ══════════════════════════════════════════ -->
+<section class="sheet" id="sheetArtist" role="dialog" aria-modal="true" aria-labelledby="artName" aria-hidden="true">
+  <div class="sheet-head">
+    <div>
+      <p class="eyebrow">The artist</p>
+      <h2 id="artName">—</h2>
+    </div>
+    <button class="x-btn" data-close="sheetArtist" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="sheet-body" id="artBody"></div>
+</section>
+
 <!-- ═══ press room ══════════════════════════════════════════ -->
 <section class="sheet" id="sheetPress" role="dialog" aria-modal="true" aria-labelledby="prH" aria-hidden="true">
   <div class="sheet-head">
@@ -1701,7 +1783,7 @@ kbd{
       <div class="cols">
         <div class="col-card"><div class="rule-brass"></div><h4>Curate</h4><p>A small number of artists, chosen for the work rather than for their following. Every piece is selected by a person who has to defend the choice.</p></div>
         <div class="col-card"><div class="rule-brass"></div><h4>Explain</h4><p>Provenance in the artist's own voice. How it was made, what it is about, what was going on at the time. Written and filmed in the studio.</p></div>
-        <div class="col-card"><div class="rule-brass"></div><h4>Frame</h4><p>Every work here hangs in the same frame, and it is our mark: a continuous bar with the lower-left corner left open. It carries the same teal-to-blue gradient as the mark, top to foot. Bar weight is what separates a historic work from a contemporary one.</p></div>
+        <div class="col-card"><div class="rule-brass"></div><h4>Mark</h4><p>Nothing here is framed. Each work hangs on its own stretcher or mount, and our mark is stamped on the top-right corner — half on the work, half on the wall. It is the same open bar as the logo, at the logo’s own weight, and it sizes itself to the work it sits on.</p></div>
       <div class="col-card"><div class="rule-brass"></div><h4>Guide</h4><p>A curator on the other end, for the first purchase or the fiftieth. Scale, framing, placement, and an honest answer when a work is wrong for you.</p></div>
       </div>
 
@@ -3707,45 +3789,37 @@ function statusOf(work){
    hard to read. It is now half as large again on the wall, the artist is
    reversed out of a dark band to give the plaque an anchor, every size is
    up by roughly a third, and the status sits in a coloured chip. */
+/* The label is a button, not a block of text.
+
+   Kirit found the all-black plaque stark and the earlier pale one more
+   readable, so the ground goes back to paper. Barnaby wanted the branding
+   confined to a small black header, so that strip carries the artist's name
+   and a restrained mark and nothing else. And since the panel's job is to be
+   pressed rather than read, everything else — year, medium, dimensions,
+   price, status — moves behind the tap. Two lines, set large. */
 function labelCanvas(work){
-  return textCanvas(680, 400, (g, W, H) => {
-    g.fillStyle = "#FBFAF7"; g.fillRect(0, 0, W, H);
-    g.strokeStyle = "rgba(20,22,26,.32)"; g.lineWidth = 3;
+  return textCanvas(680, 268, (g, W, H) => {
+    g.fillStyle = "#F8F6F2"; g.fillRect(0, 0, W, H);
+    g.strokeStyle = "rgba(20,22,26,.26)"; g.lineWidth = 3;
     g.strokeRect(1.5, 1.5, W - 3, H - 3);
 
-    g.fillStyle = "#14161A"; g.fillRect(0, 0, W, 78);
-    g.fillStyle = "#A3854A"; g.fillRect(0, 74, W, 4);
-    g.fillStyle = "#FBFAF7"; g.font = "600 32px " + F_BRAND;
-    g.fillText(fitText(g, work.artist.toUpperCase(), W - 62), 30, 52);
+    /* the black header: the artist, and the mark, at a weight that does not
+       compete with what is hanging beside it */
+    g.fillStyle = "#14161A"; g.fillRect(0, 0, W, 74);
+    g.fillStyle = "#F8F6F2"; g.font = "600 29px " + F_BRAND;
+    g.fillText(fitText(g, work.artist.toUpperCase(), W - 120), 30, 49);
+    drawMark(g, W - 70, 20, 36, true);
 
-    g.fillStyle = "#14161A"; g.font = "italic 400 50px " + F_SERIF;
-    g.fillText(fitText(g, work.title, W - 62), 30, 150);
+    /* the title, which is the one thing worth reading from across the room */
+    g.fillStyle = "#14161A"; g.font = "italic 400 54px " + F_SERIF;
+    g.fillText(fitText(g, work.title, W - 60), 30, 156);
 
-    g.fillStyle = "#2E333A"; g.font = "500 27px " + F_BODY;
-    g.fillText(work.year + " · " + work.medium, 30, 198);
-    g.fillText(work.w + " × " + work.h + " cm", 30, 236);
-
-    g.strokeStyle = "rgba(20,22,26,.20)"; g.lineWidth = 2;
-    g.beginPath(); g.moveTo(30, 266); g.lineTo(W - 30, 266); g.stroke();
-
-    const st = STATUS[statusOf(work)] || STATUS.available;
-    const shown = work.onRequest ? "PRICE ON REQUEST"
-                : (work.price === null ? "" : "£" + work.price.toLocaleString("en-GB"));
-    g.fillStyle = "#14161A"; g.font = "600 34px " + F_BRAND;
-    if (shown) g.fillText(shown, 30, 316);
-
-    g.font = "600 22px " + F_BRAND;
-    const cw = g.measureText(st.label.toUpperCase()).width + 36;
-    const cy = shown ? 338 : 292;
-    g.fillStyle = st.bg; g.fillRect(30, cy, cw, 40);
-    g.fillStyle = st.ink; g.fillRect(30, cy, 5, 40);
-    g.fillText(st.label.toUpperCase(), 51, cy + 27);
-
-    if (work.pd){
-      g.fillStyle = "#6E6A62"; g.font = "600 20px " + F_BRAND;
-      g.fillText(fitText(g, work.pd.toUpperCase(), W - cw - 120), 30 + cw + 20, cy + 27);
-    }
-    drawMark(g, W - 76, H - 76, 46, false);
+    /* and a quiet invitation to press it */
+    g.fillStyle = "#A3854A"; g.fillRect(30, 196, 46, 3);
+    g.fillStyle = "#6E6A62"; g.font = "600 22px " + F_BRAND;
+    g.fillText("MORE ABOUT THIS WORK", 30, 232);
+    g.fillStyle = "#A3854A"; g.font = "600 22px " + F_BRAND;
+    g.fillText("\u2192", W - 58, 232);
   });
 }
 function signCanvas(title, sub, numeral){
@@ -3817,9 +3891,10 @@ function refreshLabels(key){
 function addLabel(work, group, x, y, wide){
   /* the same 14 mm problem as the wall plates, and there are fifty-six of
      these, so they are the panels most likely to be seen shimmering */
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(wide, wide * 400 / 680),
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(wide, wide * 268 / 680),
     new THREE.MeshStandardMaterial({ map: labelTexture(work), roughness:0.82, metalness:0, envMapIntensity:0.4,
-      polygonOffset:true, polygonOffsetFactor:-3, polygonOffsetUnits:-3 }));
+      polygonOffset:true, polygonOffsetFactor:-3, polygonOffsetUnits:-3,
+      transparent:true, opacity:0.28 }));   /* quiet until you approach */
   m.position.set(x, y, 0.030);
   group.add(m);
   const k = work.img || work.id;
@@ -3911,12 +3986,12 @@ function frameMats(){
 /* One bevelled moulding rather than four flat bars. A real gilt frame has a
    profile, and the chamfer is what catches a raking spotlight along its
    length. It is also one mesh instead of four. */
-/* ─── the house frame ─────────────────────────────────────────
-   The mark is a picture frame, so the picture frames are the mark:
-   a continuous bar with the lower-left corner left open, carrying the
-   same teal-to-blue gradient. Same proportion as the logo, extruded at
-   the size of the work, with a chamfer so a raking spotlight runs
-   along it.
+/* ─── the mark, as an object ──────────────────────────────────
+   Extrudes the logo's outline: a continuous bar with the lower-left
+   corner left open, carrying the teal-to-blue gradient, with a chamfer
+   so a raking spotlight runs along it. It used to surround each work;
+   it is now stamped on the corner instead, but the geometry is the
+   same and the sculpture plinth labels still use it at small sizes.
 
    W and H here are the OPENING, not the outer size. The bar sits
    outside that. Walk the polygon anticlockwise from the bottom-right
@@ -3979,15 +4054,15 @@ function hangWork(work){
      gallery does not reframe a Leonardo; everything contemporary takes the
      house metal. Works on their own stretcher get a floater, where the bar
      stands off and you can see daylight between it and the canvas. */
-  const gilt = work.frame === "gilt", floater = work.frame === "none";
+  /* Barnaby's direction: the mark no longer surrounds the work. The canvas
+     hangs unframed on its stretcher or mount, and the mark is stamped on the
+     top-right corner instead — sitting proud of the surface, half on the work
+     and half on the wall. It reads as a maker's mark rather than a frame, and
+     it stops fifty-six gradient bars competing with the art. */
   const big = Math.max(W, H);
-  const fw = floater ? Math.min(0.046, Math.max(0.020, big * 0.028))
-           : gilt    ? Math.min(0.075, Math.max(0.034, big * 0.048))
-                     : Math.min(0.052, Math.max(0.024, big * 0.032));
-  const depth = gilt ? 0.075 : (floater ? 0.058 : 0.048);
   const mw = work.glass ? Math.min(0.11, big * 0.075) : 0;   /* mount board */
-  const reveal = floater ? 0.022 : 0;                        /* the floater's gap */
-  const backD = floater ? 0.042 : 0.026;
+  const backD = (work.frame === "gilt") ? 0.048
+              : (work.frame === "none") ? 0.042 : 0.030;     /* how proud it hangs */
 
   const back = new THREE.Mesh(
     new THREE.BoxGeometry(W + mw * 2, H + mw * 2, backD),
@@ -3995,22 +4070,24 @@ function hangWork(work){
   back.position.z = backD / 2; back.castShadow = true;
   g.add(back); CASTERS.push(back);
 
-  /* how far past the work the frame actually reaches — the label is placed
-     from this rather than from a fixed offset, or a wide mount plus a bar
-     puts the plate behind the moulding */
-  const reach = mw + reveal + fw;
-
-  /* every frame in the building carries the mark's gradient; the bar weight
-     is what separates a historic work from a contemporary one */
-  sgFrame(g, W + (mw + reveal) * 2, H + (mw + reveal) * 2, fw, depth,
-          frameMaterial(), 0);
-
   face = mk(W, H, backD + 0.0025);
   if (work.glass){
     const gl = new THREE.Mesh(new THREE.PlaneGeometry(W + mw * 2, H + mw * 2), GLASS);
-    gl.position.z = depth - 0.010;
+    gl.position.z = backD + 0.008;
     g.add(gl);
   }
+
+  /* The mark, centred on the top-right corner. Half the size it was: Barnaby
+     agreed the larger treatment pulls the eye off the painting. */
+  const em = Math.min(0.17, Math.max(0.085, big * 0.09));
+  const ebar = em * 0.0244;                       /* the logo's own bar weight */
+  const stamp = new THREE.Group();
+  stamp.position.set(W / 2 + mw, H / 2 + mw, backD + 0.010);
+  g.add(stamp);
+  sgFrame(stamp, em - ebar * 2, em - ebar * 2, ebar, 0.020, frameMaterial(), 0);
+
+  /* how far past the work anything reaches, so the label can clear it */
+  const reach = Math.max(mw, em / 2);
 
   const cs = new THREE.Mesh(new THREE.PlaneGeometry(W + 0.55, H + 0.55), contactMaterial());
   cs.position.set(0.012, -0.028, 0.010);
@@ -4022,7 +4099,18 @@ function hangWork(work){
       polygonOffset:true, polygonOffsetFactor:-3, polygonOffsetUnits:-3 }));
   glow.position.z = 0.020; g.add(glow);
 
-  addLabel(work, g, -(W / 2 + reach + 0.40), 1.30 - centreY, 0.52);   /* bigger, to be legible */
+  const plate = addLabel(work, g, -(W / 2 + reach + 0.40), 1.30 - centreY, 0.52);
+  /* the label is a button, so it gets a target of its own rather than making
+     people aim at the painting. The piece record does not exist yet, so the
+     link is completed once it does. */
+  const lw = 0.52, lh = lw * 268 / 680;
+  const lhit = new THREE.Mesh(new THREE.PlaneGeometry(lw + 0.06, lh + 0.06),
+    new THREE.MeshBasicMaterial({ visible:false, side:THREE.DoubleSide }));
+  lhit.position.copy(plate.position);
+  lhit.position.z += 0.004;
+  lhit.userData = { kind:"label" };
+  g.add(lhit);
+  PICKABLES.push(lhit);
 
   const nrm = sideNormal(work.side);
   let pool = null;
@@ -4038,13 +4126,16 @@ function hangWork(work){
   }
 
   const dist = Math.min(3.4, Math.max(1.75, Math.max(W, H) * 1.7));
-  PIECES.push({
+  const rec = {
     work, room, faceMat: face.material, glow, pool, light:null, normal:nrm,
+    plate: plate,
     centre:  new THREE.Vector3(anchor.x, centreY, anchor.z),
     viewPos: new THREE.Vector3(anchor.x + nrm.x * dist, EYE, anchor.z + nrm.z * dist),
     lookAt:  new THREE.Vector3(anchor.x, centreY, anchor.z),
     lit: 0
-  });
+  };
+  PIECES.push(rec);
+  lhit.userData.piece = rec;
 }
 
 function placeSculpture(work){
@@ -5088,6 +5179,9 @@ function frame(){
     p.lit += (target - p.lit) * (1 - Math.exp(-5.5 * dt));
     if (p.faceMat) p.faceMat.color.setScalar(0.44 + 0.56 * p.lit);
     if (p.glow)  p.glow.material.opacity = 0.26 * p.lit;
+    /* the plaque is nearly out of the way until you are close enough to read
+       it, so a long wall reads as paintings rather than as a row of signs */
+    if (p.plate) p.plate.material.opacity = 0.22 + 0.78 * p.lit;
     if (p.pool)  p.pool.material.opacity = (p.poolBase || 0) + 0.24 * p.lit;
     if (p.light) p.light.intensity = 0.55 + 1.30 * p.lit;
   }
@@ -5281,7 +5375,9 @@ function openPanel(work){
           '<span class="play"><svg viewBox="0 0 12 14"><path d="M0 0l12 7-12 7z"/></svg></span>' +
           '<span><span class="vt">Meet ' + first + ' in the studio</span>' +
           '<span class="vs">Film · 4 min</span></span>' +
-        '</button></div>' +
+        '</button>' +
+        '<button class="btn wide ghost" id="pvDeep" style="margin-top:14px">More about ' +
+          esc(work.artist) + '</button></div>' +
       '<div class="pv-sec"><h4>How it was made</h4><p>' + work.technique + '</p></div>' +
       '<div class="pv-sec"><h4>Scale</h4><div class="scale-box">' + scaleSVG(work) +
         '<div class="cap">' + work.w + ' × ' + work.h + ' cm against a person of 1.7 m</div></div></div>' +
@@ -5358,6 +5454,8 @@ function openPanel(work){
     body.scrollTop = 0;
   }));
   body.querySelector("#pvVid").addEventListener("click", () => toast("Studio film — not in this demo"));
+  const deep = body.querySelector("#pvDeep");
+  if (deep) deep.addEventListener("click", () => openArtist(work.artist, work));
   if (work.voice) mountVoice(work);
   body.querySelectorAll(".chip[data-ax]").forEach(c => c.addEventListener("click", () => {
     closePanel(); openSheet("sheetIndex"); applyAxis(c.dataset.ax, c.dataset.v);
@@ -5379,6 +5477,70 @@ function openPanel(work){
   srSay(work.title + " by " + work.artist + ". " + money(work.price));
 }
 
+/* ─── the artist, in full ───────────────────────────────────────
+   Barnaby: the label is a button, and behind it sits a deeper page —
+   biography, the story behind the work, film, and everything else by
+   the same hand in the building. Keeping that here rather than in the
+   panel is what lets the gallery view stay uncluttered. */
+function openArtist(name, fromWork){
+  const a = ARTISTS[name] || {};
+  const mine = CATALOGUE.filter(w => w.artist === name);
+  const w = fromWork || mine[0];
+  const hero = w ? (IMAGES[w.img || w.id] || "") : "";
+
+  const fact = (k, v) => v ? '<div class="af"><dt>' + k + '</dt><dd>' + esc(v) + '</dd></div>' : "";
+  const host = $("#artBody");
+  host.innerHTML =
+    '<div class="art-hero">' +
+      (hero ? '<img src="' + esc(hero) + '" alt="">' : '') +
+      '<div class="art-hero-t">' +
+        '<p class="eyebrow">' + (a.since && a.since !== "\\u2014"
+          ? "Represented since " + esc(a.since) : "In the collection") + '</p>' +
+        '<h2>' + esc(name) + '</h2>' +
+        (a.based ? '<p class="art-where">' + esc(a.based) + '</p>' : '') +
+      '</div>' +
+    '</div>' +
+
+    '<div class="art-grid">' +
+      '<div class="art-main">' +
+        (a.bio ? '<h3>Biography</h3><p>' + esc(a.bio) + '</p>' : '') +
+        (w && w.story ? '<h3>The story behind ' + esc(w.title) + '</h3><p>' + esc(w.story) + '</p>' : '') +
+        (w && w.technique ? '<h3>How it was made</h3><p>' + esc(w.technique) + '</p>' : '') +
+        (w && w.quote ? '<blockquote class="art-quote">' + esc(w.quote) + '</blockquote>' : '') +
+
+        '<h3>Film</h3>' +
+        '<button class="art-film" id="artFilm">' +
+          '<span class="af-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>' +
+          '<span><b>In the studio with ' + esc(name.split(" ").slice(-1)[0]) + '</b>' +
+          '<small>Not filmed yet — this is where it would sit</small></span>' +
+        '</button>' +
+      '</div>' +
+
+      '<aside class="art-side">' +
+        '<dl class="art-facts">' +
+          fact("Born", a.born) + fact("Based", a.based) +
+          fact("Trained", a.school) + fact("Exhibited", a.shows) +
+        '</dl>' +
+      '</aside>' +
+    '</div>' +
+
+    (mine.length ? '<h3 class="art-more-h">' + mine.length +
+      (mine.length === 1 ? ' work' : ' works') + ' in the building</h3>' +
+      '<div class="art-more" id="artMore"></div>' : "");
+
+  if (mine.length){
+    const grid = $("#artMore");
+    mine.forEach(x => grid.appendChild(workCard(x, () => {
+      closeSheet("sheetArtist");
+      const piece = WORKS.find(q => q.img === (x.img || x.id));
+      setTimeout(() => { if (piece) jumpToPiece(piece, true); else openPanel(x); }, 240);
+    })));
+  }
+  $("#artFilm").addEventListener("click", () => toast("Studio film — not in this demo"));
+  $("#artName").textContent = name;
+  openSheet("sheetArtist");
+}
+
 /* ─── is it for sale ─────────────────────────────────────────
    Status lives on the catalogue entry, so a change follows the work to
    every wall it hangs on and into the admin. Reserving holds it in this
@@ -5391,19 +5553,34 @@ function openEnquiry(note){
   $("#eNote").value = note || ("I would like to know more about “" + current.title + "”.");
   openSheet("sheetEnquire");
 }
+/* Barnaby asked for for-sale, reserved, sold and add-to-my-collection as one
+   set of controls that light up in the brand colour when they apply. Three of
+   those four are states a visitor cannot set — nobody browsing can mark a work
+   sold — so they are drawn as a track that shows where the work stands, with
+   the live one lit, and the two things a visitor can actually do sit beside
+   it as buttons that light the same way. */
 function paintStatus(work){
   const key = work.img || work.id;
-  const st = statusOf(work), meta = STATUS[st] || STATUS.available;
-  const chip = $("#pvStatus");
-  chip.textContent = meta.label;
-  chip.className = "st-chip " + st;
-  chip.hidden = false;
+  const st = statusOf(work);
+  const track = [["available","For sale"], ["reserved","Reserved"], ["sold","Sold"]];
+  const known = track.some(t => t[0] === st);
+  $("#pvTrack").innerHTML = track.map(t =>
+    '<span class="ctl-seg' + (t[0] === st ? " on" : "") + '">' + t[1] + '</span>').join("") +
+    (known ? "" : '<span class="ctl-seg on">' + (STATUS[st] || STATUS.available).label + '</span>');
+
   const btn = $("#pvReserve");
   const canReserve = (st === "available");
   btn.hidden = !(canReserve || st === "reserved");
   btn.disabled = !canReserve;
+  btn.classList.toggle("on", st === "reserved");
   btn.textContent = (st === "reserved") ? "Reserved" : "Reserve";
   btn.dataset.key = key;
+
+  const col = $("#pvCollect");
+  const held = saved.indexOf(work.id) >= 0;
+  col.classList.toggle("on", held);
+  col.setAttribute("aria-pressed", String(held));
+  col.textContent = held ? "In my collection" : "Add to my collection";
 }
 function reserveWork(key){
   const S = SERIES[key];
@@ -6554,17 +6731,15 @@ function hangGeom(h){
   if (!S) return null;
   const A = h.w / 100, B = Math.round(h.w / S.ratio) / 100;
   const big = Math.max(A, B);
-  const gilt = S.frame === "gilt", floater = S.frame === "none";
-  const fw = floater ? Math.min(0.046, Math.max(0.020, big * 0.028))
-           : gilt    ? Math.min(0.075, Math.max(0.034, big * 0.048))
-                     : Math.min(0.052, Math.max(0.024, big * 0.032));
+  /* unframed now: the mount board, and the corner mark, are all that reach
+     past the canvas — this has to mirror hangWork or the checks lie */
   const mw = S.glass ? Math.min(0.11, big * 0.075) : 0;
-  const reveal = floater ? 0.022 : 0;
-  const half = A / 2 + mw + reveal + fw;
-  const reach = mw + reveal + fw;
+  const em = Math.min(0.17, Math.max(0.085, big * 0.09));
+  const reach = Math.max(mw, em / 2);
+  const half = A / 2 + reach;
   const lab = A / 2 + reach + 0.52;
   const low = (h.s === "n" || h.s === "e");
-  return { A, B, fw, half, vhalf: B / 2 + mw + reveal + fw,
+  return { A, B, fw: em * 0.0244, half, vhalf: B / 2 + reach,
            lo: h.u - (low ? Math.max(half, lab) : half),
            hi: h.u + (low ? half : Math.max(half, lab)) };
 }
@@ -7243,6 +7418,12 @@ function updateHover(cx, cy){
     hideMarker();
     stage.classList.add("overart");
     if (u.kind === "art"){ hover = u; setFocus(u.piece); }
+    else if (u.kind === "label" && u.piece){
+      hover = u; setFocus(u.piece);
+      $("#promptTitle").textContent = u.piece.work.title;
+      $("#promptAction").textContent = "Click for more about this work";
+      $("#prompt").classList.add("on");
+    }
     else if (u.kind === "route"){
       hover = u; setFocus(null);
       $("#promptTitle").textContent = u.route.label;
@@ -7274,6 +7455,7 @@ function actOnClick(){
   if (hover && hover.kind === "art"){ clickTick(); goToPiece(hover.piece, true); return; }
   if (hover && hover.kind === "door"){ clickTick(); goToRoom(doorTarget(hover.door)); return; }
   if (hover && hover.kind === "route"){ clickTick(); openSheet(hover.route.sheet); return; }
+  if (hover && hover.kind === "label"){ clickTick(); goToPiece(hover.piece, true); return; }
   if (marker && marker.visible){ clickTick(); walkTo(marker.position.x, marker.position.z); }
 }
 
@@ -7354,6 +7536,11 @@ function bindInput(){
   $("#ixClear").addEventListener("click",  clearFilters);
   $("#pvSave").addEventListener("click",   () => { if (current) toggleSave(current.id); });
   $("#pvEnquire").addEventListener("click", () => openEnquiry());
+  $("#pvCollect").addEventListener("click", () => {
+    if (!current) return;
+    toggleSave(current.id);
+    paintStatus(current);
+  });
   $("#pvReserve").addEventListener("click", () => {
     const k = $("#pvReserve").dataset.key;
     if (!k || !current) return;
