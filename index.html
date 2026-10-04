@@ -367,7 +367,7 @@ kbd{
 }
 .panel-head .eyebrow{color:var(--brass)}
 .x-btn{
-  width:34px;height:34px;display:grid;place-items:center;border-radius:50%;
+  width:30px;height:30px;display:grid;place-items:center;border-radius:50%;
   color:var(--slate);transition:background .2s,color .2s;flex:0 0 auto;
 }
 .x-btn:hover{background:var(--paper-2);color:var(--ink)}
@@ -533,14 +533,32 @@ kbd{
   transition:opacity .42s var(--ease),transform .42s var(--ease-out),visibility .42s;
 }
 .sheet.on{opacity:1;visibility:visible;transform:translateY(0)}
+/* The header used to be a title block — eyebrow, large heading and a
+   paragraph — which cost about a fifth of the sheet before any content
+   appeared, and made the magazine look small inside it. It is now a single
+   slim bar: where you are on the left, the controls for this sheet on the
+   right. The standfirst moved into the body, where it scrolls away. */
 .sheet-head{
-  flex:0 0 auto;display:flex;align-items:flex-start;justify-content:space-between;
-  gap:20px;padding:calc(var(--pad) * .8) var(--pad);
+  flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
+  gap:16px;padding:10px var(--pad);
   border-bottom:1px solid var(--hair);background:var(--plaster);
 }
-.sheet-head h2{font-family:var(--display);font-size:clamp(30px,5vw,48px);margin:6px 0 0;
-  letter-spacing:.012em;text-transform:uppercase;font-weight:500}
-.sheet-head .lede{font-size:13px;color:var(--slate);margin:9px 0 0;max-width:56ch;line-height:1.65}
+.sheet-head > div:first-child{display:flex;align-items:baseline;gap:12px;min-width:0}
+.head-acts{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.sheet-head h2{
+  font-family:var(--display);font-size:clamp(17px,2.1vw,23px);margin:0;
+  letter-spacing:.05em;text-transform:uppercase;font-weight:500;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.sheet-head .eyebrow{
+  flex:0 0 auto;padding-right:12px;border-right:1px solid var(--hair);
+  font-size:9px;letter-spacing:.22em;
+}
+@media (max-width:620px){
+  .sheet-head{padding:8px 14px}
+  .sheet-head .eyebrow{display:none}       /* the heading already says it */
+}
+.sheet-body > .lede{font-size:13.5px;color:var(--slate);margin:0 0 22px;max-width:62ch;line-height:1.65}
 .sheet-body{flex:1 1 auto;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:var(--pad);padding-bottom:calc(var(--pad) * 2)}
 
 /* filter rail — Artsy taxonomy, four axes */
@@ -1177,8 +1195,15 @@ kbd{
 
 
 /* ══ the press room, as a bound issue ═════════════════════════ */
-.pr-switch{display:flex;gap:6px;margin-bottom:18px}
 #prStage{min-height:40vh}
+/* a two-way switch, small enough to live in the header bar */
+.hud-btn.seg{
+  background:transparent;border:1px solid var(--hair);color:var(--pumice);
+  padding:6px 11px;font-size:9px;backdrop-filter:none;
+}
+.hud-btn.seg[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.hud-btn.seg:hover{color:var(--ink)}
+.hud-btn.seg[aria-pressed="true"]:hover{color:var(--paper)}
 
 .book-wrap{
   display:flex;align-items:center;gap:10px;
@@ -1608,13 +1633,13 @@ kbd{
     <div>
       <p class="eyebrow">The collection</p>
       <h2 id="ixH">Catalogue</h2>
-      <p class="lede">Every work in the gallery, filtered the way collectors actually search — by medium, by movement, by what it costs and by the colour it will bring into a room.</p>
     </div>
-    <button class="x-btn" data-close="sheetIndex" aria-label="Close the catalogue">
+    <div class="head-acts"><button class="x-btn" data-close="sheetIndex" aria-label="Close the catalogue">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 6L6 18M6 6l12 12"/></svg>
-    </button>
+    </button></div>
   </div>
   <div class="sheet-body">
+    <p class="lede">Every work in the gallery, filtered the way collectors actually search — by medium, by movement, by what it costs and by the colour it will bring into a room.</p>
     <div class="filters">
       <div class="filter"><h3>Medium</h3><div class="chips" id="fMedium"></div></div>
       <div class="filter"><h3>Movement</h3><div class="chips" id="fMovement"></div></div>
@@ -1635,13 +1660,13 @@ kbd{
     <div>
       <p class="eyebrow">The rooms</p>
       <h2 id="plH">Galleries</h2>
-      <p class="lede">Five rooms, each with its own surfaces and its own light. Choose one and you will be standing in it.</p>
     </div>
-    <button class="x-btn" data-close="sheetPlan" aria-label="Close galleries">
+    <div class="head-acts"><button class="x-btn" data-close="sheetPlan" aria-label="Close galleries">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 6L6 18M6 6l12 12"/></svg>
-    </button>
+    </button></div>
   </div>
   <div class="sheet-body">
+    <p class="lede">Five rooms, each with its own surfaces and its own light. Choose one and you will be standing in it.</p>
     <div class="plan-wrap">
       <canvas id="plancanvas" width="900" height="900"></canvas>
       <div class="room-list" id="roomList"></div>
@@ -1655,13 +1680,13 @@ kbd{
     <div>
       <p class="eyebrow">Your selection</p>
       <h2 id="myH">My gallery</h2>
-      <p class="lede">The works you have set aside. Send the list to us and a curator will come back with condition notes, framing options and what else the artist has available.</p>
     </div>
-    <button class="x-btn" data-close="sheetMine" aria-label="Close my gallery">
+    <div class="head-acts"><button class="x-btn" data-close="sheetMine" aria-label="Close my gallery">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 6L6 18M6 6l12 12"/></svg>
-    </button>
+    </button></div>
   </div>
   <div class="sheet-body">
+    <p class="lede">The works you have set aside. Send the list to us and a curator will come back with condition notes, framing options and what else the artist has available.</p>
     <div class="count" id="myCount"></div>
     <div class="grid" id="myGrid"></div>
     <div id="myAsk" hidden style="margin-top:38px;padding-top:30px;border-top:1px solid var(--hair)">
@@ -1682,13 +1707,13 @@ kbd{
     <div>
       <p class="eyebrow" id="enWork">Enquiry</p>
       <h2 id="enH">Speak to a curator</h2>
-      <p class="lede">No obligation and no automated follow-up. A person reads this and writes back.</p>
     </div>
-    <button class="x-btn" data-close="sheetEnquire" aria-label="Close enquiry">
+    <div class="head-acts"><button class="x-btn" data-close="sheetEnquire" aria-label="Close enquiry">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 6L6 18M6 6l12 12"/></svg>
-    </button>
+    </button></div>
   </div>
   <div class="sheet-body">
+    <p class="lede">No obligation and no automated follow-up. A person reads this and writes back.</p>
     <form class="form" id="enqForm" novalidate>
       <div class="field"><label for="eName">Name</label><input id="eName" type="text" autocomplete="name"></div>
       <div class="field"><label for="eEmail">Email</label><input id="eEmail" type="email" autocomplete="email"></div>
@@ -1715,9 +1740,9 @@ kbd{
       <p class="eyebrow">The artist</p>
       <h2 id="artName">—</h2>
     </div>
-    <button class="x-btn" data-close="sheetArtist" aria-label="Close">
+    <div class="head-acts"><button class="x-btn" data-close="sheetArtist" aria-label="Close">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 6L6 18M6 6l12 12"/></svg>
-    </button>
+    </button></div>
   </div>
   <div class="sheet-body" id="artBody"></div>
 </section>
@@ -1728,13 +1753,13 @@ kbd{
     <div>
       <p class="eyebrow">Writing</p>
       <h2 id="prH">Press Room</h2>
-      <p class="lede">Articles, studio interviews and the newsletter, bound as an issue you turn. Use the arrows, the arrow keys, or click the outer edge of a page.</p>
     </div>
-    <button class="x-btn" data-close="sheetPress" aria-label="Close the press room">
+    <div class="head-acts"><button class="hud-btn seg" id="prBook" aria-pressed="true">Pages</button><button class="hud-btn seg" id="prList" aria-pressed="false">List</button><button class="x-btn" data-close="sheetPress" aria-label="Close the press room">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 6L6 18M6 6l12 12"/></svg>
-    </button>
+    </button></div>
   </div>
-  <div class="sheet-body" id="pressBody"></div>
+  <div class="sheet-body" id="pressBody">
+</div>
 </section>
 
 <!-- ═══ join ══════════════════════════════════════════════════ -->
@@ -1743,13 +1768,13 @@ kbd{
     <div>
       <p class="eyebrow">Artist submissions</p>
       <h2 id="joH">Join Soft Gallery</h2>
-      <p class="lede">Soft Gallery is always looking for distinctive artistic voices. Submit your work to be considered for representation and future Soft Gallery projects.</p>
     </div>
-    <button class="x-btn" data-close="sheetJoin" aria-label="Close">
+    <div class="head-acts"><button class="x-btn" data-close="sheetJoin" aria-label="Close">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 6L6 18M6 6l12 12"/></svg>
-    </button>
+    </button></div>
   </div>
   <div class="sheet-body">
+    <p class="lede">Soft Gallery is always looking for distinctive artistic voices. Submit your work to be considered for representation and future Soft Gallery projects.</p>
     <form class="form" id="joinForm" novalidate>
       <div class="two">
         <div class="field"><label for="jFirst">First name</label><input id="jFirst" type="text" autocomplete="given-name"></div>
@@ -1792,9 +1817,9 @@ kbd{
       <p class="eyebrow">Soft Gallery</p>
       <h2 id="abH">About</h2>
     </div>
-    <button class="x-btn" data-close="sheetAbout" aria-label="Close about">
+    <div class="head-acts"><button class="x-btn" data-close="sheetAbout" aria-label="Close about">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 6L6 18M6 6l12 12"/></svg>
-    </button>
+    </button></div>
   </div>
   <div class="sheet-body">
     <div class="prose">
@@ -6008,16 +6033,19 @@ function pageHTML(p, num){
   return '<div class="pg blank"></div>';
 }
 
+let pressWired = false;
 function renderPress(){
   const host = $("#pressBody");
   if (pressMode === null) pressMode = "book";   /* single-page on a phone */
-  host.innerHTML =
-    '<div class="pr-switch">' +
-      '<button class="hud-btn" id="prBook" aria-pressed="' + (pressMode === "book") + '">Read as pages</button>' +
-      '<button class="hud-btn" id="prList" aria-pressed="' + (pressMode === "list") + '">Read as a list</button>' +
-    '</div><div id="prStage"></div>';
-  $("#prBook").addEventListener("click", () => { pressMode = "book"; renderPress(); });
-  $("#prList").addEventListener("click", () => { pressMode = "list"; renderPress(); });
+  if (!pressWired){
+    pressWired = true;
+    $("#prBook").addEventListener("click", () => { pressMode = "book"; renderPress(); });
+    $("#prList").addEventListener("click", () => { pressMode = "list"; renderPress(); });
+  }
+  host.innerHTML = '<div id="prStage"></div>';
+  /* the switch lives in the header bar, so it costs the magazine no height */
+  $("#prBook").setAttribute("aria-pressed", String(pressMode === "book"));
+  $("#prList").setAttribute("aria-pressed", String(pressMode === "list"));
   if (pressMode === "book") renderBook(); else renderList();
 }
 
