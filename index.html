@@ -2862,6 +2862,10 @@ const CASTERS = [];
 let strips = [];
 let QUALITY = "high";
 
+/* Anything standing on the floor is sunk below it by this much, so no
+   bottom face ever shares the floor’s plane. Six faces used to meet at
+   y=0 and four at the door head, which is what was shimmering. */
+const SUNK = 0.05;
 const WALL_T = 0.26, DOOR_H = 2.45, EYE = 1.62, RADIUS = 0.40;
 const SKIRT_H = 0.115;
 
@@ -3694,37 +3698,55 @@ function buildSide(room, side, mat, tile){
   segs.forEach(s => {
     const len = s[1] - s[0], mid = (s[0] + s[1]) / 2;
     if (len <= 0.01) return;
-    const lowH  = glazed ? sill : room.h;
-    const lowY  = lowH / 2;
+    /* the same trick at the ceiling: run the wall a little past it so no top
+       face sits exactly on the ceiling plane */
+    const RISE  = 0.02;
+    /* Where two walls meet at a corner they overlap, and their tops were at
+       exactly the same height — so the skirting tops fought at every junction,
+       which is what shows at the foot of a doorway. The walls running in z are
+       3 mm taller than those running in x, so no two tops ever coincide. The
+       step is invisible; the flicker was not. */
+    const NUDGE = horiz ? 0 : 0.003;
+    const lowH  = (glazed ? sill : room.h + RISE) + NUDGE;
+    const baseH = lowH + SUNK,              baseY = (lowH - SUNK) / 2;
+    const skH   = SKIRT_H + NUDGE + SUNK,   skY   = (SKIRT_H + NUDGE - SUNK) / 2;
     if (horiz){
-      box(mid, lowY, fx, len, lowH, WALL_T, mat, { tile:tile, collide:true });
-      box(mid, SKIRT_H / 2, fx, len, SKIRT_H, WALL_T + 0.045, trimMat(), {});
-      if (glazed) box(mid, (head + room.h) / 2, fx, len, room.h - head, WALL_T, mat, { tile:tile });
-      box(mid, room.h - 0.022, fx, len, 0.044, WALL_T + 0.05, darkMat(), {});
+      box(mid, baseY, fx, len, baseH, WALL_T, mat, { tile:tile, collide:true });
+      box(mid, skY, fx, len, skH, WALL_T + 0.045, trimMat(), {});
+      if (glazed) box(mid, (head + room.h + RISE) / 2, fx, len, room.h + RISE - head, WALL_T, mat, { tile:tile });
+      box(mid, room.h - 0.002, fx, len + 0.02, 0.084, WALL_T + 0.05, darkMat(), {});
     } else {
-      box(fx, lowY, mid, WALL_T, lowH, len, mat, { tile:tile, collide:true });
-      box(fx, SKIRT_H / 2, mid, WALL_T + 0.045, SKIRT_H, len, trimMat(), {});
-      if (glazed) box(fx, (head + room.h) / 2, mid, WALL_T, room.h - head, len, mat, { tile:tile });
-      box(fx, room.h - 0.022, mid, WALL_T + 0.05, 0.044, len, darkMat(), {});
+      box(fx, baseY, mid, WALL_T, baseH, len, mat, { tile:tile, collide:true });
+      box(fx, skY, mid, WALL_T + 0.045, skH, len, trimMat(), {});
+      if (glazed) box(fx, (head - NUDGE + room.h + RISE + NUDGE) / 2, mid, WALL_T, room.h + RISE + NUDGE - head + NUDGE, len, mat, { tile:tile });
+      box(fx, room.h - 0.002 + NUDGE, mid, WALL_T + 0.05, 0.084, len + 0.02, darkMat(), {});
     }
     if (glazed) clerestory(room, side, s[0], s[1], fx, horiz, sill, head);
   });
 
   if (open && open !== "all"){
-    const len = open[1] - open[0], mid = (open[0] + open[1]) / 2, hh = room.h - DOOR_H;
+    const len = open[1] - open[0], mid = (open[0] + open[1]) / 2, hh = room.h + 0.02 - DOOR_H;
     if (hh > 0.05){
       if (horiz) box(mid, DOOR_H + hh / 2, fx, len, hh, WALL_T, mat, { tile:tile });
       else       box(fx, DOOR_H + hh / 2, mid, WALL_T, hh, len, mat, { tile:tile });
     }
     const J = 0.085, D = WALL_T + 0.055;
+    /* The jambs sink below the floor, and the head trim is dropped 20 mm so
+       it encloses the joint rather than butting against it: it is wider and
+       thicker than both the jambs and the lintel, so their faces at door
+       height end up inside it and are never drawn. */
+    const jH = DOOR_H + SUNK, jY = (DOOR_H - SUNK) / 2;
+    const hH = J + 0.02,      hY = DOOR_H - 0.02 + hH / 2;
     if (horiz){
-      box(open[0], DOOR_H / 2, fx, J, DOOR_H, D, trimMat(), { cast:true });
-      box(open[1], DOOR_H / 2, fx, J, DOOR_H, D, trimMat(), { cast:true });
-      box(mid, DOOR_H + J / 2, fx, len + J, J, D, trimMat(), { cast:true });
+      box(open[0], jY, fx, J, jH, D, trimMat(), { cast:true });
+      box(open[1], jY, fx, J, jH, D, trimMat(), { cast:true });
+      /* a shade wider and deeper than the jambs, so their faces fall inside
+         it rather than flush with it */
+      box(mid, hY, fx, len + J + 0.012, hH, D + 0.012, trimMat(), { cast:true });
     } else {
-      box(fx, DOOR_H / 2, open[0], D, DOOR_H, J, trimMat(), { cast:true });
-      box(fx, DOOR_H / 2, open[1], D, DOOR_H, J, trimMat(), { cast:true });
-      box(fx, DOOR_H + J / 2, mid, D, J, len + J, trimMat(), { cast:true });
+      box(fx, jY, open[0], D, jH, J, trimMat(), { cast:true });
+      box(fx, jY, open[1], D, jH, J, trimMat(), { cast:true });
+      box(fx, hY, mid, D + 0.012, hH, len + J + 0.012, trimMat(), { cast:true });
     }
   }
 }
@@ -4411,6 +4433,8 @@ function buildSigns(){
    everywhere, and rooms you are not in fall away into the dark —
    which is what a gallery after hours actually looks like.    */
 const ROOMLIGHTS = [], PICSPOTS = [];
+/* which work each picture lamp is currently on, so it can hold still */
+const SPOTAT = [null, null];
 let lightTick = 0;
 
 function buildLights(){
@@ -4434,10 +4458,10 @@ function buildLights(){
     if (i === 0){
       s.castShadow = true;
       s.shadow.mapSize.width = s.shadow.mapSize.height = 1024;
-      s.shadow.camera.near = 0.6;
-      s.shadow.camera.far = 13;
-      s.shadow.bias = -0.0016;
-      s.shadow.normalBias = 0.022;
+      s.shadow.camera.near = 0.8;
+      s.shadow.camera.far = 11;          /* tighter range, finer depth steps */
+      s.shadow.bias = -0.0009;
+      s.shadow.normalBias = 0.038;       /* a texel is ~15 mm at this throw */
     }
     PICSPOTS.push(s);
   }
@@ -4461,17 +4485,37 @@ function updateLights(dt){
     L.intensity = (e.r.corridor ? 0.75 : 1.35) * (i === 0 ? 1 : 0.66);
   }
 
-  /* and the two nearest works get a picture light */
+  /* And the two nearest works get a picture light.
+
+     This used to hand each lamp to whichever work was nearest, recomputed
+     five times a second. Stand midway between two and their distances differ
+     in the last bits of a float, so the ranking flips back and forth — and
+     because one of these lamps casts the only shadows in the building, the
+     shadow map was being re-rendered from a different angle several times a
+     second while the visitor stood perfectly still. That is the speckle at
+     the foot of every door jamb, and why it appeared in every room.
+
+     A lamp now keeps the work it has until another is a clear 0.6 m closer. */
   const byArt = PIECES.map(p => ({ p, d: p.centre.distanceTo(camera.position) }))
                       .sort((a, b) => a.d - b.d);
+  const dOf = p => p ? p.centre.distanceTo(camera.position) : Infinity;
+  const taken = [];
   for (let i = 0; i < PICSPOTS.length; i++){
-    const e = byArt[i], S = PICSPOTS[i];
-    if (!e || e.d > 11){ S.intensity = 0; continue; }
-    const c = e.p.centre, n = e.p.normal, h = (e.p.room ? e.p.room.h : 4.4) - 0.30;
+    const S = PICSPOTS[i];
+    let cur = SPOTAT[i];
+    if (cur && taken.indexOf(cur) >= 0) cur = null;     /* the other lamp has it */
+    const best = byArt.find(e => taken.indexOf(e.p) < 0 && e.p !== cur);
+    const cand = best ? best.p : null;
+    if (!cur || dOf(cur) > 11 || (cand && dOf(cand) < dOf(cur) - 0.6)) cur = cand || cur;
+    SPOTAT[i] = cur;
+    if (cur) taken.push(cur);
+    const d = dOf(cur);
+    if (!cur || d > 11){ S.intensity = 0; continue; }
+    const c = cur.centre, n = cur.normal, h = (cur.room ? cur.room.h : 4.4) - 0.30;
     S.position.set(c.x + n.x * 1.05, h, c.z + n.z * 1.05);
     S.target.position.copy(c);
     S.target.updateMatrixWorld();
-    S.intensity = 3.1 * Math.min(1, Math.max(0, (11 - e.d) / 5));
+    S.intensity = 3.1 * Math.min(1, Math.max(0, (11 - d) / 5));
   }
 }
 
@@ -4544,17 +4588,21 @@ function buildFittings(){
 
   /* ── thresholds: two floors should never meet on an invisible line ── */
   DOORS.forEach(d => {
-    if (d.h) box(d.x, 0.008, d.z, 4.0, 0.016, 0.34, brassMat(), { receive:true });
-    else     box(d.x, 0.008, d.z, 0.34, 0.016, 4.0, brassMat(), { receive:true });
+    const tH = 0.016 + SUNK, tY = (0.016 - SUNK) / 2;
+    if (d.h) box(d.x, tY, d.z, 4.0, tH, 0.34, brassMat(), { receive:true });
+    else     box(d.x, tY, d.z, 0.34, tH, 4.0, brassMat(), { receive:true });
   });
 
   /* ── the worn patch every doorway has ── */
+  /* a decal lying on the floor, so it needs the depth buffer biased toward
+     the camera or it argues with the floor at a distance */
   const wear = new THREE.MeshBasicMaterial({ map: patchTexture(), transparent:true,
-    depthWrite:false, opacity:0.20, color:0x1A1712, blending:THREE.NormalBlending });
+    depthWrite:false, opacity:0.20, color:0x1A1712, blending:THREE.NormalBlending,
+    polygonOffset:true, polygonOffsetFactor:-3, polygonOffsetUnits:-3 });
   DOORS.forEach(d => {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(d.h ? 4.4 : 2.6, d.h ? 2.6 : 4.4), wear);
     m.rotation.x = -Math.PI / 2;
-    m.position.set(d.x, 0.019, d.z);
+    m.position.set(d.x, 0.030, d.z);
     scene.add(m);
   });
 
