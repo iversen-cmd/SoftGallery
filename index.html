@@ -1347,27 +1347,72 @@ kbd{
   .pg-nav{width:32px;height:32px}
 }
 
-/* one full page at a time, which is the only readable way on a phone */
-.book.single{
-  flex:0 1 min(560px, 70vh * 0.707);
-  aspect-ratio:0.707 / 1;          /* a single page, portrait */
-  overflow:hidden;                  /* turned pages sweep out of sight */
+/* ── one page at a time, filling the sheet ────────────────────
+   The page is sized by the space left over rather than by a guess at the
+   viewport, and everything else floats on top of it. */
+.sheet-body.mag{padding:0;overflow:hidden;display:flex;flex-direction:column}
+.sheet-body.mag #prStage{flex:1 1 auto;min-height:0;display:flex}
+
+.book-wrap.single{
+  position:relative;flex:1 1 auto;min-height:0;width:100%;
+  display:flex;align-items:center;justify-content:center;
+  padding:8px 8px 14px;
 }
+/* Holding an A-series ratio on a phone wastes about 160 px of height, because
+   a 0.707 page is wider than a phone is proportionally. The page takes the
+   shape of the space instead — still capped so a landscape tablet does not
+   produce an absurdly wide page. */
+.book.single{
+  flex:0 1 auto;height:100%;width:100%;
+  max-width:min(100%, calc(100vh * 0.78));
+  overflow:hidden;                  /* turned pages sweep out of sight */
+  filter:drop-shadow(0 14px 30px rgba(20,22,26,.26));
+}
+
+/* a tall narrow page wants one column of slightly larger type */
+.book.single .art-cols{column-count:1;column-rule:0;font-size:clamp(11.5px,3vw,14.5px);line-height:1.66}
+.book.single .art-h{font-size:clamp(21px,6vw,34px)}
+.book.single .art-stand{font-size:clamp(13px,3.4vw,17px)}
+.book.single .cv-line{font-size:clamp(30px,8.6vw,54px)}
+.book.single .pg{padding:clamp(16px,4.4%,30px) clamp(16px,5%,32px)}
+.book.single .fig.top{height:31%}
+.book.single .fig.bottom{height:25%}
+.book.single .toc li{padding:clamp(8px,1.8%,14px) 0}
+.book.single .pg-foot{font-size:8px}
 .book.single .leaf{left:0;width:100%}
 .book.single .face.front{box-shadow:inset 5px 0 14px -10px rgba(20,22,26,.35)}
 .book.single .face.back{background:#F2EFE9}
-.book-wrap.single{gap:2px}
-.book-wrap.single .pg-nav{position:relative;z-index:2}
+
+/* the arrows ride over the outer edges rather than taking a column each */
+.book-wrap.single .pg-nav{
+  position:absolute;top:50%;transform:translateY(-50%);z-index:4;
+  width:34px;height:34px;background:rgba(255,255,255,.82);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  box-shadow:0 2px 10px rgba(20,22,26,.18);
+}
+.book-wrap.single .pg-nav.prev{left:2px}
+.book-wrap.single .pg-nav.next{right:2px}
+.book-wrap.single .pg-nav[disabled]{opacity:0;pointer-events:none}
+
+/* the page number, and a hairline of progress along the foot */
+.pg-count{
+  position:absolute;right:14px;bottom:20px;z-index:4;
+  font-family:var(--label);font-size:9px;font-weight:600;letter-spacing:.14em;
+  color:var(--ink);background:rgba(255,255,255,.8);padding:4px 8px;border-radius:2px;
+  font-variant-numeric:tabular-nums;
+}
+.pg-prog{position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--hair-2);z-index:4}
+.pg-prog i{display:block;height:100%;width:0%;background:var(--ink);transition:width .5s var(--ease)}
+
 .book-hint{
-  text-align:center;margin:10px 0 0;
+  position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:5;
+  margin:0;padding:6px 12px;border-radius:2px;
+  background:rgba(23,27,31,.78);color:var(--paper);
   font-family:var(--label);font-size:9px;font-weight:600;letter-spacing:.18em;
-  text-transform:uppercase;color:var(--pumice);
+  text-transform:uppercase;white-space:nowrap;
+  transition:opacity .6s var(--ease);
 }
-@media (max-width:620px){
-  .book-wrap.single .pg-nav{width:30px;height:30px}
-  .book.single{flex:1 1 auto;max-width:none}
-  .book-bar{gap:10px}
-}
+.book-hint.gone{opacity:0;pointer-events:none}
 
 
 /* ── pictures in the magazine ───────────────────────────────── */
@@ -6042,6 +6087,9 @@ function renderPress(){
     $("#prBook").addEventListener("click", () => { pressMode = "book"; renderPress(); });
     $("#prList").addEventListener("click", () => { pressMode = "list"; renderPress(); });
   }
+  /* edge to edge only while the magazine is on screen; the list still wants
+     its margins */
+  host.classList.toggle("mag", pressMode === "book" && (innerWidth < 860 || TOUCH));
   host.innerHTML = '<div id="prStage"></div>';
   /* the switch lives in the header bar, so it costs the magazine no height */
   $("#prBook").setAttribute("aria-pressed", String(pressMode === "book"));
@@ -6089,26 +6137,37 @@ function renderBook(){
   const verso = '<div class="pg blank"></div>';
 
   const stage = $("#prStage");
-  stage.innerHTML =
-    '<div class="book-wrap' + (per === 1 ? " single" : "") + '">' +
-      '<button class="pg-nav prev" id="pgPrev" aria-label="Previous page">' +
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M15 5l-7 7 7 7"/></svg></button>' +
-      '<div class="book' + (per === 1 ? " single" : "") + '" id="book">' +
-        (per === 2 ? '<div class="book-spine"></div>' : '') +
-        Array.from({ length: units }, (_, i) =>
-          '<div class="leaf" data-i="' + i + '">' +
-            '<div class="face front">' + pageHTML(pages[i * per], i * per + 1) + '</div>' +
-            '<div class="face back">' +
-              (per === 2 ? pageHTML(pages[i * 2 + 1], i * 2 + 2) : verso) +
-            '</div>' +
-          '</div>').join("") +
+  const arrow = (dir, d) =>
+    '<button class="pg-nav ' + dir + '" id="pg' + (dir === "prev" ? "Prev" : "Next") +
+    '" aria-label="' + (dir === "prev" ? "Previous" : "Next") + ' page">' +
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="' + d + '"/></svg></button>';
+  const leaves = Array.from({ length: units }, (_, i) =>
+    '<div class="leaf" data-i="' + i + '">' +
+      '<div class="face front">' + pageHTML(pages[i * per], i * per + 1) + '</div>' +
+      '<div class="face back">' +
+        (per === 2 ? pageHTML(pages[i * 2 + 1], i * 2 + 2) : verso) +
       '</div>' +
-      '<button class="pg-nav next" id="pgNext" aria-label="Next page">' +
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 5l7 7-7 7"/></svg></button>' +
-    '</div>' +
-    '<div class="book-bar"><span id="pgWhere"></span>' +
-      '<input type="range" id="pgSlide" min="0" max="' + units + '" value="' + leafAt + '" aria-label="Page"></div>' +
-    (per === 1 ? '<p class="book-hint">Swipe, or tap the edge of a page.</p>' : '');
+    '</div>').join("");
+
+  /* On a phone the page takes the whole sheet and the controls sit on top of
+     it: arrows floated over the outer edges, a hairline of progress along the
+     foot, and the page number in the corner. A slider, a counter row and a
+     hint line underneath were costing about a third of the height. */
+  stage.innerHTML = (per === 1)
+    ? '<div class="book-wrap single">' +
+        '<div class="book single" id="book">' + leaves + '</div>' +
+        arrow("prev", "M15 5l-7 7 7 7") + arrow("next", "M9 5l7 7-7 7") +
+        '<div class="pg-count" id="pgWhere"></div>' +
+        '<div class="pg-prog"><i id="pgProg"></i></div>' +
+        '<p class="book-hint" id="bookHint">Swipe to turn</p>' +
+      '</div>'
+    : '<div class="book-wrap">' +
+        arrow("prev", "M15 5l-7 7 7 7") +
+        '<div class="book" id="book"><div class="book-spine"></div>' + leaves + '</div>' +
+        arrow("next", "M9 5l7 7-7 7") +
+      '</div>' +
+      '<div class="book-bar"><span id="pgWhere"></span>' +
+        '<input type="range" id="pgSlide" min="0" max="' + units + '" value="' + leafAt + '" aria-label="Page"></div>';
 
   const book = $("#book"), all = [...book.querySelectorAll(".leaf")];
   let turnTimer = 0;
@@ -6134,10 +6193,12 @@ function renderBook(){
       $("#pgWhere").textContent = leafAt === 0 ? "Cover"
         : (leafAt >= units ? "Back cover" : "Pages " + l + "–" + (l + 1));
     } else {
-      $("#pgWhere").textContent = leafAt >= units ? "Back cover"
-        : "Page " + (leafAt + 1) + " of " + pages.length;
+      $("#pgWhere").textContent = leafAt >= units ? "\u2014" : (leafAt + 1) + " / " + pages.length;
+      const pr = $("#pgProg");
+      if (pr) pr.style.width = (leafAt / units * 100).toFixed(1) + "%";
     }
-    $("#pgSlide").value = leafAt;
+    const sl = $("#pgSlide");
+    if (sl) sl.value = leafAt;
     $("#pgPrev").disabled = leafAt === 0;
     $("#pgNext").disabled = leafAt >= units;
     const cm = $("#cvMark"); if (cm && !cm.firstChild) cm.innerHTML = brandLockup(210, false, false);
@@ -6162,7 +6223,16 @@ function renderBook(){
   };
   $("#pgNext").addEventListener("click", () => go(leafAt + 1));
   $("#pgPrev").addEventListener("click", () => go(leafAt - 1));
-  $("#pgSlide").addEventListener("input", e => go(+e.target.value));
+  const slide = $("#pgSlide");
+  if (slide) slide.addEventListener("input", e => go(+e.target.value));
+  /* the hint has done its job after the first turn */
+  const hint = $("#bookHint");
+  if (hint){
+    const drop = () => hint.classList.add("gone");
+    setTimeout(drop, 4200);
+    book.addEventListener("touchstart", drop, { passive:true, once:true });
+    book.addEventListener("click", drop, { once:true });
+  }
 
   book.addEventListener("click", e => {
     /* a work in the magazine is a way into the gallery, not a dead end */
