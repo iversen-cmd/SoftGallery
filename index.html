@@ -4921,6 +4921,69 @@ function detour(fx, fz, tx, tz){
   }
   return null;
 }
+/* When a single sidestep is not enough — the reception desk sits where one
+   sidestep always leaves the other leg crossing a corner — fall back on a
+   proper search over a coarse grid of the floor. Only ever used when the
+   straight line and the sidestep have both failed, so it costs nothing in
+   the normal case. */
+function gridPath(fx, fz, tx, tz){
+  const C = 0.45, R = RADIUS * 0.92, PAD = 5.0;
+  const x0 = Math.min(fx, tx) - PAD, x1 = Math.max(fx, tx) + PAD;
+  const z0 = Math.min(fz, tz) - PAD, z1 = Math.max(fz, tz) + PAD;
+  const W = Math.ceil((x1 - x0) / C), H = Math.ceil((z1 - z0) / C);
+  if (W * H > 20000) return null;                       /* keep it bounded */
+  const at = (i, j) => [x0 + (i + 0.5) * C, z0 + (j + 0.5) * C];
+  const ok = new Uint8Array(W * H);
+  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++){
+    const p = at(i, j);
+    ok[j * W + i] = (roomAt(p[0], p[1]) && !blocked(p[0], p[1], R)) ? 1 : 0;
+  }
+  const cell = (x, z) => [Math.min(W - 1, Math.max(0, Math.round((x - x0) / C - 0.5))),
+                          Math.min(H - 1, Math.max(0, Math.round((z - z0) / C - 0.5)))];
+  const [si, sj] = cell(fx, fz), [gi, gj] = cell(tx, tz);
+  const sI = sj * W + si, gI = gj * W + gi;
+  ok[sI] = 1; ok[gI] = 1;                               /* the ends are where we stand */
+
+  const g = new Float32Array(W * H).fill(Infinity);
+  const prev = new Int32Array(W * H).fill(-1);
+  const seen = new Uint8Array(W * H);
+  const h = k => Math.hypot((k % W) - gi, ((k / W) | 0) - gj);
+  const open = [sI]; g[sI] = 0;
+  const N = [[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,1.414],[1,-1,1.414],[-1,1,1.414],[-1,-1,1.414]];
+  while (open.length){
+    let b = 0;
+    for (let k = 1; k < open.length; k++) if (g[open[k]] + h(open[k]) < g[open[b]] + h(open[b])) b = k;
+    const cur = open.splice(b, 1)[0];
+    if (cur === gI) break;
+    seen[cur] = 1;
+    const ci = cur % W, cj = (cur / W) | 0;
+    for (const [di, dj, w] of N){
+      const ni = ci + di, nj = cj + dj;
+      if (ni < 0 || nj < 0 || ni >= W || nj >= H) continue;
+      const nk = nj * W + ni;
+      if (!ok[nk] || seen[nk]) continue;
+      /* no cutting a corner diagonally past something solid */
+      if (di && dj && (!ok[cj * W + ni] || !ok[nj * W + ci])) continue;
+      const cost = g[cur] + w * C;
+      if (cost < g[nk]){ g[nk] = cost; prev[nk] = cur; if (open.indexOf(nk) < 0) open.push(nk); }
+    }
+  }
+  if (!isFinite(g[gI])) return null;
+  const cells = [];
+  for (let k = gI; k !== -1; k = prev[k]) cells.push(k);
+  cells.reverse();
+  const pts = cells.map(k => at(k % W, (k / W) | 0));
+  /* pull the string so it reads as a walk, not a staircase */
+  const out = [];
+  let cx = fx, cz = fz, i = 0;
+  while (i < pts.length){
+    let j = pts.length - 1;
+    while (j > i && !clearLine(cx, cz, pts[j][0], pts[j][1], R)) j--;
+    out.push(pts[j]); cx = pts[j][0]; cz = pts[j][1]; i = j + 1;
+  }
+  return out.length ? out : null;
+}
+
 function route(fromX, fromZ, toX, toZ){
   const a = branchOf(roomAt(fromX, fromZ)), b = branchOf(roomAt(toX, toZ));
   let pts = [];
@@ -4940,14 +5003,23 @@ function route(fromX, fromZ, toX, toZ){
     if (!clearLine(cx, cz, tgt[0], tgt[1], RADIUS * 0.92)){
       const d = detour(cx, cz, tgt[0], tgt[1]);
       if (d){ out.push(d); cx = d[0]; cz = d[1]; }
+      else {
+        /* a failed sidestep used to emit the blocked leg anyway, which told
+           the walker to walk through the obstacle: it jammed, never reached
+           the waypoint, and the tour waited for an arrival that never came */
+        const gp = gridPath(cx, cz, tgt[0], tgt[1]);
+        if (gp) gp.forEach(p => { out.push(p); cx = p[0]; cz = p[1]; });
+      }
     }
-    out.push(tgt); cx = tgt[0]; cz = tgt[1]; i = j + 1;
+    if (Math.hypot(cx - tgt[0], cz - tgt[1]) > 0.01){ out.push(tgt); cx = tgt[0]; cz = tgt[1]; }
+    i = j + 1;
   }
   return out;
 }
 
 /* ─── the walk ──────────────────────────────────────────────── */
-const glide = { on:false, path:[], i:0, look:null, yaw:null, onArrive:null, t:0, step:0, total:0 };
+const glide = { on:false, path:[], i:0, look:null, yaw:null, onArrive:null, t:0, step:0, total:0,
+                best:Infinity, stuck:0, deadline:0 };
 
 function pathLength(fromX, fromZ, path){
   let d = 0, cx = fromX, cz = fromZ;
@@ -4964,6 +5036,10 @@ function walkTo(x, z, opts){
   glide.travelYaw = null;
   glide.onArrive = opts.onArrive || null;
   glide.total = pathLength(P.x, P.z, p);
+  glide.best = Infinity; glide.stuck = 0;
+  /* a walk that cannot finish must not wait for ever: the guided tour holds
+     its timer until the arrival fires, so a jam used to stop it dead */
+  glide.deadline = glide.total / 1.1 + 12;
   footfall(true);
 }
 function stopWalk(){ glide.on = false; glide.onArrive = null; }
@@ -4972,8 +5048,25 @@ function stepGlide(dt){
   const tgt = glide.path[glide.i];
   if (!tgt){ arrive(); return; }
   glide.t += dt;
+  glide.deadline -= dt;
   const dx = tgt[0] - P.x, dz = tgt[1] - P.z;
   const d = Math.hypot(dx, dz);
+
+  /* Two safety nets. If the distance to the waypoint stops falling we are
+     pressed against something, so give that waypoint up and take the next.
+     If the whole walk has run long, finish it where it was meant to end. */
+  if (d < glide.best - 0.03){ glide.best = d; glide.stuck = 0; }
+  else glide.stuck += dt;
+  if (glide.deadline <= 0){
+    const end = glide.path[glide.path.length - 1];
+    if (end && walkable(end[0], end[1])){ P.x = end[0]; P.z = end[1]; }
+    arrive(); return;
+  }
+  if (glide.stuck > 1.2){
+    glide.i++; glide.best = Infinity; glide.stuck = 0;
+    if (glide.i >= glide.path.length) arrive();
+    return;
+  }
 
   /* remaining distance decides the pace: brisk across the building,
      slow as you come up to the thing you clicked on */
@@ -4986,6 +5079,7 @@ function stepGlide(dt){
 
   if (d < Math.max(0.06, sp * dt)){
     P.x = tgt[0]; P.z = tgt[1]; glide.i++;
+    glide.best = Infinity; glide.stuck = 0;
     if (glide.i >= glide.path.length) arrive();
     return;
   }
