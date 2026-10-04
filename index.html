@@ -1322,6 +1322,28 @@ kbd{
   .pg-nav{width:32px;height:32px}
 }
 
+/* one full page at a time, which is the only readable way on a phone */
+.book.single{
+  flex:0 1 min(560px, 70vh * 0.707);
+  aspect-ratio:0.707 / 1;          /* a single page, portrait */
+  overflow:hidden;                  /* turned pages sweep out of sight */
+}
+.book.single .leaf{left:0;width:100%}
+.book.single .face.front{box-shadow:inset 5px 0 14px -10px rgba(20,22,26,.35)}
+.book.single .face.back{background:#F2EFE9}
+.book-wrap.single{gap:2px}
+.book-wrap.single .pg-nav{position:relative;z-index:2}
+.book-hint{
+  text-align:center;margin:10px 0 0;
+  font-family:var(--label);font-size:9px;font-weight:600;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--pumice);
+}
+@media (max-width:620px){
+  .book-wrap.single .pg-nav{width:30px;height:30px}
+  .book.single{flex:1 1 auto;max-width:none}
+  .book-bar{gap:10px}
+}
+
 
 /* ── pictures in the magazine ───────────────────────────────── */
 .pg-img{display:block;width:100%;height:100%;object-fit:cover;cursor:pointer}
@@ -1986,6 +2008,8 @@ const STORE_KEY = "sg.admin.v1";
 /* The prototype gate. It is in the page source, so it keeps a curious
    visitor out and nothing more. Real auth arrives with the backend. */
 const ADMIN_PASS = "softgallery";
+/* where a price request goes */
+const GALLERY_EMAIL = "hello@softgallery.art";
 
 let STORE = { series:{}, hangs:null, artists:{}, rooms:{}, press:null,
               images:{}, stats:null, submissions:[], log:[] };
@@ -5545,6 +5569,19 @@ function openArtist(name, fromWork){
    Status lives on the catalogue entry, so a change follows the work to
    every wall it hangs on and into the admin. Reserving holds it in this
    browser — a real hold needs the backend, and the panel says so. */
+/* No server yet, so the form cannot post anywhere. Handing the composed
+   message to the visitor's own mail client does genuinely send it, which is
+   better than a confirmation that quietly goes nowhere. Replace this with a
+   POST to the API when there is one. */
+function enquiryMailto(work, note, from){
+  const subject = "Soft Gallery — " + (work ? work.title + " by " + work.artist : "Enquiry");
+  const body = [note, "", work ? "Work: " + work.title + " (" + work.artist + ", " + work.year + ")" : "",
+                work && !work.onRequest && work.price ? "Listed at £" + work.price.toLocaleString("en-GB") : "",
+                from ? "From: " + from : ""].filter(Boolean).join("\n");
+  return "mailto:" + GALLERY_EMAIL + "?subject=" + encodeURIComponent(subject) +
+         "&body=" + encodeURIComponent(body);
+}
+
 function openEnquiry(note){
   if (!current) return;
   statWork(current.img || current.id).enquiries++;
@@ -5569,11 +5606,21 @@ function paintStatus(work){
     (known ? "" : '<span class="ctl-seg on">' + (STATUS[st] || STATUS.available).label + '</span>');
 
   const btn = $("#pvReserve");
-  const canReserve = (st === "available");
-  btn.hidden = !(canReserve || st === "reserved");
-  btn.disabled = !canReserve;
-  btn.classList.toggle("on", st === "reserved");
-  btn.textContent = (st === "reserved") ? "Reserved" : "Reserve";
+  const ask = !!work.onRequest;
+  if (ask){
+    /* no price is published, so the only move is to ask for one */
+    btn.hidden = (st === "sold");
+    btn.disabled = false;
+    btn.classList.remove("on");
+    btn.textContent = "Request price";
+  } else {
+    const canReserve = (st === "available");
+    btn.hidden = !(canReserve || st === "reserved");
+    btn.disabled = !canReserve;
+    btn.classList.toggle("on", st === "reserved");
+    btn.textContent = (st === "reserved") ? "Reserved" : "Reserve";
+  }
+  btn.dataset.ask = ask ? "1" : "";
   btn.dataset.key = key;
 
   const col = $("#pvCollect");
@@ -5963,7 +6010,7 @@ function pageHTML(p, num){
 
 function renderPress(){
   const host = $("#pressBody");
-  if (pressMode === null) pressMode = (innerWidth < 860 || TOUCH) ? "list" : "book";
+  if (pressMode === null) pressMode = "book";   /* single-page on a phone */
   host.innerHTML =
     '<div class="pr-switch">' +
       '<button class="hud-btn" id="prBook" aria-pressed="' + (pressMode === "book") + '">Read as pages</button>' +
@@ -6004,67 +6051,77 @@ function renderList(article){
 }
 
 function renderBook(){
-  const pages = pressPages(), leaves = pages.length / 2;
-  leafAt = Math.min(leafAt, leaves);
+  const pages = pressPages();
+  /* One page at a time on a phone, a spread on a desktop. A spread shrunk to
+     fit a 390 px screen is unreadable; a single page fills it and the turn
+     still feels like a magazine, which is what Sasha asked for. */
+  const per = (innerWidth < 860 || TOUCH) ? 1 : 2;
+  const units = Math.ceil(pages.length / per);
+  leafAt = Math.min(leafAt, units);
+  const verso = '<div class="pg blank"></div>';
+
   const stage = $("#prStage");
   stage.innerHTML =
-    '<div class="book-wrap">' +
+    '<div class="book-wrap' + (per === 1 ? " single" : "") + '">' +
       '<button class="pg-nav prev" id="pgPrev" aria-label="Previous page">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M15 5l-7 7 7 7"/></svg></button>' +
-      '<div class="book" id="book">' +
-        '<div class="book-spine"></div>' +
-        Array.from({ length: leaves }, (_, i) =>
+      '<div class="book' + (per === 1 ? " single" : "") + '" id="book">' +
+        (per === 2 ? '<div class="book-spine"></div>' : '') +
+        Array.from({ length: units }, (_, i) =>
           '<div class="leaf" data-i="' + i + '">' +
-            '<div class="face front">' + pageHTML(pages[i * 2], i * 2 + 1) + '</div>' +
-            '<div class="face back">' + pageHTML(pages[i * 2 + 1], i * 2 + 2) + '</div>' +
+            '<div class="face front">' + pageHTML(pages[i * per], i * per + 1) + '</div>' +
+            '<div class="face back">' +
+              (per === 2 ? pageHTML(pages[i * 2 + 1], i * 2 + 2) : verso) +
+            '</div>' +
           '</div>').join("") +
       '</div>' +
       '<button class="pg-nav next" id="pgNext" aria-label="Next page">' +
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 5l7 7-7 7"/></svg></button>' +
     '</div>' +
     '<div class="book-bar"><span id="pgWhere"></span>' +
-      '<input type="range" id="pgSlide" min="0" max="' + leaves + '" value="' + leafAt + '" aria-label="Page"></div>';
+      '<input type="range" id="pgSlide" min="0" max="' + units + '" value="' + leafAt + '" aria-label="Page"></div>' +
+    (per === 1 ? '<p class="book-hint">Swipe, or tap the edge of a page.</p>' : '');
 
   const book = $("#book"), all = [...book.querySelectorAll(".leaf")];
   let turnTimer = 0;
 
   /* Stacking, and the one case it has to handle specially.
 
-     At rest the two stacks never overlap: flipped leaves lie on the left,
-     unflipped on the right. So the left wants the most recently turned page
-     on top (z rising with i) and the right wants the next one to turn on top
-     (z falling with i).
+     At rest the stacks never overlap: turned pages lie to the left, unturned
+     to the right (or beneath, on a phone). So the left wants the most
+     recently turned on top, the right the next one to turn.
 
-     A page mid-turn is the exception — it sweeps across the right-hand side
-     on its way over. Given its resting z it would pass *behind* the pages it
-     is turning over, and it did: with eight leaves the first four turns were
-     buried, which is exactly the range where i+1 <= leaves-i-1. So the leaf
-     that is moving is lifted above everything for the length of the
-     animation, then dropped back into its stack. */
+     A page mid-turn is the exception — it sweeps across on its way over, and
+     with its resting z-index it would pass behind the pages it is turning
+     over. The leaf that is moving is therefore lifted above everything for
+     the length of the animation, then dropped back into its stack. */
   const paint = (lift) => {
     all.forEach((L, i) => {
       const done = i < leafAt;
       L.classList.toggle("flipped", done);
-      L.style.zIndex = (i === lift) ? leaves + 5 : (done ? i : leaves - i);
+      L.style.zIndex = (i === lift) ? units + 5 : (done ? i : units - i);
     });
-    const l = Math.min(leafAt * 2, pages.length);
-    $("#pgWhere").textContent = leafAt === 0 ? "Cover"
-      : (leafAt >= leaves ? "Back cover" : "Pages " + l + "–" + (l + 1));
+    if (per === 2){
+      const l = Math.min(leafAt * 2, pages.length);
+      $("#pgWhere").textContent = leafAt === 0 ? "Cover"
+        : (leafAt >= units ? "Back cover" : "Pages " + l + "–" + (l + 1));
+    } else {
+      $("#pgWhere").textContent = leafAt >= units ? "Back cover"
+        : "Page " + (leafAt + 1) + " of " + pages.length;
+    }
     $("#pgSlide").value = leafAt;
     $("#pgPrev").disabled = leafAt === 0;
-    $("#pgNext").disabled = leafAt >= leaves;
+    $("#pgNext").disabled = leafAt >= units;
     const cm = $("#cvMark"); if (cm && !cm.firstChild) cm.innerHTML = brandLockup(210, false, false);
     const bm = $("#bkMark"); if (bm && !bm.firstChild) bm.innerHTML = brandMark(64, false, false);
   };
   const go = to => {
-    const next = Math.max(0, Math.min(leaves, to));
+    const next = Math.max(0, Math.min(units, to));
     if (next === leafAt) return;
     const jump = Math.abs(next - leafAt) > 1;      /* from the contents */
     const lift = (next > leafAt) ? leafAt : next;  /* the leaf that moves */
     leafAt = next;
     if (jump){
-      /* several leaves change at once, so turning them all looks like a
-         shuffle — go straight there instead */
       book.classList.add("no-anim");
       paint(-1);
       void book.offsetWidth;                       /* commit before re-enabling */
@@ -6078,6 +6135,7 @@ function renderBook(){
   $("#pgNext").addEventListener("click", () => go(leafAt + 1));
   $("#pgPrev").addEventListener("click", () => go(leafAt - 1));
   $("#pgSlide").addEventListener("input", e => go(+e.target.value));
+
   book.addEventListener("click", e => {
     /* a work in the magazine is a way into the gallery, not a dead end */
     const im = e.target.closest("[data-work]");
@@ -6089,11 +6147,35 @@ function renderBook(){
       setTimeout(() => { if (piece) jumpToPiece(piece, true); else if (w) openPanel(w); }, 240);
       return;
     }
-    if (e.target.closest("[data-goto]")){ go(Math.floor(+e.target.closest("[data-goto]").dataset.goto / 2)); return; }
+    const jumpEl = e.target.closest("[data-goto]");
+    if (jumpEl){
+      const page = +jumpEl.dataset.goto;           /* 1-based page number */
+      go(per === 2 ? Math.floor(page / 2) : page - 1);
+      return;
+    }
     const r = book.getBoundingClientRect(), x = e.clientX - r.left;
-    if (x > r.width * 0.86) go(leafAt + 1);
-    else if (x < r.width * 0.14) go(leafAt - 1);
+    const edge = per === 1 ? 0.22 : 0.14;
+    if (x > r.width * (1 - edge)) go(leafAt + 1);
+    else if (x < r.width * edge) go(leafAt - 1);
   });
+
+  /* swipe, on the devices that have fingers */
+  if (per === 1){
+    let sx = 0, sy = 0, tracking = false;
+    book.addEventListener("touchstart", e => {
+      if (e.touches.length !== 1) return;
+      sx = e.touches[0].clientX; sy = e.touches[0].clientY; tracking = true;
+    }, { passive:true });
+    book.addEventListener("touchend", e => {
+      if (!tracking) return;
+      tracking = false;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - sx, dy = t.clientY - sy;
+      if (Math.abs(dx) < 46 || Math.abs(dx) < Math.abs(dy)) return;   /* a scroll, not a turn */
+      go(leafAt + (dx < 0 ? 1 : -1));
+    }, { passive:true });
+  }
+
   paint();
   $("#pressBody").scrollTop = 0;
 }
@@ -6185,7 +6267,7 @@ function validate(fields){
 function replaceForm(form, title, body){
   const d = document.createElement("div");
   d.className = "done label-card";
-  d.innerHTML = '<p class="didone">' + title + '</p><p>' + body + '</p>';
+  d.innerHTML = '<p class="didone">' + title + '</p><div>' + body + '</div>';
   form.parentNode.replaceChild(d, form);
   srSay(title + ". " + body);
 }
@@ -6608,8 +6690,10 @@ function adWorkEditor(key){
     '<div class="ad-block"><h4>Commerce</h4><div class="ad-form">' +
       '<div class="ad-row">' + sel("eAvail", "Availability", AVAIL, w.avail) +
         txt("ePrice", "Price in \u00a3", w.price, "number") +
-        sel("eReq", "Price on request", { "0":"No \u2014 show the price", "1":"Yes \u2014 hide it" },
-            w.onRequest ? "1" : "0", "The About page promises a price on everything for sale.") + '</div>' +
+        sel("eReq", "How it is sold",
+            { "0":"Buy now \u2014 the price is shown", "1":"Request price \u2014 hidden, enquiry by email" },
+            w.onRequest ? "1" : "0",
+            "Request price sends the visitor\u2019s message to " + GALLERY_EMAIL + ".") + '</div>' +
       '<div class="ad-row">' + sel("eRights", "Rights", RIGHTS, w.rights) +
         txt("ePd", "Source / collection", w.pd || "") + '</div>' +
     '</div></div>' +
@@ -6683,7 +6767,7 @@ function adWorkEditor(key){
     if (!patch.artist) problems.push("A work needs an artist.");
     if (isNew && !pending) problems.push("Upload an image \u2014 the aspect ratio comes from the file.");
     if (patch.avail === "available" && !patch.onRequest && !(patch.price > 0))
-      problems.push("Marked available with no price. Either set a price or use price on request.");
+      problems.push("Buy now needs a price. Either set one, or switch it to Request price.");
     if (patch.rights === "pending" && patch.avail === "available")
       problems.push("Rights are unresolved, so this cannot be offered for sale.");
     const msg = $("#adWorkMsg");
@@ -7259,26 +7343,32 @@ function voiced(node){
   node.connect(dry); node.connect(verb);
 }
 
+/* The ambience used to be synthesised here: a bed of filtered noise under two
+   sine tones a fifth apart. The noise is what you could hear hissing, and it
+   is gone — this now plays a real track instead, routed through the same
+   filter and reverb so the building still colours it room by room.
+
+   audio/ambience.mp3 is cut from the supplied recording: the fade-in and
+   fade-out are trimmed off and the tail is crossfaded back into the head, so
+   it loops without a seam or a drop to silence every couple of minutes. */
+let musicEl = null;
 function startAmbience(){
   const ac = audio(); if (!ac || toneGain) return;
-  toneGain = ac.createGain(); toneGain.gain.value = 0.30; toneGain.connect(master);
+  toneGain = ac.createGain(); toneGain.gain.value = 0.22; toneGain.connect(master);
   toneFilter = ac.createBiquadFilter();
-  toneFilter.type = "lowpass"; toneFilter.frequency.value = 520; toneFilter.Q.value = 0.7;
+  /* opened right up compared with the old drone — a lowpass at 520 Hz would
+     leave music sounding like it was playing in the next building */
+  toneFilter.type = "lowpass"; toneFilter.frequency.value = 3200; toneFilter.Q.value = 0.5;
   toneFilter.connect(toneGain);
 
-  const noise = ac.createBufferSource(); noise.buffer = noiseBuf; noise.loop = true;
-  const ng = ac.createGain(); ng.gain.value = 0.34;
-  noise.connect(ng); ng.connect(toneFilter); noise.start();
-
-  /* two notes a fifth apart, drifting against each other */
-  [110, 164.81].forEach((f, i) => {
-    const o = ac.createOscillator(); o.type = "sine"; o.frequency.value = f;
-    const g = ac.createGain(); g.gain.value = 0.028 - i * 0.010;
-    const lfo = ac.createOscillator(); lfo.frequency.value = 0.05 + i * 0.021;
-    const lg = ac.createGain(); lg.gain.value = 0.014;
-    lfo.connect(lg); lg.connect(g.gain); lfo.start();
-    o.connect(g); g.connect(toneFilter); o.start();
-  });
+  musicEl = new Audio("audio/ambience.mp3");
+  musicEl.loop = true;
+  musicEl.preload = "auto";
+  try {
+    const src = ac.createMediaElementSource(musicEl);
+    src.connect(toneFilter);
+  } catch(e){ /* older browsers: it simply plays dry */ }
+  musicEl.play().catch(() => {});   /* no file, or no gesture yet: stay quiet */
 }
 
 /* the room you are in changes what it sounds like */
@@ -7287,8 +7377,9 @@ function setRoomTone(room){
   if (!soundOn || !toneFilter || !room || room === toneRoom) return;
   toneRoom = room;
   const t = AC.currentTime;
-  const cut = room.corridor ? 240 : (room.id === "atrium" ? 760 : 520);
-  const vol = room.corridor ? 0.20 : (room.id === "atrium" ? 0.34 : 0.28);
+  /* a corridor muffles it, the tall foyer opens it out */
+  const cut = room.corridor ? 1100 : (room.id === "atrium" ? 5600 : 3200);
+  const vol = room.corridor ? 0.15 : (room.id === "atrium" ? 0.26 : 0.21);
   toneFilter.frequency.setTargetAtTime(cut, t, 0.8);
   toneGain.gain.setTargetAtTime(vol, t, 0.8);
   if (wet){
@@ -7310,7 +7401,11 @@ function setSound(on){
     if (AC.state === "suspended") AC.resume();
     master.gain.setTargetAtTime(0.9, AC.currentTime, 1.2);
     toneRoom = null; setRoomTone(P.room);
-  } else if (master) master.gain.setTargetAtTime(0, AC.currentTime, 0.35);
+    if (musicEl && musicEl.paused) musicEl.play().catch(() => {});
+  } else {
+    if (master) master.gain.setTargetAtTime(0, AC.currentTime, 0.35);
+    if (musicEl) setTimeout(() => { if (!soundOn && musicEl) musicEl.pause(); }, 500);
+  }
 }
 
 /* ─── the small sounds ──────────────────────────────────────── */
@@ -7542,9 +7637,13 @@ function bindInput(){
     paintStatus(current);
   });
   $("#pvReserve").addEventListener("click", () => {
-    const k = $("#pvReserve").dataset.key;
-    if (!k || !current) return;
-    reserveWork(k);
+    const b = $("#pvReserve");
+    if (!b.dataset.key || !current) return;
+    if (b.dataset.ask){
+      openEnquiry("Please could you tell me the price of “" + current.title + "”?");
+      return;
+    }
+    reserveWork(b.dataset.key);
     openEnquiry("I would like to reserve “" + current.title + "”.");
   });
   document.querySelectorAll("[data-close]").forEach(b =>
@@ -7556,8 +7655,15 @@ function bindInput(){
       { sel:"#eName",  test:v => v.length > 1, bad:"We need a name to reply to." },
       { sel:"#eEmail", test:v => EMAIL.test(v), bad:"That email address will not reach you." }
     ])) return;
-    replaceForm($("#enqForm"), "Sent",
-      "A curator will reply within two working days. Nothing is committed and nothing is charged.");
+    /* hand the composed message to the visitor's own mail client, which does
+       genuinely reach the gallery — until there is a server to post to */
+    const link = enquiryMailto(current, $("#eNote").value.trim(),
+      $("#eName").value.trim() + " <" + $("#eEmail").value.trim() + ">");
+    replaceForm($("#enqForm"), "Ready to send",
+      "Your message is written. Send it and a curator will reply within two working days. " +
+      "Nothing is committed and nothing is charged." +
+      '<a class="btn wide" style="margin-top:16px;display:block;text-align:center" href="' +
+      link + '">Send to ' + GALLERY_EMAIL + '</a>');
   });
   $("#viewForm").addEventListener("submit", e => {
     e.preventDefault();
