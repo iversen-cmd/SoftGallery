@@ -1566,11 +1566,41 @@ kbd{
 #nowebgl .inner{max-width:44ch}
 #nowebgl h1{font-family:var(--display);font-size:clamp(28px,6vw,44px);margin:14px 0 12px;font-style:italic}
 #nowebgl p{font-size:14px;line-height:1.75;color:var(--slate);margin:0 0 22px}
+
+/* ══ demo mode (?demo=1) — a scripted walkthrough for recording ══ */
+#demoShield{position:fixed;inset:0;z-index:9998;cursor:none;background:transparent;display:none}
+body.demo #demoShield{display:block}
+body.demo, body.demo *{cursor:none !important}
+#demoCursor{position:fixed;left:0;top:0;z-index:9999;width:26px;height:26px;pointer-events:none;
+  opacity:0;transition:opacity .5s var(--ease);will-change:transform}
+#demoCursor.on{opacity:1}
+#demoCursor svg{display:block;width:26px;height:26px;transform-origin:3px 2px;
+  transition:transform .12s var(--ease);filter:drop-shadow(0 2px 4px rgba(0,0,0,.45))}
+#demoCursor.down svg{transform:scale(.82)}
+#demoCursor i{position:absolute;left:-15px;top:-16px;width:36px;height:36px;border-radius:50%;
+  border:1.5px solid rgba(247,245,241,.95);opacity:0;transform:scale(.3)}
+#demoCursor i.go{animation:demoRing .55s var(--ease-out) forwards}
+@keyframes demoRing{0%{opacity:.9;transform:scale(.3)}100%{opacity:0;transform:scale(1.25)}}
+#demoHint{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:9997;
+  font:500 12px/1.6 var(--body);color:rgba(247,245,241,.62);text-align:center;letter-spacing:.01em;
+  pointer-events:none;transition:opacity .4s var(--ease)}
+#demoHint b{color:var(--paper);font-weight:600}
+#demoHint.gone{opacity:0}
+#demoEnd{position:fixed;inset:0;z-index:9990;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:26px;color:var(--paper);text-align:center;opacity:0;pointer-events:none;
+  background:radial-gradient(122% 92% at 50% 38%,#16202C 0%,var(--brand-navy) 62%,#080D14 100%);
+  transition:opacity 1.6s var(--ease)}
+#demoEnd.on{opacity:1}
+#demoEnd .tag{font-family:var(--serif);font-style:italic;font-size:clamp(22px,2.6vw,34px);opacity:.92}
+#demoEnd .url{font:500 13px/1 var(--body);letter-spacing:.08em;color:rgba(247,245,241,.6)}
 </style>
 </head>
 <body>
 
 <div id="stage" aria-hidden="true"></div>
+<div id="demoShield" aria-hidden="true"></div>
+<div id="demoCursor" aria-hidden="true"><i></i><svg viewBox="0 0 26 26"><path d="M3 2 L3 21 L8 16.4 L11.6 24 L15 22.5 L11.4 15 L18 15 Z" fill="#F7F5F1" stroke="#14161A" stroke-width="1.4" stroke-linejoin="round"/></svg></div>
+<div id="demoEnd" aria-hidden="true"><div id="demoEndMark"></div><div class="tag">Where art comes to life</div><div class="url">softgallery.art</div></div>
 <div id="veil"></div>
 <div id="lens"><div class="vig"></div><div class="grain"></div><div class="dof"></div></div>
 
@@ -5382,6 +5412,7 @@ function frame(){
   const dt = Math.min(0.05, clock.getDelta());
   const t  = clock.elapsedTime;
 
+  if (DEMO.on) demoStep(dt);
   if (zoom) stepZoom(dt);
   else {
     if (tour.on) stepTour(dt);
@@ -7592,6 +7623,7 @@ function voiced(node){
    fade-out are trimmed off and the tail is crossfaded back into the head, so
    it loops without a seam or a drop to silence every couple of minutes. */
 let musicEl = null;
+let MUSIC_SCALE = 1;      /* demo mode can turn the music down under a narrator */
 function startAmbience(){
   const ac = audio(); if (!ac || toneGain) return;
   toneGain = ac.createGain(); toneGain.gain.value = 0.22; toneGain.connect(master);
@@ -7619,7 +7651,7 @@ function setRoomTone(room){
   const t = AC.currentTime;
   /* a corridor muffles it, the tall foyer opens it out */
   const cut = room.corridor ? 1100 : (room.id === "atrium" ? 5600 : 3200);
-  const vol = room.corridor ? 0.15 : (room.id === "atrium" ? 0.26 : 0.21);
+  const vol = (room.corridor ? 0.15 : (room.id === "atrium" ? 0.26 : 0.21)) * MUSIC_SCALE;
   toneFilter.frequency.setTargetAtTime(cut, t, 0.8);
   toneGain.gain.setTargetAtTime(vol, t, 0.8);
   if (wet){
@@ -8135,6 +8167,355 @@ $("#arrMark").innerHTML = brandLockup(Math.min(330, innerWidth * 0.66), true, !R
 $("#hudMark").innerHTML = brandLockupH(168, true);
 
 bindAdmin();          /* independent of the 3D, so it works before and without it */
+
+
+/* ══════════════════════════════════════════════════════════════
+   DEMO MODE — a scripted walkthrough for recording a video.
+   Open the page with ?demo=1 on the address. Nothing changes
+   without it.
+
+   Space        start from the beginning
+   2 – 7        start at that chapter instead
+   P            pause / resume
+   Esc          stop the demo and hand control back
+
+   Optional on the address:
+   &music=0.5   music level under the narrator (1 = as the site)
+   &only=1      play just the chapter you start, then stop
+
+   Every hold and every walk below has a fixed duration in seconds,
+   so the timeline is the same on every take. Change a number in
+   T to fit the narration; the chapter times print to the console.
+   ══════════════════════════════════════════════════════════════ */
+const QS = new URLSearchParams(location.search);
+const DEMO = { on:false, time:0, paused:false, aborted:false, waits:[],
+               glide:null, turn:null, aim:null, cur:null, cx:0, cy:0, chapter:0 };
+DEMO.enabled = QS.has("demo");
+if (QS.has("music")) MUSIC_SCALE = Math.max(0, Math.min(1.5, parseFloat(QS.get("music")) || 0));
+
+const TL = {
+  /* 1 · arrival */          arrivalHold:3.0, toEnter:2.2, afterEnter:4.0,
+  /* 2 · foyer, long room */ panLeft:5.0, panRight:6.0, panBack:4.0, toDoor:1.8,
+                             walkLongRoom:14.0, longRoomHold:4.0,
+  /* 3 · bloom */            toBloom:1.8, hoverBloom:1.4, walkBloom:4.5, bloomWork:7.0,
+                             bloomArtist:6.0, bloomProv:5.0,
+  /* 4 · catalogue */        catalogueHold:5.0, filterHold:4.0, upwardHold:8.0,
+  /* 5 · press room */       coverHold:5.0, pageHold:5.0, pages:3,
+  /* 6 · iris */             turnToIris:4.0, toIris:1.8, hoverIris:1.2, walkIris:9.5,
+                             irisRead:2.5, afterVoice:3.0,
+  /* 7 · outro */            lookBack:7.0, endCard:6.0,
+  cursorMove:1.3
+};
+
+/* ─── the clock: holds count demo time, so P pauses everything ── */
+function demoStep(dt){
+  if (DEMO.paused) return;
+  DEMO.time += dt;
+  const now = DEMO.time;
+  DEMO.waits = DEMO.waits.filter(w => { if (now >= w.at){ w.res(); return false; } return true; });
+  if (DEMO.cur) stepCursor(now);
+  if (zoom){ DEMO.aim = null; return; }    /* the site's own lean-in has the camera, and
+                                              stepping back leaves you where it put you */
+  if (DEMO.glide) stepDemoGlide(dt, now);
+  else if (DEMO.turn) stepDemoTurn(now);
+  else if (DEMO.aim){
+    const k = 1 - Math.exp(-3.0 * dt);
+    P.yaw = lerpAngle(P.yaw, DEMO.aim.yaw, k);
+    P.pitch += (DEMO.aim.pitch - P.pitch) * k;
+  }
+}
+function wait(sec){
+  return new Promise((res, rej) => {
+    if (DEMO.aborted) return rej("stop");
+    DEMO.waits.push({ at: DEMO.time + sec, res: () => DEMO.aborted ? rej("stop") : res() });
+  });
+}
+function until(test, cap){
+  const start = DEMO.time;
+  return (async () => { while (!test() && DEMO.time - start < cap) await wait(0.1); })();
+}
+const mj = u => { u = Math.max(0, Math.min(1, u)); return u*u*u*(10 - 15*u + 6*u*u); };   /* minimum-jerk */
+
+/* ─── a walk on rails: the site's route, rounded and timed ───── */
+function chaikin(pts, n){
+  for (let k = 0; k < n; k++){
+    const out = [pts[0]];
+    for (let i = 0; i < pts.length - 1; i++){
+      const a = pts[i], b = pts[i+1];
+      out.push([a[0]*.75 + b[0]*.25, a[1]*.75 + b[1]*.25], [a[0]*.25 + b[0]*.75, a[1]*.25 + b[1]*.75]);
+    }
+    out.push(pts[pts.length - 1]);
+    pts = out;
+  }
+  return pts;
+}
+function demoWalk(x, z, dur, look){
+  let pts = [[P.x, P.z]].concat(route(P.x, P.z, x, z));
+  if (pts.length < 2) pts.push([x, z]);
+  pts = chaikin(pts, 3).map(p => blocked(p[0], p[1], RADIUS * 0.8) ? resolve(p[0], p[1], RADIUS * 0.8) : p);
+  const cum = [0];
+  for (let i = 1; i < pts.length; i++) cum.push(cum[i-1] + Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]));
+  return new Promise(res => {
+    DEMO.aim = null; DEMO.turn = null;
+    DEMO.glide = { pts, cum, L: cum[cum.length-1], t0: DEMO.time, dur, look, res, lastS:0, step:0 };
+  });
+}
+function pathAt(g, s){
+  s = Math.max(0, Math.min(g.L, s));
+  let i = 1; while (i < g.cum.length - 1 && g.cum[i] < s) i++;
+  const a = g.pts[i-1], b = g.pts[i], seg = (g.cum[i] - g.cum[i-1]) || 1, f = (s - g.cum[i-1]) / seg;
+  return [a[0] + (b[0]-a[0]) * f, a[1] + (b[1]-a[1]) * f];
+}
+function stepDemoGlide(dt, now){
+  const g = DEMO.glide, u = (now - g.t0) / g.dur, s = g.L * mj(u);
+  const p = pathAt(g, s); P.x = p[0]; P.z = p[1];
+  const ahead = pathAt(g, s + 1.8);
+  let yaw = (Math.hypot(ahead[0]-P.x, ahead[1]-P.z) > 0.05) ? Math.atan2(-(ahead[0]-P.x), -(ahead[1]-P.z)) : P.yaw;
+  let pitch = -0.02;
+  if (g.look){
+    const f = faceFrom(P.x, P.z, g.look), remain = g.L - s;
+    const w = mj((3.2 - remain) / 2.8);
+    yaw = lerpAngle(yaw, f.yaw, w); pitch = pitch + (f.pitch - pitch) * w;
+  }
+  const k = 1 - Math.exp(-3.4 * dt);
+  P.yaw = lerpAngle(P.yaw, yaw, k);
+  P.pitch += (pitch - P.pitch) * k;
+  g.step += s - g.lastS; g.lastS = s;
+  if (g.step > 0.82){ g.step = 0; footfall(); }
+  if (u >= 1){
+    DEMO.glide = null;
+    DEMO.aim = g.look ? faceFrom(P.x, P.z, g.look) : { yaw, pitch };
+    g.res();
+  }
+}
+/* ─── turning the head, on the spot ─────────────────────────── */
+function demoTurn(yaw, pitch, dur){
+  return new Promise(res => {
+    const d = ((yaw - P.yaw + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI;
+    DEMO.aim = null;
+    DEMO.turn = { y0:P.yaw, dy:d, p0:P.pitch, p1:pitch, t0:DEMO.time, dur, res };
+  });
+}
+function stepDemoTurn(now){
+  const t = DEMO.turn, e = mj((now - t.t0) / t.dur);
+  P.yaw = t.y0 + t.dy * e; P.pitch = t.p0 + (t.p1 - t.p0) * e;
+  if (now - t.t0 >= t.dur){ DEMO.turn = null; DEMO.aim = { yaw:P.yaw, pitch:P.pitch }; t.res(); }
+}
+
+/* ─── the pointer the viewer sees ───────────────────────────── */
+const dc = document.getElementById("demoCursor");
+function placeCursor(x, y){ DEMO.cx = x; DEMO.cy = y; dc.style.transform = "translate(" + x + "px," + y + "px)"; }
+function cursorTo(target, dur){
+  const r = target.getBoundingClientRect ? target.getBoundingClientRect() : null;
+  const x = r ? r.left + r.width * 0.5 : target.x, y = r ? r.top + r.height * 0.55 : target.y;
+  return new Promise(res => {
+    const x0 = DEMO.cx, y0 = DEMO.cy, dx = x - x0, dy = y - y0;
+    /* a slight arc, the way a hand actually moves a mouse */
+    const L = Math.hypot(dx, dy) || 1, bend = Math.min(60, L * 0.08);
+    DEMO.cur = { x0, y0, x, y, mx: (x0 + x) / 2 - dy / L * bend, my: (y0 + y) / 2 + dx / L * bend,
+                 t0: DEMO.time, dur: dur || TL.cursorMove, res };
+  });
+}
+function stepCursor(now){
+  const c = DEMO.cur, u = mj((now - c.t0) / c.dur), v = 1 - u;
+  placeCursor(v*v*c.x0 + 2*v*u*c.mx + u*u*c.x, v*v*c.y0 + 2*v*u*c.my + u*u*c.y);
+  if (now - c.t0 >= c.dur){ DEMO.cur = null; c.res(); }
+}
+async function press(el, act){
+  dc.classList.add("down");
+  const ring = dc.querySelector("i"); ring.classList.remove("go"); void ring.offsetWidth; ring.classList.add("go");
+  await wait(0.13);
+  dc.classList.remove("down");
+  if (act) act(); else if (el && el.click) el.click();
+  setTimeout(() => { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); }, 110);
+}
+async function clickOn(el, act, dur){ if (!el) return; await cursorTo(el, dur); await wait(0.15); await press(el, act); }
+function screenOf(v){
+  const p = v.clone().project(camera);
+  return { x: Math.max(30, Math.min(innerWidth - 30, (p.x + 1) / 2 * innerWidth)),
+           y: Math.max(30, Math.min(innerHeight - 30, (1 - p.y) / 2 * innerHeight)) };
+}
+
+/* ─── which hang of each work the demo visits ────────────────── */
+function hangOf(key, roomId){
+  return PIECES.find(p => p.work.img === key && p.room.id === roomId) ||
+         PIECES.find(p => p.work.img === key) || null;
+}
+function standAt(p){
+  const f = faceFrom(p.viewPos.x, p.viewPos.z, p.lookAt);
+  placeAt(p.viewPos.x, p.viewPos.z, f.yaw, f.pitch);
+  DEMO.aim = f;
+}
+async function stepUpTo(p, toDur, hover, walk){
+  await cursorTo(screenOf(p.centre), toDur);
+  setFocus(p);                                             /* the hover prompt, as a visitor sees it */
+  await wait(hover);
+  await press(null, () => { clickTick(); setFocus(null); $("#prompt").classList.remove("on"); });
+  await demoWalk(p.viewPos.x, p.viewPos.z, walk, p.lookAt);
+  openPanel(p.work);
+}
+async function closeTheWork(){
+  await clickOn($("#pvClose"));
+  await until(() => !zoom, 4);
+}
+const parkCursor = () => cursorTo({ x: innerWidth * 0.80, y: innerHeight * 0.80 }, 1.6);
+
+/* ─── the film, in chapters ─────────────────────────────────── */
+const CHAPTERS = [
+  /* 1 */ { name:"Arrival", run: async () => {
+    await wait(TL.arrivalHold);
+    await clickOn($("#enterBtn"), null, TL.toEnter);
+    await wait(0.3); parkCursor();
+    await wait(TL.afterEnter);
+  }},
+  /* 2 */ { name:"Foyer and the Long Room", setup: () => placeAt(0, 4.4, 0, -0.02), run: async () => {
+    await demoTurn(0.62, 0.02, TL.panLeft);
+    await demoTurn(-0.62, 0.02, TL.panRight);
+    await demoTurn(0, -0.02, TL.panBack);
+    await clickOn({ x:0, y:0, getBoundingClientRect(){ const s = screenOf(new THREE.Vector3(0, 1.3, -6.2));
+      return { left:s.x, top:s.y, width:0, height:0 }; } }, () => clickTick(), TL.toDoor);
+    await demoWalk(0, -14.8, TL.walkLongRoom);
+    parkCursor();
+    await demoTurn(0.10, 0.0, TL.longRoomHold);
+  }},
+  /* 3 */ { name:"Bloom", setup: () => { placeAt(0, -14.8, 0.10, 0); DEMO.aim = { yaw:0.10, pitch:0 }; },
+    run: async () => {
+    const p = hangOf("bloom", "north"); if (!p) return;
+    await stepUpTo(p, TL.toBloom, TL.hoverBloom, TL.walkBloom);
+    await wait(0.8); parkCursor();
+    await wait(TL.bloomWork);
+    await clickOn($('#pvBody .pv-tab[data-pane="pane2"]')); await wait(TL.bloomArtist);
+    await clickOn($('#pvBody .pv-tab[data-pane="pane3"]')); await wait(TL.bloomProv);
+    await closeTheWork();
+    await wait(1.0);
+  }},
+  /* 4 */ { name:"Catalogue to Upward", setup: () => { const p = hangOf("bloom", "north"); if (p) standAt(p); },
+    run: async () => {
+    clearFilters();
+    await clickOn($("#navIndex"));
+    await wait(0.4); await cursorTo({ x: innerWidth * 0.5, y: innerHeight * 0.62 }, 1.4);
+    await wait(TL.catalogueHold - 1.4);
+    await clickOn($('#fColour .chip[data-v="Cool"]'));
+    await wait(0.5); await cursorTo({ x: DEMO.cx + 40, y: DEMO.cy + 120 }, 1.2);
+    await wait(TL.filterHold - 1.2);
+    const card = Array.from(document.querySelectorAll("#ixGrid .work"))
+      .find(b => b.querySelector(".wt") && b.querySelector(".wt").textContent === "Upward");
+    const up = hangOf("popart", "south");
+    await clickOn(card, () => { closeSheet("sheetIndex"); if (up) jumpToPiece(up, true); });
+    await wait(0.9); parkCursor();
+    await wait(TL.upwardHold);
+    await closeTheWork();
+    await wait(0.8);
+  }},
+  /* 5 */ { name:"Press Room", setup: () => { const p = hangOf("popart", "south"); if (p) standAt(p); },
+    run: async () => {
+    leafAt = 0; pressMode = "book"; pressBuilt = false;
+    await clickOn($("#navPress"));
+    await wait(0.6); await cursorTo({ x: innerWidth * 0.5, y: innerHeight * 0.78 }, 1.4);
+    await wait(TL.coverHold - 1.4);
+    for (let i = 0; i < TL.pages; i++){
+      await clickOn($("#pgNext"), null, 1.0);
+      await wait(0.4); await cursorTo({ x: DEMO.cx - 90, y: DEMO.cy + 30 }, 1.0);
+      await wait(TL.pageHold - 1.4);
+    }
+    await clickOn($('[data-close="sheetPress"]'));
+    await wait(1.0);
+  }},
+  /* 6 */ { name:"Iris, with the artist's voice", setup: () => { const p = hangOf("popart", "south"); if (p) standAt(p); },
+    run: async () => {
+    const p = hangOf("eye", "south"); if (!p) return;
+    const f = faceFrom(P.x, P.z, p.centre);
+    parkCursor();
+    await demoTurn(f.yaw, 0.02, TL.turnToIris);
+    await stepUpTo(p, TL.toIris, TL.hoverIris, TL.walkIris);
+    await wait(0.9); parkCursor();
+    /* if the browser held the recording back, press play the way a visitor would */
+    if (voiceEl && voiceEl.paused && !voiceEl.ended){ await clickOn($("#vPlay")); parkCursor(); }
+    await until(() => voiceEl && !isNaN(voiceEl.duration), 3);
+    const len = (voiceEl && voiceEl.duration) || 11;
+    await until(() => !voiceEl || voiceEl.ended, len + 4);
+    await wait(TL.afterVoice);
+  }},
+  /* 7 */ { name:"Outro", setup: () => { const p = hangOf("eye", "south"); if (p) standAt(p); }, run: async () => {
+    if ($("#panel").classList.contains("on")) await closeTheWork();
+    dc.classList.remove("on");
+    await demoTurn(0.35, 0.03, TL.lookBack);
+    $("#demoEndMark").innerHTML = brandLockup(Math.min(300, innerWidth * 0.5), true, !REDUCED);
+    $("#demoEnd").classList.add("on");
+    if (AC && master) master.gain.setTargetAtTime(0, AC.currentTime, 1.1);
+    await wait(TL.endCard);
+  }}
+];
+
+async function runDemo(from){
+  DEMO.on = true;
+  document.body.classList.add("demo");
+  $("#demoHint").classList.add("gone");
+  if (tour.on) setTour(false);
+  placeCursor(innerWidth * 0.86, innerHeight * 0.9);
+  dc.classList.add("on");
+  const only = QS.has("only");
+  try {
+    if (from > 1){
+      /* starting part-way: the visitor is already inside */
+      enterGallery(true);
+      CHAPTERS[from - 1].setup && CHAPTERS[from - 1].setup();
+      await wait(1.2); parkCursor(); await wait(0.6);
+    }
+    for (let c = from; c <= CHAPTERS.length; c++){
+      DEMO.chapter = c;
+      console.log("[demo] chapter " + c + " · " + CHAPTERS[c-1].name + " · starts at " + DEMO.time.toFixed(1) + "s");
+      await CHAPTERS[c-1].run();
+      if (only) break;
+    }
+    console.log("[demo] finished at " + DEMO.time.toFixed(1) + "s");
+  } catch(e){ if (e !== "stop") console.error(e); }
+  dc.classList.remove("on");
+}
+function stopDemo(){
+  DEMO.aborted = true; DEMO.glide = null; DEMO.turn = null; DEMO.aim = null; DEMO.cur = null;
+  DEMO.waits.forEach(w => w.res()); DEMO.waits = [];
+  DEMO.on = false;
+  document.body.classList.remove("demo");
+  dc.classList.remove("on");
+  $("#demoEnd").classList.remove("on");
+}
+
+if (DEMO.enabled){
+  const hint = document.createElement("div");
+  hint.id = "demoHint";
+  hint.innerHTML = "Demo mode is loading…";
+  document.body.appendChild(hint);
+  const ready = () => {
+    hint.innerHTML = "Demo mode. Press <b>Space</b> to start, or <b>2</b>–<b>7</b> to start at a chapter. " +
+                     "<b>P</b> pauses, <b>Esc</b> stops.";
+  };
+  (function check(){ bootDone ? ready() : setTimeout(check, 200); })();
+  addEventListener("keydown", e => {
+    const k = e.key.toLowerCase();
+    if (!DEMO.on && !DEMO.aborted){
+      if (!bootDone) return;
+      let from = 0;
+      if (k === " ") from = 1;
+      else if (/^[2-7]$/.test(k)) from = +k;
+      if (!from) return;
+      e.preventDefault(); e.stopImmediatePropagation();
+      /* this keypress is the gesture the browser needs before it will play
+         sound, so wake the audio now; it stays silent until Enter is pressed */
+      startAmbience();
+      if (AC && AC.state === "suspended") AC.resume();
+      runDemo(from);
+      return;
+    }
+    if (!DEMO.on) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    if (k === "p"){
+      DEMO.paused = !DEMO.paused;
+      if (voiceEl) DEMO.paused ? voiceEl.pause() : voiceEl.play().catch(() => {});
+    }
+    if (k === "escape") stopDemo();
+  }, true);
+}
 
 $("#enterBtn").disabled = true;
 $("#enterQuiet").disabled = true;
